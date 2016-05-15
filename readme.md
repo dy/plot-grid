@@ -2,6 +2,8 @@ Grid component for visualizing plots, built with oldschool HTML5 and CSS3. Becau
 
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
+[TODO: image]
+
 ## Usage
 
 [![npm install plot-grid](https://nodei.co/npm/plot-grid.png?mini=true)](https://npmjs.org/package/plot-grid/)
@@ -69,31 +71,8 @@ grid.update({
 });
 ```
 
-You can also axis/line styles:
+You can also style axis/lines, see [index.css](./index.css) for CSS classes to override.
 
-```css
-.grid-line {
-	border-width: 1px;
-	border-color: rgba(100,100,100,.1);
-}
-.grid-line-x {
-	border-style: dotted;
-}
-.grid-line-y {
-	border-style: solid;
-	border-width: 1px;
-}
-
-.grid-axis {
-
-}
-.grid-axis-x {
-
-}
-.grid-axis-label {
-
-}
-```
 
 ## Used by
 
