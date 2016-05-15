@@ -49,7 +49,7 @@ Grid.prototype.lines = null;
 Grid.prototype.axes = null;
 
 Grid.prototype.defaultLines = {
-	orientation: 'vertical',
+	orientation: 'x',
 	logarithmic: false,
 	min: 0,
 	max: 100,
@@ -61,7 +61,7 @@ Grid.prototype.defaultLines = {
 
 Grid.prototype.defaultAxis = {
 	name: 'Frequency',
-	orientation: 'horizontal',
+	orientation: 'x',
 	logarithmic: false,
 	min: 0,
 	max: 100,
@@ -100,7 +100,7 @@ Grid.prototype.update = function (options) {
 		var values = lines.values;
 		if (!values) {
 			values = [lines.min];
-			var intersteps = this.grid.clientWidth / 40;
+			var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 40;
 			if (intersteps < 1) {
 				values.push(max);
 			} else {
@@ -109,8 +109,15 @@ Grid.prototype.update = function (options) {
 
 				stepSize = closestNumber(stepSize, [1, 2, 2.5, 5, 10].map((v) => v * order));
 
-				for (var step = 0; step <= lines.max; step += stepSize) {
-					values.push(step);
+				if (lines.min > lines.max) {
+					for (var step = lines.max; step <= lines.min; step += stepSize) {
+						values.push(step);
+					}
+				}
+				else {
+					for (var step = lines.min; step <= lines.max; step += stepSize) {
+						values.push(step);
+					}
 				}
 			}
 		}
@@ -122,18 +129,23 @@ Grid.prototype.update = function (options) {
 
 		//draw lines
 		values.forEach(function (value, i) {
-			var line = grid.querySelector(`#grid-line-${value|0}`);
+			var line = grid.querySelector(`#grid-line-${lines.orientation}-${value|0}`);
 			if (!line) {
 				line = document.createElement('span');
-				line.id = `grid-line-${value|0}`;
+				line.id = `grid-line-${lines.orientation}-${value|0}`;
 				line.classList.add('grid-line');
 				line.classList.add(`grid-line-${lines.orientation}`);
 				line.setAttribute('data-value', value);
 				line.setAttribute('title', titles[i]);
 				grid.appendChild(line);
-				var ratio = value / (lines.max - lines.min);
+				var ratio = value / Math.abs(lines.max - lines.min);
 				if (!this.logarithmic) ratio *= 100;
-				line.style.left = ratio + '%';
+				if (lines.orientation === 'x') {
+					line.style.left = ratio + '%';
+				}
+				else {
+					line.style.top = ratio + '%';
+				}
 			}
 			line.removeAttribute('hidden');
 		});

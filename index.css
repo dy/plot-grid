@@ -33,24 +33,24 @@
 	width: 3rem;
 }*/
 
-.grid-line-vertical {
+.grid-line-x {
 	border-left: 1px dotted;
 	margin-left: -1px;
 	height: 100%;
 }
 
-.grid-line-horizontal {
+.grid-line-y {
+	margin-top: -1px;
 	border-bottom: 1px dotted;
 	width: 100%;
 	top: auto;
-	height: 0;
 }
-.grid-line-horizontal:after {
+.grid/*-line-y:after {
 	text-align: right;
 	left: -3rem;
 	margin-left: -.1rem;
 	top: -0.5rem;
-}
+}*/
 
 .grid-axis {
 

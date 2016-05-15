@@ -7,17 +7,18 @@ if (isBrowser) {
 }
 
 
-test('cartesian', function () {
+test('linear', function () {
 	var grid = Grid({
 		lines: [
 			{
 				min: 0,
-				max: 100
+				max: 100,
+				orientation: 'x'
 			},
 			{
 				min: 100,
 				max: 0,
-				orientation: 'horizontal'
+				orientation: 'y'
 			}
 		]
 	});
