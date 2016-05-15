@@ -18,7 +18,7 @@
 	left: 0;
 	width: 0;
 	height: 0;
-	color: rgba(127,127,127,.5);
+	color: rgba(127,127,127,.3);
 }
 .grid-line[hidden] {
 	display: none;
@@ -53,7 +53,7 @@
 }*/
 
 .grid-axis {
-
+	position: absolute;
 }
 .grid-axis-x {
 

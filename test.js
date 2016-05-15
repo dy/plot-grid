@@ -20,6 +20,14 @@ test('linear', function () {
 				max: 0,
 				orientation: 'y'
 			}
+		],
+
+		axes: [
+			{
+				min: 0,
+				max: 100,
+				orientation: 'x'
+			}
 		]
 	});
 

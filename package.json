@@ -18,7 +18,9 @@
     "axis"
   ],
   "browserify": {
-    "transform": ["sheetify/transform"]
+    "transform": [
+      "sheetify/transform"
+    ]
   },
   "author": "ΔY <dfcreative@gmail.com>",
   "license": "MIT",
@@ -31,6 +33,7 @@
   },
   "dependencies": {
     "inherits": "^2.0.1",
+    "insert-css": "^0.2.0",
     "is-browser": "^2.0.1",
     "mumath": "^2.0.0",
     "sheetify": "^5.0.0",

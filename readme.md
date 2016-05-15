@@ -19,7 +19,7 @@ var grid = createGrid({
 	//grid lines
 	lines: [
 		{
-			orientation: 'vertical',
+			orientation: 'x',
 			logarithmic: true,
 			min: 20,
 			max: 20000,
@@ -27,7 +27,7 @@ var grid = createGrid({
 			titles: ['20Hz', '200Hz', '2kHz', '20kHz']
 		},
 		{
-			orientation: 'horizontal',
+			orientation: 'y',
 			logarithmic: false,
 			min: -100,
 			max: 0,
@@ -40,7 +40,7 @@ var grid = createGrid({
 	axes: [
 		{
 			name: 'Frequency',
-			orientation: 'horizontal',
+			orientation: 'x',
 			logarithmic: true,
 			min: 20,
 			max: 20000,
@@ -50,7 +50,7 @@ var grid = createGrid({
 		},
 		{
 			name: 'Magnitude',
-			orientation: 'vertical',
+			orientation: 'y',
 			logarithmic: false,
 			min: -100,
 			max: 0,
@@ -95,7 +95,6 @@ You can also axis/line styles:
 }
 ```
 
-
 ## Used by
 
 * [gl-spectrum](https://github.com/dfcreative/gl-spectrum)
@@ -104,9 +103,14 @@ You can also axis/line styles:
 * [audio-waveform](https://github.com/audio-lab/audio-waveform)
 * [audio-spectrogram](https://github.com/audio-lab/audio-spectrogram)
 
+## Thanks
+
+To [@evanw](https://github.com/evanw) with [thetamath](http://thetamath.com/app/y=x%5E(3)-x) for grid API inspiration.
+
 ## Related
 
 * [gl-plot2d](https://www.npmjs.com/package/gl-plot2d) — webgl-based grid.
 * [gl-plot3d](https://www.npmjs.com/package/gl-plot3d) — webgl-based 3d grid.
 * [gl-axes2d](https://www.npmjs.com/package/gl-axes2d) — webgl-based 2d plot axes.
 * [gauge](https://www.npmjs.com/package/component-gauge) — simple gauge component.
+* [thetamath](http://thetamath.com/app/) — plot any math function.
