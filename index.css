@@ -1,0 +1,66 @@
+:host {
+	position: relative;
+}
+
+/** Decorative elements repeat canvas’s size */
+.grid {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	font-family: sans-serif;
+}
+.grid-line {
+	/*opacity: .2;*/
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	color: rgba(127,127,127,.5);
+}
+.grid-line[hidden] {
+	display: none;
+}
+/*.grid-line:after {
+	content: attr(data-value);
+	position: absolute;
+	height: 1rem;
+	line-height: 1rem;
+	font-size: .8rem;
+    text-align: center;
+	width: 3rem;
+}*/
+
+.grid-line-vertical {
+	border-left: 1px dotted;
+	margin-left: -1px;
+	height: 100%;
+}
+
+.grid-line-horizontal {
+	border-bottom: 1px dotted;
+	width: 100%;
+	top: auto;
+	height: 0;
+}
+.grid-line-horizontal:after {
+	text-align: right;
+	left: -3rem;
+	margin-left: -.1rem;
+	top: -0.5rem;
+}
+
+.grid-axis {
+
+}
+.grid-axis-x {
+
+}
+.grid-axis-y {
+
+}
+.grid-axis-label {
+
+}
