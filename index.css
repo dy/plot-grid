@@ -2,7 +2,6 @@
 	position: relative;
 }
 
-/** Decorative elements repeat canvas’s size */
 .grid {
 	position: absolute;
 	top: 0;
@@ -12,7 +11,6 @@
 	font-family: sans-serif;
 }
 .grid-line {
-	/*opacity: .2;*/
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -23,15 +21,6 @@
 .grid-line[hidden] {
 	display: none;
 }
-/*.grid-line:after {
-	content: attr(data-value);
-	position: absolute;
-	height: 1rem;
-	line-height: 1rem;
-	font-size: .8rem;
-    text-align: center;
-	width: 3rem;
-}*/
 
 .grid-line-x {
 	border-left: 1px dotted;
@@ -45,12 +34,6 @@
 	width: 100%;
 	top: auto;
 }
-/*.grid-line-y:after {
-	text-align: right;
-	left: -3rem;
-	margin-left: -.1rem;
-	top: -0.5rem;
-}*/
 
 .grid-axis {
 	position: absolute;
