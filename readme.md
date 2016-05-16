@@ -42,10 +42,6 @@ var grid = createGrid({
 	axes: [
 		{
 			name: 'Frequency',
-			min: 20,
-			max: 20000,
-			values: [20, 200, 2000, 20000],
-			titles: ['0db', '-25db', '-50db', '-75db', '-100db'],
 			labels: [20, 200, '2k', '20k']
 		},
 		true
