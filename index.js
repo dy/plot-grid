@@ -79,12 +79,14 @@ Grid.prototype.update = function (options) {
 	if (options.viewport) this.viewport = options.viewport;
 	var viewport = this.viewport;
 
+	var w = this.container.offsetWidth;
+	var h = this.container === document.body ? window.innerHeight : this.container.offsetHeight;
+
 	if (viewport instanceof Function) {
-		viewport = viewport(
-			this.container.offsetWidth,
-			this.container === document.body ? window.innerHeight : this.container.offsetHeight
-		);
+		viewport = viewport(w, h);
 	}
+
+	if (!viewport) viewport = [0,0,w,h];
 
 	this.grid.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
 	this.grid.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');
