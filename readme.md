@@ -15,7 +15,7 @@ var grid = createGrid({
 	//where to place grid, by default - body
 	container: el,
 
-	//position within the container
+	//position within the container or function returning it
 	viewport: [0, 0, container.clientWidth, container.clientHeight],
 
 	//grid lines
@@ -38,28 +38,17 @@ var grid = createGrid({
 		}
 	],
 
-	//grid axes
+	//grid axes, in order according to the lines - settings or true/false
 	axes: [
 		{
 			name: 'Frequency',
-			orientation: 'x',
-			logarithmic: true,
 			min: 20,
 			max: 20000,
 			values: [20, 200, 2000, 20000],
 			titles: ['0db', '-25db', '-50db', '-75db', '-100db'],
 			labels: [20, 200, '2k', '20k']
 		},
-		{
-			name: 'Magnitude',
-			orientation: 'y',
-			logarithmic: false,
-			min: -100,
-			max: 0,
-			values: [0, -25, -50, -75, -100],
-			titles: ['0db', '-25db', '-50db', '-75db', '-100db'],
-			labels: ['0', '-25', '-50', '-75', '-100']
-		}
+		true
 	]
 });
 

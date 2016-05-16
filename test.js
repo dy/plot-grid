@@ -9,6 +9,9 @@ if (isBrowser) {
 
 test('linear', function () {
 	var grid = Grid({
+		viewport: function (w, h) {
+			return [60, 20, w - 80, h - 80];
+		},
 		lines: [
 			{
 				min: 0,
@@ -16,17 +19,15 @@ test('linear', function () {
 				orientation: 'x'
 			},
 			{
-				min: 100,
-				max: 0,
+				min: 0,
+				max: 100,
 				orientation: 'y'
 			}
 		],
 
 		axes: [
-			{
-				min: 0,
-				max: 100,
-				orientation: 'x'
+			true, {
+
 			}
 		]
 	});

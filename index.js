@@ -11,6 +11,7 @@ var sf = require('sheetify');
 var className = sf('./index.css');
 var closestNumber = require('mumath/closest');
 var mag = require('mumath/order');
+var within = require('mumath/within');
 
 
 module.exports = Grid;
@@ -60,9 +61,7 @@ Grid.prototype.defaultLines = {
 };
 
 Grid.prototype.defaultAxis = {
-	name: 'Frequency',
-	orientation: 'x',
-	logarithmic: false,
+	name: '',
 	min: 0,
 	max: 100,
 	//detected from range
@@ -79,7 +78,15 @@ Grid.prototype.update = function (options) {
 	var grid = this.grid;
 
 	//set viewport
-	var viewport = this.viewport || options.viewport || [0, 0, '100%', this.container === document.body ? window.innerHeight : '100%'];
+	if (options.viewport) this.viewport = options.viewport;
+	var viewport = this.viewport;
+
+	if (viewport instanceof Function) {
+		viewport = viewport(
+			this.container.offsetWidth,
+			this.container === document.body ? window.innerHeight : this.container.offsetHeight
+		);
+	}
 
 	this.grid.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
 	this.grid.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');
@@ -91,18 +98,22 @@ Grid.prototype.update = function (options) {
 	for (var i = 0; i < lines.length; i++) {
 		lines[i].setAttribute('hidden', true);
 	}
+	var labels = grid.querySelectorAll('.grid-label');
+	for (var i = 0; i < labels.length; i++) {
+		labels[i].setAttribute('hidden', true);
+	}
 
 	//set lines
 	this.lines.forEach(function (lines, i) {
 		if (options.lines) lines = extend(this.lines[i], options.lines[i]);
 
-		//detect steps, if not defined, as one per each 20px
+		//detect steps, if not defined, as one per each 50px
 		var values = lines.values;
 		if (!values) {
-			values = [lines.min];
-			var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 40;
+			values = [];
+			var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 50;
 			if (intersteps < 1) {
-				values.push(max);
+				values = [lines.min, lines.max];
 			} else {
 				var stepSize = Math.abs(lines.max - lines.min) / Math.floor(intersteps);
 				var order = mag(stepSize);
@@ -139,23 +150,107 @@ Grid.prototype.update = function (options) {
 				line.setAttribute('title', titles[i]);
 				grid.appendChild(line);
 				var ratio = value / Math.abs(lines.max - lines.min);
-				if (!this.logarithmic) ratio *= 100;
+				if (!lines.logarithmic) ratio *= 100;
+				if (lines.min > lines.max) ratio = 100 - ratio;
 				if (lines.orientation === 'x') {
 					line.style.left = ratio + '%';
 				}
 				else {
-					line.style.top = ratio + '%';
+					line.style.top = (100 - ratio) + '%';
 				}
 			}
 			line.removeAttribute('hidden');
 		});
-	}, this);
 
 
-	//set axes
-	this.axes.forEach(function (axis, i) {
+		//draw axes
+		var axis = this.axes[i];
+
+		//do not paint inexisting axis
+		if (!axis) return;
+
 		if (options.axes) axis = extend(this.axes[i], options.axes[i]);
-	});
+
+		//define values
+		var axisValues = axis.values || values;
+
+		//define titles
+		var axisTitles = axis.titles || axisValues.slice().map(function (value) {
+			return value.toLocaleString();
+		});
+
+		//define labels
+		var labels = axis.labels || axisTitles;
+
+		var min = axis.min != null ? axis.min : lines.min;
+		var max = axis.max != null ? axis.max : lines.max;
+
+		//put axis properly
+		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}`);
+		if (!axisEl) {
+			axisEl = document.createElement('span');
+			axisEl.id = `grid-axis-${lines.orientation}`;
+			axisEl.classList.add('grid-axis');
+			axisEl.classList.add(`grid-axis-${lines.orientation}`);
+			axisEl.setAttribute('data-name', axis.name);
+			axisEl.setAttribute('title', axis.name);
+			grid.appendChild(axisEl);
+
+			var minRatio = min / Math.abs(lines.max - lines.min);
+
+			if (!lines.logarithmic) minRatio *= 100;
+			if (axis.orientation === 'x') {
+				axisEl.style.left = minRatio + '%';
+			}
+			else {
+				axisEl.style.bottom = minRatio + '%';
+			}
+
+			var maxRatio = 1 - max / Math.abs(lines.max - lines.min);
+
+			if (!lines.logarithmic) maxRatio *= 100;
+			if (axis.orientation === 'x') {
+				axisEl.style.right = maxRatio + '%';
+			}
+			else {
+				axisEl.style.top = maxRatio + '%';
+			}
+		}
+		axisEl.removeAttribute('hidden');
+
+		//draw labels
+		axisValues.forEach(function (value, i) {
+			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}`);
+			if (!label) {
+				label = document.createElement('label');
+				label.id = `grid-label-${lines.orientation}-${value|0}`;
+				label.classList.add('grid-label');
+				label.classList.add(`grid-label-${lines.orientation}`);
+				label.setAttribute('data-value', value);
+				label.setAttribute('for', `grid-line-${lines.orientation}`);
+				label.setAttribute('title', axisTitles[i]);
+				label.innerHTML = labels[i];
+				grid.appendChild(label);
+
+				var ratio = value / Math.abs(lines.max - lines.min);
+				if (!lines.logarithmic) ratio *= 100;
+				if (lines.min > lines.max) ratio = 100 - ratio;
+				if (lines.orientation === 'x') {
+					label.style.left = ratio + '%';
+				}
+				else {
+					label.style.top = (100 - ratio) + '%';
+				}
+			}
+
+			if (within(value, min, max)) {
+				label.removeAttribute('hidden');
+			} else {
+				label.setAttribute('hidden', true);
+			}
+		});
+
+	}, this);
 
 
 	//detect decades
