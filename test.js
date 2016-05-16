@@ -54,12 +54,25 @@ test.only('logarithmic', function () {
 				min: -100,
 				max: 0,
 				orientation: 'y'
-			}
+			},
+			{
+				min: 20,
+				max: 20000,
+				orientation: 'x',
+				logarithmic: true,
+				values: function (value) {
+					if (value.toString()[0] !== '1') return null;
+					return value;
+				},
+				style: {
+					borderLeftStyle: 'solid'
+				}
+			},
 		],
 		axes: [
 			{
 				labels: function (value, i, opt) {
-					if (value.toString()[0] !== '2' && value.toString()[0] !== '1') return null;
+					if (value.toString()[0] !== '2' && value.toString()[0] !== '1' && value.toString()[0] !== '5') return null;
 					return opt.titles[i];
 				}
 			},

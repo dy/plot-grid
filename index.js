@@ -102,11 +102,11 @@ Grid.prototype.update = function (options) {
 	}
 
 	//set lines
-	this.lines.forEach(function (lines, i) {
+	this.lines.forEach(function (lines, idx) {
 		//temp object keeping state of current lines run
 		var stats = {};
 
-		if (options.lines) lines = extend(this.lines[i], options.lines[i]);
+		if (options.lines) lines = extend(this.lines[idx], options.lines[idx]);
 		stats.lines = lines;
 
 		var linesMin = Math.min(lines.max, lines.min);
@@ -115,40 +115,41 @@ Grid.prototype.update = function (options) {
 		stats.max = linesMax;
 
 		//detect steps, if not defined, as one per each 50px
-		var values = lines.values;
-		if (!values) {
-			values = [];
-			var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 50;
-			if (intersteps < 1) {
-				values = [linesMin, linesMax];
+		var values = [];
+		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 50;
+		if (intersteps < 1) {
+			values = [linesMin, linesMax];
+		}
+		else if (!lines.logarithmic) {
+			var stepSize = (linesMax - linesMin) / Math.floor(intersteps);
+			var order = mag(stepSize);
+
+			stepSize = closestNumber(stepSize, [1, 2, 2.5, 5, 10].map((v) => v * order));
+
+			var start = stepSize * Math.round(linesMin / stepSize);
+
+			for (var step = start; step <= linesMax; step += stepSize) {
+				if (step < linesMin) continue;
+				values.push(step);
 			}
-			else if (!lines.logarithmic) {
-				var stepSize = (linesMax - linesMin) / Math.floor(intersteps);
-				var order = mag(stepSize);
+		}
+		else {
+			//each logarithmic divisor
+			if (linesMin < 0 && linesMax > 0) throw Error('Cannot create logarithmic grid spanning over zero');
 
-				stepSize = closestNumber(stepSize, [1, 2, 2.5, 5, 10].map((v) => v * order));
-
-				var start = stepSize * Math.round(linesMin / stepSize);
-
-				for (var step = start; step <= linesMax; step += stepSize) {
+			[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (base) {
+				var order = mag(linesMin);
+				var start = base * order;
+				for (var step = start; step <= linesMax; step *=10) {
 					if (step < linesMin) continue;
 					values.push(step);
 				}
-			}
-			else {
-				//each logarithmic divisor
-				if (linesMin < 0 && linesMax > 0) throw Error('Cannot create logarithmic grid spanning over zero');
-
-				[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (base) {
-					var order = mag(linesMin);
-					var start = base * order;
-					for (var step = start; step <= linesMax; step *=10) {
-						if (step < linesMin) continue;
-						values.push(step);
-					}
-				});
-			}
+			});
 		}
+
+		values = lines.values instanceof Function ?
+			values.map((v, i) => lines.values(v, i, stats), this).filter((v) => v != null) :
+			lines.values || values;
 		stats.values = values;
 
 		//define titles
@@ -160,11 +161,11 @@ Grid.prototype.update = function (options) {
 
 		//draw lines
 		var offsets = values.map(function (value, i) {
-			var line = grid.querySelector(`#grid-line-${lines.orientation}-${value|0}`);
+			var line = grid.querySelector(`#grid-line-${lines.orientation}-${value|0}-${idx}`);
 			var ratio;
 			if (!line) {
 				line = document.createElement('span');
-				line.id = `grid-line-${lines.orientation}-${value|0}`;
+				line.id = `grid-line-${lines.orientation}-${value|0}-${idx}`;
 				line.classList.add('grid-line');
 				line.classList.add(`grid-line-${lines.orientation}`);
 				line.setAttribute('data-value', value);
@@ -185,6 +186,14 @@ Grid.prototype.update = function (options) {
 				else {
 					line.style.top = (100 - ratio) + '%';
 				}
+
+				if (lines.style) {
+					for (var prop in lines.style) {
+						var val = lines.style[prop];
+						if (typeof val === 'number') val += 'px';
+						line.style[prop] = val;
+					}
+				}
 			}
 			else {
 				ratio = parseFloat(line.getAttribute('data-value'));
@@ -197,12 +206,12 @@ Grid.prototype.update = function (options) {
 
 
 		//draw axes
-		var axis = this.axes[i];
+		var axis = this.axes[idx];
 
 		//do not paint inexisting axis
 		if (!axis) return;
 
-		if (options.axes) axis = extend(this.axes[i], options.axes[i]);
+		if (options.axes) axis = extend(this.axes[idx], options.axes[idx]);
 		stats.axis = axis;
 
 		//define values
@@ -224,7 +233,7 @@ Grid.prototype.update = function (options) {
 		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}`);
 		if (!axisEl) {
 			axisEl = document.createElement('span');
-			axisEl.id = `grid-axis-${lines.orientation}`;
+			axisEl.id = `grid-axis-${lines.orientation}-${idx}`;
 			axisEl.classList.add('grid-axis');
 			axisEl.classList.add(`grid-axis-${lines.orientation}`);
 			axisEl.setAttribute('data-name', axis.name);
@@ -237,10 +246,10 @@ Grid.prototype.update = function (options) {
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
 
-			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}`);
+			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}-${idx}`);
 			if (!label) {
 				label = document.createElement('label');
-				label.id = `grid-label-${lines.orientation}-${value|0}`;
+				label.id = `grid-label-${lines.orientation}-${value|0}-${idx}`;
 				label.classList.add('grid-label');
 				label.classList.add(`grid-label-${lines.orientation}`);
 				label.setAttribute('data-value', value);

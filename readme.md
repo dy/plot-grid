@@ -32,10 +32,12 @@ var grid = createGrid({
 			orientation: 'y',
 			min: -100,
 			max: 0,
-			// logarithmic: false,
-			// values: null,
+			//undefined values are detected automatically
 			titles: function (value, i, stats) {
 				return value.toLocalString() + 'db';
+			},
+			style: {
+				color: 'black'
 			}
 		}
 	],
