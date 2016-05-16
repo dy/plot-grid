@@ -7,7 +7,7 @@ if (isBrowser) {
 }
 
 
-test.skip('linear', function () {
+test.only('linear', function () {
 	var grid = Grid({
 		viewport: function (w, h) {
 			return [60, 20, w - 80, h - 80];
@@ -35,7 +35,7 @@ test.skip('linear', function () {
 	window.addEventListener('resize', () => grid.update());
 });
 
-test.only('logarithmic', function () {
+test.skip('logarithmic', function () {
 	var grid = Grid({
 		viewport: function (w, h) {
 			return [60, 20, w - 80, h - 80];
