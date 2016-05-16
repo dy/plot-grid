@@ -32,9 +32,8 @@ var grid = createGrid({
 			orientation: 'y',
 			min: -100,
 			max: 0,
-			//↓ detected automatically depending on scale
-			values: null,
-			//↓ can be a function mapping values
+			// logarithmic: false,
+			// values: null,
 			titles: function (value, i, stats) {
 				return value.toLocalString() + 'db';
 			}
@@ -45,6 +44,8 @@ var grid = createGrid({
 	axes: [
 		{
 			name: 'Frequency',
+			// values: null,
+			// titles: null,
 			labels: [20, 200, '2k', '20k']
 		},
 		true

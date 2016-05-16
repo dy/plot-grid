@@ -62,9 +62,6 @@ Grid.prototype.defaultLines = {
 
 Grid.prototype.defaultAxis = {
 	name: '',
-	//copied from lines
-	min: null,
-	max: null,
 	//detected from range
 	values: null,
 	//copied from values
@@ -205,13 +202,8 @@ Grid.prototype.update = function (options) {
 		//do not paint inexisting axis
 		if (!axis) return;
 
-		var min = axis.min != null ? axis.min : lines.min;
-		var max = axis.max != null ? axis.max : lines.max;
-
 		if (options.axes) axis = extend(this.axes[i], options.axes[i]);
 		stats.axis = axis;
-		stats.axisMin = min;
-		stats.axisMax = max;
 
 		//define values
 		var axisValues = axis.values || values;
@@ -264,7 +256,7 @@ Grid.prototype.update = function (options) {
 				}
 			}
 
-			if (within(value, min, max)) {
+			if (within(value, linesMin, linesMax)) {
 				label.removeAttribute('hidden');
 			} else {
 				label.setAttribute('hidden', true);

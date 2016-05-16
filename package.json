@@ -16,7 +16,11 @@
     "plot",
     "grid",
     "lines",
-    "axis"
+    "axis",
+    "logarithmic",
+    "decibels",
+    "frequency",
+    "graph"
   ],
   "browserify": {
     "transform": [
