@@ -2,7 +2,7 @@ Grid component for visualizing plots, built with oldschool HTML5 and CSS3. Becau
 
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-[TODO: image]
+![linear grid](images/linear.png?raw=true "Linear grid")
 
 ## Usage
 
