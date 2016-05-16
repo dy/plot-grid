@@ -7,7 +7,7 @@ if (isBrowser) {
 }
 
 
-test('linear', function () {
+test.skip('linear', function () {
 	var grid = Grid({
 		viewport: function (w, h) {
 			return [60, 20, w - 80, h - 80];
@@ -35,8 +35,39 @@ test('linear', function () {
 	window.addEventListener('resize', () => grid.update());
 });
 
-test.skip('logarithmic', function () {
+test.only('logarithmic', function () {
+	var grid = Grid({
+		viewport: function (w, h) {
+			return [60, 20, w - 80, h - 80];
+		},
+		lines: [
+			{
+				min: 20,
+				max: 20000,
+				orientation: 'x',
+				logarithmic: true,
+				titles: function (value) {
+					return value >= 1000 ? ((value / 1000).toFixed(0) + 'k') : value;
+				}
+			},
+			{
+				min: -100,
+				max: 0,
+				orientation: 'y'
+			}
+		],
+		axes: [
+			{
+				labels: function (value, i, opt) {
+					if (value.toString()[0] !== '2' && value.toString()[0] !== '1') return null;
+					return opt.titles[i];
+				}
+			},
+			true
+		]
+	});
 
+	window.addEventListener('resize', () => grid.update());
 });
 
 test('polar');

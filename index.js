@@ -62,8 +62,9 @@ Grid.prototype.defaultLines = {
 
 Grid.prototype.defaultAxis = {
 	name: '',
-	min: 0,
-	max: 100,
+	//copied from lines
+	min: null,
+	max: null,
 	//detected from range
 	values: null,
 	//copied from values
@@ -105,7 +106,16 @@ Grid.prototype.update = function (options) {
 
 	//set lines
 	this.lines.forEach(function (lines, i) {
+		//temp object keeping state of current lines run
+		var stats = {};
+
 		if (options.lines) lines = extend(this.lines[i], options.lines[i]);
+		stats.lines = lines;
+
+		var linesMin = Math.min(lines.max, lines.min);
+		var linesMax = Math.max(lines.min, lines.max);
+		stats.min = linesMin;
+		stats.max = linesMax;
 
 		//detect steps, if not defined, as one per each 50px
 		var values = lines.values;
@@ -113,34 +123,48 @@ Grid.prototype.update = function (options) {
 			values = [];
 			var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 50;
 			if (intersteps < 1) {
-				values = [lines.min, lines.max];
-			} else {
-				var stepSize = Math.abs(lines.max - lines.min) / Math.floor(intersteps);
+				values = [linesMin, linesMax];
+			}
+			else if (!lines.logarithmic) {
+				var stepSize = (linesMax - linesMin) / Math.floor(intersteps);
 				var order = mag(stepSize);
 
 				stepSize = closestNumber(stepSize, [1, 2, 2.5, 5, 10].map((v) => v * order));
 
-				if (lines.min > lines.max) {
-					for (var step = lines.max; step <= lines.min; step += stepSize) {
-						values.push(step);
-					}
-				}
-				else {
-					for (var step = lines.min; step <= lines.max; step += stepSize) {
-						values.push(step);
-					}
+				var start = stepSize * Math.round(linesMin / stepSize);
+
+				for (var step = start; step <= linesMax; step += stepSize) {
+					if (step < linesMin) continue;
+					values.push(step);
 				}
 			}
+			else {
+				//each logarithmic divisor
+				if (linesMin < 0 && linesMax > 0) throw Error('Cannot create logarithmic grid spanning over zero');
+
+				[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (base) {
+					var order = mag(linesMin);
+					var start = base * order;
+					for (var step = start; step <= linesMax; step *=10) {
+						if (step < linesMin) continue;
+						values.push(step);
+					}
+				});
+			}
 		}
+		stats.values = values;
 
 		//define titles
-		var titles = lines.titles || values.slice().map(function (value) {
+		var titles = lines.titles instanceof Function ? values.map((v, i) => lines.titles(v, i, stats), this) :
+			lines.titles || values.slice().map(function (value) {
 			return value.toLocaleString();
 		});
+		stats.titles = titles;
 
 		//draw lines
-		values.forEach(function (value, i) {
+		var offsets = values.map(function (value, i) {
 			var line = grid.querySelector(`#grid-line-${lines.orientation}-${value|0}`);
+			var ratio;
 			if (!line) {
 				line = document.createElement('span');
 				line.id = `grid-line-${lines.orientation}-${value|0}`;
@@ -149,9 +173,15 @@ Grid.prototype.update = function (options) {
 				line.setAttribute('data-value', value);
 				line.setAttribute('title', titles[i]);
 				grid.appendChild(line);
-				var ratio = value / Math.abs(lines.max - lines.min);
-				if (!lines.logarithmic) ratio *= 100;
-				if (lines.min > lines.max) ratio = 100 - ratio;
+				if (!lines.logarithmic) {
+					ratio = (value - linesMin) / (linesMax - linesMin);
+				}
+				else {
+					ratio = (lg(value) - lg(linesMin)) / (lg(linesMax) - lg(linesMin));
+				}
+				if (lines.min > lines.max) ratio = 1 - ratio;
+
+				ratio *= 100;
 				if (lines.orientation === 'x') {
 					line.style.left = ratio + '%';
 				}
@@ -159,8 +189,14 @@ Grid.prototype.update = function (options) {
 					line.style.top = (100 - ratio) + '%';
 				}
 			}
+			else {
+				ratio = parseFloat(line.getAttribute('data-value'));
+			}
 			line.removeAttribute('hidden');
+
+			return ratio;
 		});
+		stats.offsets = offsets;
 
 
 		//draw axes
@@ -169,21 +205,28 @@ Grid.prototype.update = function (options) {
 		//do not paint inexisting axis
 		if (!axis) return;
 
+		var min = axis.min != null ? axis.min : lines.min;
+		var max = axis.max != null ? axis.max : lines.max;
+
 		if (options.axes) axis = extend(this.axes[i], options.axes[i]);
+		stats.axis = axis;
+		stats.axisMin = min;
+		stats.axisMax = max;
 
 		//define values
 		var axisValues = axis.values || values;
+		stats.axisValues = axisValues;
 
 		//define titles
-		var axisTitles = axis.titles || axisValues.slice().map(function (value) {
+		var axisTitles = axis.titles instanceof Function ? axisValues.map((v, i) => axis.titles(v, i, stats), this) : axis.titles ? axis.titles : axisValues === values ? titles : axisValues.slice().map(function (value) {
 			return value.toLocaleString();
 		});
+		stats.axisTitles = axisTitles;
 
 		//define labels
-		var labels = axis.labels || axisTitles;
+		var labels = axis.labels instanceof Function ? axisValues.map((v, i) => axis.labels(v, i, stats), this) : axis.labels || axisTitles;
+		stats.labels = labels;
 
-		var min = axis.min != null ? axis.min : lines.min;
-		var max = axis.max != null ? axis.max : lines.max;
 
 		//put axis properly
 		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}`);
@@ -195,31 +238,13 @@ Grid.prototype.update = function (options) {
 			axisEl.setAttribute('data-name', axis.name);
 			axisEl.setAttribute('title', axis.name);
 			grid.appendChild(axisEl);
-
-			var minRatio = min / Math.abs(lines.max - lines.min);
-
-			if (!lines.logarithmic) minRatio *= 100;
-			if (axis.orientation === 'x') {
-				axisEl.style.left = minRatio + '%';
-			}
-			else {
-				axisEl.style.bottom = minRatio + '%';
-			}
-
-			var maxRatio = 1 - max / Math.abs(lines.max - lines.min);
-
-			if (!lines.logarithmic) maxRatio *= 100;
-			if (axis.orientation === 'x') {
-				axisEl.style.right = maxRatio + '%';
-			}
-			else {
-				axisEl.style.top = maxRatio + '%';
-			}
 		}
 		axisEl.removeAttribute('hidden');
 
 		//draw labels
 		axisValues.forEach(function (value, i) {
+			if (value == null || labels[i] == null) return;
+
 			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}`);
 			if (!label) {
 				label = document.createElement('label');
@@ -231,15 +256,11 @@ Grid.prototype.update = function (options) {
 				label.setAttribute('title', axisTitles[i]);
 				label.innerHTML = labels[i];
 				grid.appendChild(label);
-
-				var ratio = value / Math.abs(lines.max - lines.min);
-				if (!lines.logarithmic) ratio *= 100;
-				if (lines.min > lines.max) ratio = 100 - ratio;
 				if (lines.orientation === 'x') {
-					label.style.left = ratio + '%';
+					label.style.left = offsets[i] + '%';
 				}
 				else {
-					label.style.top = (100 - ratio) + '%';
+					label.style.top = (100 - offsets[i]) + '%';
 				}
 			}
 
@@ -251,42 +272,6 @@ Grid.prototype.update = function (options) {
 		});
 
 	}, this);
-
-
-	//detect decades
-	// var decades = Math.round(lg(this.maxFrequency/this.minFrequency));
-	// var decadeOffset = lg(this.minFrequency/10);
-
-	//draw magnitude limits
-	// var mRange = this.maxDecibels - this.minDecibels;
-	// for (var m = this.minDecibels, i = 0; m <= this.maxDecibels; m += 10, i += 10) {
-	// 	line = document.createElement('span');
-	// 	line.classList.add('grid-line');
-	// 	line.classList.add('grid-line-v');
-	// 	if (!i) line.classList.add('grid-line-first');
-	// 	line.setAttribute('data-value', m.toLocaleString());
-	// 	line.style.bottom = 100 * i / mRange + '%';
-	// 	this.grid.appendChild(line);
-	// }
-	// line.classList.add('grid-line-last');
-
-
-	/** Map frequency to an x coord */
-	// function f2w (f, w, logarithmic) {
-	// 	if (logarithmic) {
-	// 		var decadeW = w / decades;
-	// 		return decadeW * (lg(f) - 1 - decadeOffset);
-	// 	} else {
-	// 		return
-	// 	}
-	// };
-
-
-	/** Map x coord to a frequency */
-	function w2f (x, w) {
-		var decadeW = w / decades;
-		return Math.pow(10, x/decadeW + 1 + decadeOffset);
-	};
 
 	this.emit('update');
 

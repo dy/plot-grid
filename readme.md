@@ -30,11 +30,14 @@ var grid = createGrid({
 		},
 		{
 			orientation: 'y',
-			logarithmic: false,
 			min: -100,
 			max: 0,
-			values: [0, -25, -50, -75, -100],
-			titles: ['0db', '-25db', '-50db', '-75db', '-100db']
+			//↓ detected automatically depending on scale
+			values: null,
+			//↓ can be a function mapping values
+			titles: function (value, i, stats) {
+				return value.toLocalString() + 'db';
+			}
 		}
 	],
 
