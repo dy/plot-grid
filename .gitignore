@@ -56,7 +56,7 @@ docs
 *.pdf
 *.pak
 
-
+demo
 design
 instances
 *node_modules
