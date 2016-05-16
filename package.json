@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node test.js",
     "test:browser": "budo test.js",
-    "build": "browserify test.js -o demo/bundle.js"
+    "build": "browserify test.js -t bubleify -o demo/bundle.js"
   },
   "repository": {
     "type": "git",
