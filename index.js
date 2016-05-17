@@ -42,7 +42,7 @@ function Grid (options) {
 	this.lines.forEach(function (lines, idx) {
 		var linesContainer = document.createElement('div');
 		linesContainer.classList.add('.grid-lines');
-		linesContainer.id = `.grid-lines-${lines.orientation}-${idx}`;
+		linesContainer.id = `grid-lines-${lines.orientation}-${idx}`;
 		this.grid.appendChild(linesContainer);
 		this.linesContainers[idx] = linesContainer;
 	}, this);
