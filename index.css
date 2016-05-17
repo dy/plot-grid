@@ -37,37 +37,37 @@
 
 .grid-line-x {
 	height: 100%;
-	margin-left: -.25rem;
+	width: 0;
+	border-left: 1px dotted;
+	margin-left: -1px;
 }
 .grid-line-x:after {
 	content: '';
-	border-left: 1px dotted;
-	width: 0;
+	position: absolute;
+	width: .5rem;
 	top: 0;
 	bottom: 0;
-	position: absolute;
-	left: .25rem;
-	margin-left: -1px;
+	left: -.25rem;
 }
-.grid-line-x.grid-line-min:after {
+.grid-line-x.grid-line-min {
 	margin-left: 0px;
 }
 
 .grid-line-y {
-	margin-top: -.25rem;
 	width: 100%;
+	height: 0;
+	margin-top: -1px;
+	border-top: 1px dotted;
 }
 .grid-line-y:after {
 	content: '';
-	border-top: 1px dotted;
 	position: absolute;
-	height: 0;
+	height: .5rem;
 	left: 0;
 	right: 0;
-	top: .25rem;
-	margin-top: -1px;
+	top: -.25rem;
 }
-.grid-line-y.grid-line-max:after {
+.grid-line-y.grid-line-max {
 	margin-top: 0px;
 }
 
