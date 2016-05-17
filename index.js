@@ -33,8 +33,19 @@ function Grid (options) {
 	this.grid.classList.add('grid');
 	this.container.appendChild(this.grid);
 
+	//ensure lines values
 	this.lines = (options.lines || []).map((lines) => lines && extend(this.defaultLines, lines));
 	this.axes = (options.axes || []).map((axis) => axis && extend(this.defaultAxis, axis));
+
+	//create lines containers
+	this.linesContainers = [];
+	this.lines.forEach(function (lines, idx) {
+		var linesContainer = document.createElement('div');
+		linesContainer.classList.add('.grid-lines');
+		linesContainer.id = `.grid-lines-${lines.orientation}-${idx}`;
+		this.grid.appendChild(linesContainer);
+		this.linesContainers[idx] = linesContainer;
+	}, this);
 
 	this.update(options);
 }
@@ -74,6 +85,7 @@ Grid.prototype.update = function (options) {
 	options = options || {};
 
 	var grid = this.grid;
+	var linesContainers = this.linesContainers;
 
 	//set viewport
 	if (options.viewport) this.viewport = options.viewport;
@@ -88,10 +100,10 @@ Grid.prototype.update = function (options) {
 
 	if (!viewport) viewport = [0,0,w,h];
 
-	this.grid.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
-	this.grid.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');
-	this.grid.style.width = viewport[2] + (typeof viewport[2] === 'number' ? 'px' : '');
-	this.grid.style.height = viewport[3] + (typeof viewport[3] === 'number' ? 'px' : '');
+	grid.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
+	grid.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');
+	grid.style.width = viewport[2] + (typeof viewport[2] === 'number' ? 'px' : '');
+	grid.style.height = viewport[3] + (typeof viewport[3] === 'number' ? 'px' : '');
 
 	//hide all lines first
 	var lines = grid.querySelectorAll('.grid-line');
@@ -107,8 +119,12 @@ Grid.prototype.update = function (options) {
 	this.lines.forEach(function (lines, idx) {
 		if (!lines) return;
 
+		var linesContainer = linesContainers[idx];
+
 		//temp object keeping state of current lines run
-		var stats = {};
+		var stats = {
+			linesContainer: linesContainer
+		};
 
 		if (options.lines) lines = extend(this.lines[idx], options.lines[idx]);
 		stats.lines = lines;
@@ -120,7 +136,7 @@ Grid.prototype.update = function (options) {
 
 		//detect steps, if not defined, as one per each 50px
 		var values = [];
-		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : this.grid.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : this.grid.clientHeight)) / 50;
+		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight)) / 50;
 		if (intersteps < 1) {
 			values = [linesMin, linesMax];
 		}
@@ -165,7 +181,7 @@ Grid.prototype.update = function (options) {
 
 		//draw lines
 		var offsets = values.map(function (value, i) {
-			var line = grid.querySelector(`#grid-line-${lines.orientation}-${value|0}-${idx}`);
+			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}-${value|0}-${idx}`);
 			var ratio;
 			if (!line) {
 				line = document.createElement('span');
@@ -174,7 +190,7 @@ Grid.prototype.update = function (options) {
 				line.classList.add(`grid-line-${lines.orientation}`);
 				line.setAttribute('data-value', value);
 				line.setAttribute('title', titles[i]);
-				grid.appendChild(line);
+				linesContainer.appendChild(line);
 				if (!lines.logarithmic) {
 					ratio = (value - linesMin) / (linesMax - linesMin);
 				}

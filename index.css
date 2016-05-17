@@ -10,29 +10,57 @@
 	right: 0;
 	font-family: sans-serif;
 }
+
+.grid-lines {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	overflow: hidden;
+}
+
 .grid-line {
 	position: absolute;
 	top: 0;
 	left: 0;
-	width: 0;
-	height: 0;
+	width: .5rem;
+	height: .5rem;
 	color: rgba(127,127,127,.3);
 }
 .grid-line[hidden] {
 	display: none;
 }
+.grid-line:hover {
+	color: rgba(127,127,127,.5);
+}
 
 .grid-line-x {
-	border-left: 1px dotted;
-	margin-left: -1px;
 	height: 100%;
+	margin-left: -.25rem;
+}
+.grid-line-x:after {
+	content: '';
+	border-left: 1px dotted;
+	width: 0;
+	top: 0;
+	bottom: 0;
+	position: absolute;
+	left: .25rem;
 }
 
 .grid-line-y {
-	margin-top: -1px;
-	border-bottom: 1px dotted;
+	margin-top: -.25rem;
 	width: 100%;
-	top: auto;
+}
+.grid-line-y:after {
+	content: '';
+	border-top: 1px dotted;
+	position: absolute;
+	height: 0;
+	left: 0;
+	right: 0;
+	top: .25rem;
 }
 
 .grid-axis {
