@@ -12,6 +12,7 @@ var className = sf('./index.css');
 var closestNumber = require('mumath/closest');
 var mag = require('mumath/order');
 var within = require('mumath/within');
+var uid = require('get-uid');
 
 
 module.exports = Grid;
@@ -21,6 +22,8 @@ function Grid (options) {
 	if (!(this instanceof Grid)) return new Grid(options);
 
 	extend(this, options);
+
+	this.id = uid();
 
 	if (!isBrowser) return;
 
@@ -37,15 +40,10 @@ function Grid (options) {
 	this.lines = (options.lines || []).map((lines) => lines && extend(this.defaultLines, lines));
 	this.axes = (options.axes || []).map((axis) => axis && extend(this.defaultAxis, axis));
 
-	//create lines containers
-	this.linesContainers = [];
-	this.lines.forEach(function (lines, idx) {
-		var linesContainer = document.createElement('div');
-		linesContainer.classList.add('.grid-lines');
-		linesContainer.id = `grid-lines-${lines.orientation}-${idx}`;
-		this.grid.appendChild(linesContainer);
-		this.linesContainers[idx] = linesContainer;
-	}, this);
+	//create lines container
+	this.linesContainer = document.createElement('div');
+	this.linesContainer.classList.add('grid-lines');
+	this.grid.appendChild(this.linesContainer);
 
 	this.update(options);
 }
@@ -85,7 +83,8 @@ Grid.prototype.update = function (options) {
 	options = options || {};
 
 	var grid = this.grid;
-	var linesContainers = this.linesContainers;
+	var linesContainer = this.linesContainer;
+	var id = this.id;
 
 	//set viewport
 	if (options.viewport) this.viewport = options.viewport;
@@ -119,11 +118,11 @@ Grid.prototype.update = function (options) {
 	this.lines.forEach(function (lines, idx) {
 		if (!lines) return;
 
-		var linesContainer = linesContainers[idx];
-
 		//temp object keeping state of current lines run
 		var stats = {
-			linesContainer: linesContainer
+			linesContainer: linesContainer,
+			idx: idx,
+			id: id
 		};
 
 		if (options.lines) lines = extend(this.lines[idx], options.lines[idx]);
@@ -181,13 +180,15 @@ Grid.prototype.update = function (options) {
 
 		//draw lines
 		var offsets = values.map(function (value, i) {
-			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}-${value|0}-${idx}`);
+			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}-${value|0}-${idx}-${id}`);
 			var ratio;
 			if (!line) {
 				line = document.createElement('span');
-				line.id = `grid-line-${lines.orientation}-${value|0}-${idx}`;
+				line.id = `grid-line-${lines.orientation}-${value|0}-${idx}-${id}`;
 				line.classList.add('grid-line');
 				line.classList.add(`grid-line-${lines.orientation}`);
+				if (value === linesMin) line.classList.add('grid-line-min');
+				if (value === linesMax) line.classList.add('grid-line-max');
 				line.setAttribute('data-value', value);
 				line.setAttribute('title', titles[i]);
 				linesContainer.appendChild(line);
@@ -250,10 +251,10 @@ Grid.prototype.update = function (options) {
 
 
 		//put axis properly
-		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}`);
+		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}-${idx}-${id}`);
 		if (!axisEl) {
 			axisEl = document.createElement('span');
-			axisEl.id = `grid-axis-${lines.orientation}-${idx}`;
+			axisEl.id = `grid-axis-${lines.orientation}-${idx}-${id}`;
 			axisEl.classList.add('grid-axis');
 			axisEl.classList.add(`grid-axis-${lines.orientation}`);
 			axisEl.setAttribute('data-name', axis.name);
@@ -266,10 +267,10 @@ Grid.prototype.update = function (options) {
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
 
-			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}-${idx}`);
+			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}-${idx}-${id}`);
 			if (!label) {
 				label = document.createElement('label');
-				label.id = `grid-label-${lines.orientation}-${value|0}-${idx}`;
+				label.id = `grid-label-${lines.orientation}-${value|0}-${idx}-${id}`;
 				label.classList.add('grid-label');
 				label.classList.add(`grid-label-${lines.orientation}`);
 				label.setAttribute('data-value', value);

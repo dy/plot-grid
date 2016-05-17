@@ -37,6 +37,7 @@
     "tst": "^1.3.1"
   },
   "dependencies": {
+    "get-uid": "^1.0.1",
     "inherits": "^2.0.1",
     "insert-css": "^0.2.0",
     "is-browser": "^2.0.1",

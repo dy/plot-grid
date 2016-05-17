@@ -47,6 +47,10 @@
 	bottom: 0;
 	position: absolute;
 	left: .25rem;
+	margin-left: -1px;
+}
+.grid-line-x.grid-line-min:after {
+	margin-left: 0px;
 }
 
 .grid-line-y {
@@ -61,6 +65,10 @@
 	left: 0;
 	right: 0;
 	top: .25rem;
+	margin-top: -1px;
+}
+.grid-line-y.grid-line-max:after {
+	margin-top: 0px;
 }
 
 .grid-axis {
