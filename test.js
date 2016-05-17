@@ -22,7 +22,8 @@ test.only('linear', function () {
 				min: 0,
 				max: 100,
 				orientation: 'y'
-			}
+			},
+			false
 		],
 
 		axes: [

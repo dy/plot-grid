@@ -33,8 +33,8 @@ function Grid (options) {
 	this.grid.classList.add('grid');
 	this.container.appendChild(this.grid);
 
-	this.lines = (options.lines || []).map((lines) => extend(this.defaultLines, lines));
-	this.axes = (options.axes || []).map((axis) => extend(this.defaultAxis, axis));
+	this.lines = (options.lines || []).map((lines) => lines && extend(this.defaultLines, lines));
+	this.axes = (options.axes || []).map((axis) => axis && extend(this.defaultAxis, axis));
 
 	this.update(options);
 }
