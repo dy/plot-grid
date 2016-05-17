@@ -105,6 +105,8 @@ Grid.prototype.update = function (options) {
 
 	//set lines
 	this.lines.forEach(function (lines, idx) {
+		if (!lines) return;
+
 		//temp object keeping state of current lines run
 		var stats = {};
 
