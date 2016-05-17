@@ -64,19 +64,19 @@ Grid.prototype.defaultLines = {
 	min: 0,
 	max: 100,
 	//detected from range
-	values: null,
+	values: undefined,
 	//copied from values
-	titles: null
+	titles: undefined
 };
 
 Grid.prototype.defaultAxis = {
 	name: '',
 	//detected from range
-	values: null,
+	values: undefined,
 	//copied from values
-	labels: null,
+	labels: undefined,
 	//copied from labels
-	titles: null
+	titles: undefined
 };
 
 Grid.prototype.update = function (options) {
@@ -173,9 +173,9 @@ Grid.prototype.update = function (options) {
 
 		//define titles
 		var titles = lines.titles instanceof Function ? values.map((v, i) => lines.titles(v, i, stats), this) :
-			lines.titles || values.slice().map(function (value) {
+			lines.titles === undefined ? values.slice().map(function (value) {
 			return value.toLocaleString();
-		});
+		}) : lines.titles;
 		stats.titles = titles;
 
 		//draw lines
@@ -190,7 +190,7 @@ Grid.prototype.update = function (options) {
 				if (value === linesMin) line.classList.add('grid-line-min');
 				if (value === linesMax) line.classList.add('grid-line-max');
 				line.setAttribute('data-value', value);
-				line.setAttribute('title', titles[i]);
+				titles && line.setAttribute('title', titles[i]);
 				linesContainer.appendChild(line);
 				if (!lines.logarithmic) {
 					ratio = (value - linesMin) / (linesMax - linesMin);
@@ -240,9 +240,9 @@ Grid.prototype.update = function (options) {
 		stats.axisValues = axisValues;
 
 		//define titles
-		var axisTitles = axis.titles instanceof Function ? axisValues.map((v, i) => axis.titles(v, i, stats), this) : axis.titles ? axis.titles : axisValues === values ? titles : axisValues.slice().map(function (value) {
+		var axisTitles = axis.titles instanceof Function ? axisValues.map((v, i) => axis.titles(v, i, stats), this) : axis.titles ? axis.titles : axisValues === values ? titles : axis.titles === undefined ? axisValues.slice().map(function (value) {
 			return value.toLocaleString();
-		});
+		}) : axis.titles;
 		stats.axisTitles = axisTitles;
 
 		//define labels
@@ -275,7 +275,7 @@ Grid.prototype.update = function (options) {
 				label.classList.add(`grid-label-${lines.orientation}`);
 				label.setAttribute('data-value', value);
 				label.setAttribute('for', `grid-line-${lines.orientation}`);
-				label.setAttribute('title', axisTitles[i]);
+				axisTitles && label.setAttribute('title', axisTitles[i]);
 				label.innerHTML = labels[i];
 				grid.appendChild(label);
 				if (lines.orientation === 'x') {
