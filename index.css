@@ -17,6 +17,7 @@
 	left: 0;
 	bottom: 0;
 	right: 0;
+	color: rgb(127,127,127);
 	overflow: hidden;
 }
 
@@ -26,13 +27,13 @@
 	left: 0;
 	width: .5rem;
 	height: .5rem;
-	color: rgba(127,127,127,.3);
+	opacity: .3;
 }
 .grid-line[hidden] {
 	display: none;
 }
 .grid-line:hover {
-	color: rgba(127,127,127,.5);
+	opacity: .5;
 }
 
 .grid-line-x {
