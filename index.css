@@ -17,7 +17,6 @@
 	left: 0;
 	bottom: 0;
 	right: 0;
-	color: rgb(127,127,127);
 	overflow: hidden;
 }
 
@@ -27,13 +26,13 @@
 	left: 0;
 	width: .5rem;
 	height: .5rem;
-	opacity: .3;
+	opacity: .135;
 }
 .grid-line[hidden] {
 	display: none;
 }
 .grid-line:hover {
-	opacity: .5;
+	opacity: .27;
 }
 
 .grid-line-x {

@@ -60,6 +60,9 @@ grid.update({
 		lines: width < 100 ? [0, 50, 100] : [0, 25, 50, 75, 100]
 	}
 });
+
+//preset lines style
+grid.linesContainer.style.color = 'gray';
 ```
 
 You can also style axis/lines, see [index.css](./index.css) for CSS classes to override.
