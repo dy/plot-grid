@@ -180,11 +180,11 @@ Grid.prototype.update = function (options) {
 
 		//draw lines
 		var offsets = values.map(function (value, i) {
-			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}-${value|0}-${idx}-${id}`);
+			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}-${lines.logarithmic}-${value|0}-${idx}-${id}`);
 			var ratio;
 			if (!line) {
 				line = document.createElement('span');
-				line.id = `grid-line-${lines.orientation}-${value|0}-${idx}-${id}`;
+				line.id = `grid-line-${lines.orientation}-${lines.logarithmic}-${value|0}-${idx}-${id}`;
 				line.classList.add('grid-line');
 				line.classList.add(`grid-line-${lines.orientation}`);
 				if (value === linesMin) line.classList.add('grid-line-min');
@@ -251,10 +251,10 @@ Grid.prototype.update = function (options) {
 
 
 		//put axis properly
-		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}-${idx}-${id}`);
+		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}-${lines.logarithmic}-${idx}-${id}`);
 		if (!axisEl) {
 			axisEl = document.createElement('span');
-			axisEl.id = `grid-axis-${lines.orientation}-${idx}-${id}`;
+			axisEl.id = `grid-axis-${lines.orientation}-${lines.logarithmic}-${idx}-${id}`;
 			axisEl.classList.add('grid-axis');
 			axisEl.classList.add(`grid-axis-${lines.orientation}`);
 			axisEl.setAttribute('data-name', axis.name);
@@ -267,14 +267,14 @@ Grid.prototype.update = function (options) {
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
 
-			var label = grid.querySelector(`#grid-label-${lines.orientation}-${value|0}-${idx}-${id}`);
+			var label = grid.querySelector(`#grid-label-${lines.orientation}-${lines.logarithmic}-${value|0}-${idx}-${id}`);
 			if (!label) {
 				label = document.createElement('label');
-				label.id = `grid-label-${lines.orientation}-${value|0}-${idx}-${id}`;
+				label.id = `grid-label-${lines.orientation}-${lines.logarithmic}-${value|0}-${idx}-${id}`;
 				label.classList.add('grid-label');
 				label.classList.add(`grid-label-${lines.orientation}`);
 				label.setAttribute('data-value', value);
-				label.setAttribute('for', `grid-line-${lines.orientation}`);
+				label.setAttribute('for', `grid-line-${lines.orientation}-${lines.logarithmic}-${value|0}-${idx}-${id}`);
 				axisTitles && label.setAttribute('title', axisTitles[i]);
 				label.innerHTML = labels[i];
 				grid.appendChild(label);

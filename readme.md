@@ -54,11 +54,12 @@ var grid = createGrid({
 	]
 });
 
+//optionally pass options to update to redefine grid style
 grid.update({
 	viewport: [20, 20, width, height],
-	x: {
-		lines: width < 100 ? [0, 50, 100] : [0, 25, 50, 75, 100]
-	}
+	lines: [{
+		logarithmic: false
+	}]
 });
 
 //preset lines style
