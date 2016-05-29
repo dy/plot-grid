@@ -31,10 +31,9 @@ function Grid (options) {
 	this.container = options.container || document.body;
 	this.container.classList.add(className);
 
-	//display grid
-	this.grid = document.createElement('div');
-	this.grid.classList.add('grid');
-	this.container.appendChild(this.grid);
+	this.gridElement = document.createElement('div');
+	this.gridElement.classList.add('grid');
+	this.container.appendChild(this.gridElement);
 
 	//ensure lines values
 	this.lines = (options.lines || []).map((lines) => lines && extend(this.defaultLines, lines));
@@ -42,8 +41,8 @@ function Grid (options) {
 
 	//create lines container
 	this.linesContainer = document.createElement('div');
+	this.gridElement.appendChild(this.linesContainer);
 	this.linesContainer.classList.add('grid-lines');
-	this.grid.appendChild(this.linesContainer);
 
 	this.update(options);
 }
@@ -82,7 +81,7 @@ Grid.prototype.defaultAxis = {
 Grid.prototype.update = function (options) {
 	options = options || {};
 
-	var grid = this.grid;
+	var gridElement = this.gridElement;
 	var linesContainer = this.linesContainer;
 	var id = this.id;
 
@@ -99,17 +98,27 @@ Grid.prototype.update = function (options) {
 
 	if (!viewport) viewport = [0,0,w,h];
 
-	grid.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
-	grid.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');
-	grid.style.width = viewport[2] + (typeof viewport[2] === 'number' ? 'px' : '');
-	grid.style.height = viewport[3] + (typeof viewport[3] === 'number' ? 'px' : '');
+	gridElement.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
+	gridElement.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');
+	gridElement.style.width = viewport[2] + (typeof viewport[2] === 'number' ? 'px' : '');
+	gridElement.style.height = viewport[3] + (typeof viewport[3] === 'number' ? 'px' : '');
+
+	//exceptional case of overflow:hidden
+	// if (this.container === document.body) {
+	// 	if (viewport[2] >= window.innerWidth || viewport[3] >= window.innerHeight) {
+	// 		linesContainer.style.overflow = 'hidden';
+	// 	}
+	// 	else {
+	// 		linesContainer.style.overflow = 'visible';
+	// 	}
+	// }
 
 	//hide all lines first
-	var lines = grid.querySelectorAll('.grid-line');
+	var lines = gridElement.querySelectorAll('.grid-line');
 	for (var i = 0; i < lines.length; i++) {
 		lines[i].setAttribute('hidden', true);
 	}
-	var labels = grid.querySelectorAll('.grid-label');
+	var labels = gridElement.querySelectorAll('.grid-label');
 	for (var i = 0; i < labels.length; i++) {
 		labels[i].setAttribute('hidden', true);
 	}
@@ -213,7 +222,6 @@ Grid.prototype.update = function (options) {
 				else {
 					line.style.top = (100 - ratio) + '%';
 				}
-
 				if (lines.style) {
 					for (var prop in lines.style) {
 						var val = lines.style[prop];
@@ -257,7 +265,7 @@ Grid.prototype.update = function (options) {
 
 
 		//put axis properly
-		var axisEl = grid.querySelector(`#grid-axis-${lines.orientation}${lines.logarithmic?'-log':''}-${idx}-${id}`);
+		var axisEl = gridElement.querySelector(`#grid-axis-${lines.orientation}${lines.logarithmic?'-log':''}-${idx}-${id}`);
 		if (!axisEl) {
 			axisEl = document.createElement('span');
 			axisEl.id = `grid-axis-${lines.orientation}${lines.logarithmic?'-log':''}-${idx}-${id}`;
@@ -265,7 +273,7 @@ Grid.prototype.update = function (options) {
 			axisEl.classList.add(`grid-axis-${lines.orientation}`);
 			axisEl.setAttribute('data-name', axis.name);
 			axisEl.setAttribute('title', axis.name);
-			grid.appendChild(axisEl);
+			gridElement.appendChild(axisEl);
 		}
 		axisEl.removeAttribute('hidden');
 
@@ -273,7 +281,7 @@ Grid.prototype.update = function (options) {
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
 
-			var label = grid.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+			var label = gridElement.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
 			if (!label) {
 				label = document.createElement('label');
 				label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`;
@@ -283,7 +291,7 @@ Grid.prototype.update = function (options) {
 				label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
 				axisTitles && label.setAttribute('title', axisTitles[i]);
 				label.innerHTML = labels[i];
-				grid.appendChild(label);
+				gridElement.appendChild(label);
 				if (lines.orientation === 'x') {
 					label.style.left = offsets[i] + '%';
 				}

@@ -8,9 +8,8 @@
 	left: 0;
 	bottom: 0;
 	right: 0;
-	font-family: sans-serif;
+	pointer-events: none;
 }
-
 .grid-lines {
 	position: absolute;
 	top: 0;
@@ -18,9 +17,11 @@
 	bottom: 0;
 	right: 0;
 	overflow: hidden;
+	pointer-events: none;
 }
 
 .grid-line {
+	pointer-events: all;
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -97,6 +98,8 @@
 	left: auto;
 	min-height: 1rem;
 	font-size: .8rem;
+	font-family: sans-serif;
+	pointer-events: all;
 }
 .grid-label-x {
 	bottom: auto;

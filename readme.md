@@ -42,7 +42,7 @@ var grid = createGrid({
 		}
 	],
 
-	//grid axes, in order according to the lines - settings or true/false
+	//grid axes, corresponding to the lines - settings or true/false
 	axes: [
 		{
 			name: 'Frequency',
@@ -54,7 +54,7 @@ var grid = createGrid({
 	]
 });
 
-//optionally pass options to update to redefine grid style
+//pass options to update grid style
 grid.update({
 	viewport: [20, 20, width, height],
 	lines: [{
