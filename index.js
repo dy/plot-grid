@@ -139,7 +139,7 @@ Grid.prototype.update = function (options) {
 				this.lines[idx].style = extend(this.lines[idx].style, options.lines[idx].style);
 				delete options.lines[idx].style;
 			}
-			lines = extend(this.lines[idx], options.lines[idx]);
+			this.lines[idx] = lines = extend(this.lines[idx], options.lines[idx]);
 		}
 		stats.lines = lines;
 
