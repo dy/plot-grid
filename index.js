@@ -142,7 +142,6 @@ Grid.prototype.update = function (options) {
 			this.lines[idx] = lines = extend(this.lines[idx], options.lines[idx]);
 		}
 		stats.lines = lines;
-
 		var linesMin = Math.min(lines.max, lines.min);
 		var linesMax = Math.max(lines.min, lines.max);
 		stats.min = linesMin;
@@ -207,31 +206,29 @@ Grid.prototype.update = function (options) {
 				line.setAttribute('data-value', value);
 				titles && line.setAttribute('title', titles[i]);
 				linesContainer.appendChild(line);
-				if (!lines.logarithmic) {
-					ratio = (value - linesMin) / (linesMax - linesMin);
-				}
-				else {
-					ratio = (lg(value) - lg(linesMin)) / (lg(linesMax) - lg(linesMin));
-				}
-				if (lines.min > lines.max) ratio = 1 - ratio;
+			}
 
-				ratio *= 100;
-				if (lines.orientation === 'x') {
-					line.style.left = ratio + '%';
-				}
-				else {
-					line.style.top = (100 - ratio) + '%';
-				}
-				if (lines.style) {
-					for (var prop in lines.style) {
-						var val = lines.style[prop];
-						if (typeof val === 'number') val += 'px';
-						line.style[prop] = val;
-					}
-				}
+			if (!lines.logarithmic) {
+				ratio = (value - linesMin) / (linesMax - linesMin);
 			}
 			else {
-				ratio = parseFloat(line.getAttribute('data-value'));
+				ratio = (lg(value) - lg(linesMin)) / (lg(linesMax) - lg(linesMin));
+			}
+			if (lines.min > lines.max) ratio = 1 - ratio;
+
+			ratio *= 100;
+			if (lines.orientation === 'x') {
+				line.style.left = ratio + '%';
+			}
+			else {
+				line.style.top = (100 - ratio) + '%';
+			}
+			if (lines.style) {
+				for (var prop in lines.style) {
+					var val = lines.style[prop];
+					if (typeof val === 'number') val += 'px';
+					line.style[prop] = val;
+				}
 			}
 			line.removeAttribute('hidden');
 
