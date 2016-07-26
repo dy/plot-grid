@@ -27,13 +27,13 @@
 	left: 0;
 	width: .5rem;
 	height: .5rem;
-	opacity: .135;
+	/*opacity: .135;*/
 }
 .grid-line[hidden] {
 	display: none;
 }
 .grid-line:hover {
-	opacity: .27;
+	/*opacity: .27;*/
 }
 
 .grid-line-x {
@@ -71,6 +71,39 @@
 .grid-line-y.grid-line-max {
 	margin-top: 0px;
 }
+
+/* radial lines */
+.grid-line-r {
+	height: 100%;
+	width: 100%;
+	left: 50%;
+	top: 50%;
+	border-radius: 50vw;
+	border: 1px dotted;
+}
+.grid-line-r.grid-line-min {
+}
+
+/* angular lines */
+.grid-line-a {
+	height: 0;
+	top: 0;
+	left: 0;
+	transform-origin: center center;
+	width: 100%;
+	border-top: 1px dotted;
+}
+.grid-line-a:after {
+	content: '';
+	position: absolute;
+	height: .5rem;
+	left: 0;
+	right: 0;
+	top: -.25rem;
+}
+.grid-line-a.grid-line-min {
+}
+
 
 .grid-axis {
 	position: absolute;

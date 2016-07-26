@@ -9,73 +9,86 @@ Grid component for visualizing plots, built with oldschool HTML5 and CSS3. Becau
 [![npm install plot-grid](https://nodei.co/npm/plot-grid.png?mini=true)](https://npmjs.org/package/plot-grid/)
 
 ```js
-var createGrid = require('plot-grid');
+```
 
-var grid = createGrid({
-	//where to place grid, by default - body
-	container: el,
+## API
 
-	//position within the container or function returning it
-	viewport: [0, 0, container.clientWidth, container.clientHeight],
+<details><summary>**`grid = new Grid(options)`**</summary>
 
-	//grid lines
-	lines: [
-		{
-			orientation: 'x',
-			logarithmic: true,
-			min: 20,
-			max: 20000,
-			values: [20, 200, 2000, 20000],
-			titles: ['20Hz', '200Hz', '2kHz', '20kHz']
+Create new grid instance. It can serve both as a class or constructor method (no `new`).
+
+Possible options are:
+
+```js
+//where to place grid, by default - body
+container: el,
+
+//position within the container or function returning it
+viewport: [0, 0, container.clientWidth, container.clientHeight],
+
+//grid lines
+lines: [
+	{
+		orientation: 'x',
+		logarithmic: true,
+		min: 20,
+		max: 20000,
+		values: [20, 200, 2000, 20000],
+		titles: ['20Hz', '200Hz', '2kHz', '20kHz']
+	},
+	{
+		orientation: 'y',
+		min: -100,
+		max: 0,
+		//undefined values are detected automatically
+		titles: function (value, i, stats) {
+			return value.toLocalString() + 'db';
 		},
-		{
-			orientation: 'y',
-			min: -100,
-			max: 0,
-			//undefined values are detected automatically
-			titles: function (value, i, stats) {
-				return value.toLocalString() + 'db';
-			},
-			style: {
-				color: 'black'
-			}
+		style: {
+			color: 'black'
 		}
-	],
+	}
+],
 
-	//grid axes, corresponding to the lines - settings or true/false
-	axes: [
-		{
-			name: 'Frequency',
-			// values: null,
-			// titles: null,
-			labels: [20, 200, '2k', '20k']
-		},
-		true
-	]
-});
+//grid axes, corresponding to the lines - settings or true/false
+axes: [
+	{
+		name: 'Frequency',
+		// values: null,
+		// titles: null,
+		labels: [20, 200, '2k', '20k']
+	},
+	true
+],
 
-//pass options to update grid style
+//change container color property to nudge lines color, can be string or object
+style: `color: gray;`
+```
+
+</details>
+<details><summary>**`grid.update(options)`**</summary>
+
+Pass new options to update grid style. Also should be called on if resize is needed.
+
+```js
 grid.update({
 	viewport: [20, 20, width, height],
 	lines: [{
 		logarithmic: false
 	}]
 });
-
-//preset lines style
-grid.linesContainer.style.color = 'gray';
 ```
+
+</details>
 
 You can also style axis/lines, see [index.css](./index.css) for CSS classes to override.
 
 
 ## Used by
 
-* [gl-spectrum](https://github.com/dfcreative/gl-spectrum)
-* [audio-spectrum](https://github.com/audio-lab/audio-spectrum)
-* [audio-stats](https://github.com/audio-lab/audio-stats)
-* [audio-waveform](https://github.com/audio-lab/audio-waveform)
-* [audio-spectrogram](https://github.com/audio-lab/audio-spectrogram)
+* [gl-spectrum](https://github.com/audio-lab/gl-spectrum)
+* [gl-spectrogram](https://github.com/audio-lab/gl-spectrogram)
+* [gl-waveform](https://github.com/audio-lab/gl-waveform)
 
 ## Thanks
 
