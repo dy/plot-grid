@@ -96,12 +96,12 @@ grid.update({
 ```
 
 </details>
-<details><summary>grid.element.style.color = 'green'</summary>
+<details><summary>**`grid.element.style.color = 'green'`**</summary>
 
 Change grid lines and axes color.
 
 </details>
-<details><summary>grid.element.style.setProperty('--opacity', value)</summary>
+<details><summary>**`grid.element.style.setProperty('--opacity', value)`**</summary>
 
 Change grid lines opacity. It will not change axes style.
 
