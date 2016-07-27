@@ -200,8 +200,8 @@
 
 .grid-label-r {
 	right: 100%;
+	top: calc(50% - .5rem);
 	margin-right: 1.5rem;
-	margin-top: -.5rem;
 }
 .grid-label-r:before {
 	content: '';

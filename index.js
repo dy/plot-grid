@@ -356,9 +356,8 @@ Grid.prototype.update = function (options) {
 			axisEl.style.borderRadius = minW + 'px';
 		}
 		else if (/r/.test(lines.orientation)) {
-			let w = Math.min(viewport[2], viewport[3]);
-			axisEl.style.marginTop = -w*100*.005 + 'px';
-			axisEl.style.height = w*100*.01 + 'px';
+			axisEl.style.marginTop = -minW*100*.005 + 'px';
+			axisEl.style.height = minW*100*.01 + 'px';
 		}
 
 		axisEl.removeAttribute('hidden');
@@ -406,7 +405,7 @@ Grid.prototype.update = function (options) {
 			}
 			else if (/r/.test(lines.orientation)) {
 				//ignore odds due to radius is reflected
-				if (i % 2) return;
+				// if (i % 2) return;
 
 				let labelTop = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`);
 				let labelBottom = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-bottom`);
@@ -436,8 +435,10 @@ Grid.prototype.update = function (options) {
 
 				labelBottom.innerHTML = labels[i];
 
-				labelTop.style.top = (50 - offsets[i]/2) + '%';
-				labelBottom.style.top = (50 + offsets[i]/2) + '%';
+				// labelTop.style.top = (50 - offsets[i]/2) + '%';
+				// labelBottom.style.top = (50 + offsets[i]/2) + '%';
+				labelTop.style.marginTop = -(minW*.5*offsets[i]/100) + 'px';
+				labelBottom.style.marginTop = (minW*.5*offsets[i]/100) + 'px';
 
 				if (within(value, linesMin, linesMax)) {
 					labelTop.removeAttribute('hidden');
