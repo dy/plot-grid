@@ -2,24 +2,26 @@
  * @module  plot-grid
  */
 
-var extend = require('xtend');
-var isBrowser = require('is-browser');
-var lg = require('mumath/lg');
-var Emitter = require('events').EventEmitter;
-var inherits = require('inherits');
-var closestNumber = require('mumath/closest');
-var mag = require('mumath/order');
-var within = require('mumath/within');
-var uid = require('get-uid');
-var insertStyles = require('insert-styles');
-var fs = require('fs');
+const extend = require('xtend');
+const isBrowser = require('is-browser');
+const lg = require('mumath/lg');
+const Emitter = require('events').EventEmitter;
+const inherits = require('inherits');
+const closestNumber = require('mumath/closest');
+const mag = require('mumath/order');
+const within = require('mumath/within');
+const uid = require('get-uid');
+const insertStyles = require('insert-styles');
+const fs = require('fs');
 
 insertStyles(fs.readFileSync(__dirname + '/index.css'));
 
 
 module.exports = Grid;
 
-
+/**
+ * @constructor
+ */
 function Grid (options) {
 	if (!(this instanceof Grid)) return new Grid(options);
 
@@ -45,7 +47,6 @@ function Grid (options) {
 	this.update(options);
 }
 
-
 inherits(Grid, Emitter);
 
 
@@ -55,6 +56,26 @@ Grid.prototype.viewport = null;
 Grid.prototype.lines = null;
 Grid.prototype.axes = null;
 
+Grid.prototype.prefixes = {
+	8: 'Y', // yotta
+	7: 'Z', // zetta
+	6: 'E', // exa
+	5: 'P', // peta
+	4: 'T', // tera
+	3: 'G', // giga
+	2: 'M', // mega
+	1: 'k', // kilo
+	0: '',
+	'-1': 'm', // milli
+	'-2': 'µ', // micro
+	'-3': 'n', // nano
+	'-4': 'p', // pico
+	'-5': 'f', // femto
+	'-6': 'a', // atto
+	'-7': 'z', // zepto
+	'-8': 'y'  // ycoto
+};
+
 Grid.prototype.defaultLines = {
 	orientation: 'x',
 	logarithmic: false,
@@ -63,7 +84,9 @@ Grid.prototype.defaultLines = {
 	//detected from range
 	values: undefined,
 	//copied from values
-	titles: undefined
+	titles: undefined,
+	format: true,
+	units: ''
 };
 
 Grid.prototype.defaultAxis = {
@@ -73,11 +96,15 @@ Grid.prototype.defaultAxis = {
 	//copied from values
 	labels: undefined,
 	//copied from labels
-	titles: undefined
+	titles: undefined,
+	format: true,
+	units: ''
 };
 
 Grid.prototype.update = function (options) {
 	options = options || {};
+
+	var that = this;
 
 	var element = this.element;
 	var linesContainer = this.linesContainer;
@@ -174,30 +201,41 @@ Grid.prototype.update = function (options) {
 			if (linesMin <= 0 && linesMax >= 0) throw Error('Cannot create logarithmic grid spanning over zero, including zero');
 
 			[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (base) {
-				// var order = mag(linesMin);
-				// var start = base * order;
-				// for (var step = start; step <= linesMax; step *=10) {
-				// 	if (step < linesMin) continue;
-				// 	values.push(step);
-				// }
+				var order = mag(linesMin);
+				var start = base * order;
+				for (var step = start; step <= linesMax; step *=10) {
+					if (step < linesMin) continue;
+					values.push(step);
+				}
 			});
 		}
 
 		values = lines.values instanceof Function ?
 			values.map((v, i) => lines.values(v, i, stats), this).filter((v) => v != null) :
 			lines.values || values;
+
+		//to avoid collisions
+		values = values.sort((a, b) => a - b);
+
 		stats.values = values;
 
 		//define titles
 		var titles = lines.titles instanceof Function ? values.map((v, i) => lines.titles(v, i, stats), this) :
-			lines.titles === undefined ? values.slice().map(function (value) {
-			return value.toLocaleString();
+			lines.titles === undefined ? values.map(function (value) {
+				let order = mag(value);
+				let power = Math.floor(Math.log(order) / Math.log(1000));
+				if (lines.format && that.prefixes[power]) {
+					value /= (power*1000);
+					return value.toLocaleString() + that.prefixes[power] + lines.units;
+				}
+				else {
+					return value.toLocaleString() + lines.units;
+				}
 		}) : lines.titles;
 		stats.titles = titles;
 
 		//draw lines
-		var offsets = values.reverse().map(function (value, i) {
-			i = values.length - 1 - i;
+		var offsets = values.map(function (value, i) {
 			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
 			var ratio;
 			if (!line) {
@@ -208,9 +246,10 @@ Grid.prototype.update = function (options) {
 				if (value === linesMin) line.classList.add('grid-line-min');
 				if (value === linesMax) line.classList.add('grid-line-max');
 				line.setAttribute('data-value', value);
-				titles && line.setAttribute('title', titles[i]);
 				linesContainer.appendChild(line);
 			}
+
+			titles && line.setAttribute('title', titles[i]);
 
 			if (!lines.logarithmic) {
 				ratio = (value - linesMin) / (linesMax - linesMin);
@@ -252,7 +291,6 @@ Grid.prototype.update = function (options) {
 			return ratio;
 		});
 		stats.offsets = offsets;
-
 
 		//draw axes
 		var axis = this.axes[idx];
@@ -309,8 +347,6 @@ Grid.prototype.update = function (options) {
 				label.classList.add(`grid-label-${lines.orientation}`);
 				label.setAttribute('data-value', value);
 				label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
-				axisTitles && label.setAttribute('title', axisTitles[i]);
-				label.innerHTML = labels[i];
 				element.appendChild(label);
 				if (lines.orientation === 'x') {
 					label.style.left = offsets[i] + '%';
@@ -319,6 +355,9 @@ Grid.prototype.update = function (options) {
 					label.style.top = (100 - offsets[i]) + '%';
 				}
 			}
+
+			label.innerHTML = labels[i];
+			axisTitles && label.setAttribute('title', axisTitles[i]);
 
 			if (within(value, linesMin, linesMax)) {
 				label.removeAttribute('hidden');

@@ -34,7 +34,8 @@ lines: [
 		min: 20,
 		max: 20000,
 		values: [20, 200, 2000, 20000],
-		titles: ['20Hz', '200Hz', '2kHz', '20kHz']
+		units: 'Hz',
+		titles: null // → ['20Hz', '200Hz', '2kHz', '20kHz']
 	},
 	{
 		orientation: 'y',

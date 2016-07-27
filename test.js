@@ -10,7 +10,7 @@ insertCss(`
 `);
 
 
-let padding = [40, 40, 40, 40]
+let padding = [60, 60, 60, 60]
 
 
 let grid = Grid({
@@ -28,7 +28,8 @@ let grid = Grid({
 			max: 100,
 			orientation: 'y'
 		}
-	]
+	],
+	axes: [true, true]
 });
 
 
@@ -110,7 +111,6 @@ window.addEventListener('resize', () => grid.update());
 
 var settings = createSettings({
 	viewport: {
-		label: 'Viewport',
 		type: 'text',
 		value: padding,
 		change: (v) => {
@@ -118,35 +118,70 @@ var settings = createSettings({
 			grid.update();
 		}
 	},
-	color: {type: 'color', label: 'Color', value: getComputedStyle(grid.element).color, change: c => {
+	color: {type: 'color', value: getComputedStyle(grid.element).color, change: c => {
 		grid.element.style.color = c;
 	}},
-	opacity: {type: 'range', label: 'Opacity', value: .135, min: 0, max: 1, change: c => {
+	opacity: {type: 'range', value: .135, min: 0, max: 1, change: c => {
 
 	}},
-	x: {type: 'raw', label: '<br/><strong>↔</strong>', title: 'Horizontal'},
-	xAxis: { type: 'checkbox', label: 'Axis', value: grid.axes[0], input: v => {
+	x: {type: 'raw', label: '<br/><strong>A lines</strong>', title: 'Horizontal'},
+	xLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		let lines = grid.lines;
+		lines[0].logarithmic = isLog;
+		if (isLog) {
+			lines[0].min = 1;
+			lines[0].max = 10000;
+		}
+		else {
+			lines[0].min = 0;
+			lines[0].max = 100;
+		}
+		grid.update({
+			lines: lines
+		});
+	}},
+	// xUnits: { label: 'units', type: 'text', value: '', change: v => {
+	// 	let lines = grid.lines;
+	// 	lines[0].units = v;
+	// 	grid.update({
+	// 		lines:  lines
+	// 	});
+	// }},
+	xOrientation: { label: 'orientation', type: 'switch', options: ['x', 'y', 'r', 'θ'], value: 'x'},
+	xRange: { type: 'interval', label: 'min..max', value: [1, 10000], min: 1, max: 20000, log: true },
+	xAxis: { type: 'checkbox', label: 'axis', value: grid.axes[0], change: v => {
 		let axes = grid.axes;
 		axes[0] = v;
 		grid.update({
 			axes:  axes
 		});
 	}},
-	xType: { label: 'Type', type: 'switch',	options: ['linear', 'logarithmic'], value: 'linear'},
-	xOrientation: { label: 'Orientation', type: 'switch',	options: ['x', 'y', 'r', 'θ'], value: 'x'},
-	xRange: { type: 'interval', label: 'Range', value: [1, 10000], min: 1, max: 20000, log: true },
 
-	y: {type: 'raw', label: '<br/><strong>↕</strong>', title: 'Vertical'},
-	yAxis: {type: 'checkbox', label: 'Axis', value: grid.axes[1], input: v => {
+	y: {type: 'raw', label: '<br/><strong>B lines</strong>', title: 'Vertical'},
+	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, style: 'width: 50%', change: isLog => {
+		let lines = grid.lines;
+		lines[1].logarithmic = isLog;
+		if (isLog) {
+			lines[1].min = 1;
+			lines[1].max = 10000;
+		}
+		else {
+			lines[1].min = 0;
+			lines[1].max = 100;
+		}
+		grid.update({
+			lines: lines
+		});
+	}},
+	yAxis: {type: 'checkbox', label: 'axis', value: grid.axes[1], change: v => {
 		let axes = grid.axes;
 		axes[1] = v;
 		grid.update({
 			axes:  axes
 		});
 	} },
-	yType: { label: 'Type', type: 'switch',	options: ['linear', 'logarithmic'], value: 'linear'},
-	yOrientation: { label: 'Orientation', type: 'switch',	options: ['x', 'y', 'r', 'θ'], value: 'x'},
-	yRange: { type: 'interval', label: 'Range', value: [1, 10000], min: 1, max: 20000, log: true}
+	yOrientation: { label: 'orientation', type: 'switch',	options: ['x', 'y', 'r', 'θ'], value: 'x'},
+	yRange: { type: 'interval', label: 'min..max', value: [1, 10000], min: 1, max: 20000, log: true}
 }, {
 	theme: require('settings-panel/theme/control'),
 	palette: ['white', 'black'],
