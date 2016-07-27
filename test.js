@@ -124,17 +124,19 @@ var settings = createSettings({
 	opacity: {type: 'range', value: .135, min: 0, max: 1, change: c => {
 
 	}},
-	x: {type: 'raw', label: '<br/><strong>A lines</strong>', title: 'Horizontal'},
+	x: {type: 'raw', label: '<br/><strong>X lines</strong>', title: 'Horizontal'},
 	xLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = grid.lines;
 		lines[0].logarithmic = isLog;
 		if (isLog) {
 			lines[0].min = 1;
 			lines[0].max = 10000;
+			settings.set('xRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
 		}
 		else {
 			lines[0].min = 0;
 			lines[0].max = 100;
+			settings.set('xRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
 		}
 		grid.update({
 			lines: lines
@@ -148,7 +150,14 @@ var settings = createSettings({
 	// 	});
 	// }},
 	xOrientation: { label: 'orientation', type: 'switch', options: ['x', 'y', 'r', 'θ'], value: 'x'},
-	xRange: { type: 'interval', label: 'min..max', value: [1, 10000], min: 1, max: 20000, log: true },
+	xRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
+		let lines = grid.lines;
+		lines[0].min = v[0];
+		lines[0].max = v[1];
+		grid.update({
+			lines: lines
+		});
+	}},
 	xAxis: { type: 'checkbox', label: 'axis', value: grid.axes[0], change: v => {
 		let axes = grid.axes;
 		axes[0] = v;
@@ -157,17 +166,19 @@ var settings = createSettings({
 		});
 	}},
 
-	y: {type: 'raw', label: '<br/><strong>B lines</strong>', title: 'Vertical'},
+	y: {type: 'raw', label: '<br/><strong>Y lines</strong>', title: 'Vertical'},
 	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, style: 'width: 50%', change: isLog => {
 		let lines = grid.lines;
 		lines[1].logarithmic = isLog;
 		if (isLog) {
 			lines[1].min = 1;
 			lines[1].max = 10000;
+			settings.set('yRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
 		}
 		else {
 			lines[1].min = 0;
 			lines[1].max = 100;
+			settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
 		}
 		grid.update({
 			lines: lines
@@ -181,7 +192,14 @@ var settings = createSettings({
 		});
 	} },
 	yOrientation: { label: 'orientation', type: 'switch',	options: ['x', 'y', 'r', 'θ'], value: 'x'},
-	yRange: { type: 'interval', label: 'min..max', value: [1, 10000], min: 1, max: 20000, log: true}
+	yRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
+		let lines = grid.lines;
+		lines[1].min = v[0];
+		lines[1].max = v[1];
+		grid.update({
+			lines: lines
+		});
+	}}
 }, {
 	theme: require('settings-panel/theme/control'),
 	palette: ['white', 'black'],

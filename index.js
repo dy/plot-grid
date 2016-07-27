@@ -210,6 +210,8 @@ Grid.prototype.update = function (options) {
 			});
 		}
 
+
+
 		values = lines.values instanceof Function ?
 			values.map((v, i) => lines.values(v, i, stats), this).filter((v) => v != null) :
 			lines.values || values;
@@ -335,6 +337,7 @@ Grid.prototype.update = function (options) {
 		}
 		axisEl.removeAttribute('hidden');
 
+
 		//draw labels
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
@@ -348,16 +351,42 @@ Grid.prototype.update = function (options) {
 				label.setAttribute('data-value', value);
 				label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
 				element.appendChild(label);
-				if (lines.orientation === 'x') {
-					label.style.left = offsets[i] + '%';
-				}
-				else if (lines.orientation === 'y' ) {
-					label.style.top = (100 - offsets[i]) + '%';
-				}
+			}
+
+			if (lines.orientation === 'x') {
+				label.style.left = offsets[i] + '%';
+			}
+			else if (lines.orientation === 'y' ) {
+				label.style.top = (100 - offsets[i]) + '%';
 			}
 
 			label.innerHTML = labels[i];
+
 			axisTitles && label.setAttribute('title', axisTitles[i]);
+
+			//hide label for special log case to avoid overlapping
+			if (lines.logarithmic) {
+				let start = parseInt(value.toPrecision(1)[0]);
+
+				if (values.length > intersteps * 2.4) {
+					if (start == 3) label.innerHTML = '';
+				}
+				if (values.length > intersteps * 2) {
+					if (start == 7) label.innerHTML = '';
+				}
+				if (values.length > intersteps * 1.7) {
+					if (start == 4) label.innerHTML = '';
+				}
+				if (values.length > intersteps * 1.5) {
+					if (start == 6) label.innerHTML = '';
+				}
+				if (values.length > intersteps * 1.2) {
+					if (start == 8) label.innerHTML = '';
+				}
+				if (values.length > intersteps * .9) {
+					if (start == 9) label.innerHTML = '';
+				}
+			}
 
 			if (within(value, linesMin, linesMax)) {
 				label.removeAttribute('hidden');
