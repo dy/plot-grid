@@ -32,88 +32,17 @@ let grid = Grid({
 		{
 			min: 0,
 			max: 100,
-			orientation: 'x'
+			orientation: 'r'
 		},
 		{
 			min: 0,
 			max: 100,
-			orientation: 'y'
+			orientation: 'a'
 		}
 	],
 	axes: [true, true]
 });
 
-
-
-	// var grid = Grid({
-	// 	viewport: function (w, h) {
-	// 		return [60, 20, w - 80, h - 80];
-	// 	},
-	// 	lines: [
-	// 		{
-	// 			min: 20,
-	// 			max: 20000,
-	// 			orientation: 'x',
-	// 			logarithmic: true,
-	// 			titles: function (value) {
-	// 				return value >= 1000 ? ((value / 1000).toFixed(0) + 'k') : value;
-	// 			}
-	// 		},
-	// 		{
-	// 			min: -100,
-	// 			max: 0,
-	// 			orientation: 'y'
-	// 		},
-	// 		{
-	// 			min: 20,
-	// 			max: 20000,
-	// 			orientation: 'x',
-	// 			logarithmic: true,
-	// 			values: function (value) {
-	// 				if (value.toString()[0] !== '1') return null;
-	// 				return value;
-	// 			},
-	// 			style: {
-	// 				borderLeftStyle: 'solid'
-	// 			}
-	// 		},
-	// 	],
-	// 	axes: [
-	// 		{
-	// 			labels: function (value, i, opt) {
-	// 				if (value.toString()[0] !== '2' && value.toString()[0] !== '1' && value.toString()[0] !== '5') return null;
-	// 				return opt.titles[i];
-	// 			}
-	// 		},
-	// 		true
-	// 	]
-	// });
-
-
-	// var grid = Grid({
-	// 	viewport: function (w, h) {
-	// 		return [60, 20, w - 80, h - 80];
-	// 	},
-	// 	lines: [
-	// 		{
-	// 			min: 0,
-	// 			max: 100,
-	// 			orientation: 'r'
-	// 		},
-	// 		{
-	// 			min: -100,
-	// 			max: 100,
-	// 			orientation: 'a'
-	// 		},
-	// 		false
-	// 	],
-
-	// 	axes: [
-	// 		true, {
-
-	// 		}
-	// 	]
-	// });
 
 window.addEventListener('resize', () => grid.update());
 
@@ -121,8 +50,24 @@ window.addEventListener('resize', () => grid.update());
 
 
 var settings = createSettings({
-	type: {type: 'switch', value: 'Cartesian', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: v => {
+	type: {type: 'switch', value: 'Polar', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: v => {
+		let lines = grid.lines;
+		if (v === 'Polar') {
+			settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
+			settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
 
+			lines[0].orientation = 'r';
+			lines[1].orientation = 'a';
+		}
+		else {
+			settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
+			settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
+
+			lines[0].orientation = 'x';
+			lines[1].orientation = 'y';
+		}
+
+		grid.update({lines: lines});
 	}},
 	viewport: {
 		type: 'text',
@@ -171,7 +116,6 @@ var settings = createSettings({
 			axes:  axes
 		});
 	}},
-	xOrientation: { label: 'orientation', type: 'switch', options: ['x', 'y', 'r', 'θ'], value: 'x'},
 	xRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
 		let lines = grid.lines;
 		lines[0].min = v[0];
@@ -206,7 +150,6 @@ var settings = createSettings({
 			axes:  axes
 		});
 	} },
-	yOrientation: { label: 'orientation', type: 'switch',	options: ['x', 'y', 'r', 'θ'], value: 'x'},
 	yRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
 		let lines = grid.lines;
 		lines[1].min = v[0];
@@ -216,9 +159,11 @@ var settings = createSettings({
 		});
 	}}
 }, {
+	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
 	theme: require('../settings-panel/theme/control'),
 	fontSize: 11,
 	// palette: ['black', 'white'],
 	fontFamily: 'monospace',
-	style: `position: absolute; top: 0px; right: 0px; padding: 20px; height: 100%; width: 300px; z-index: 1;`
+	style: `position: absolute; top: 0px; right: 0px; padding: 20px; height: 100%; width: 300px; z-index: 1;`,
+	css: '.settings-panel-title {text-align: left;}'
 });

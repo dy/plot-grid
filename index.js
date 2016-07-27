@@ -145,10 +145,14 @@ Grid.prototype.update = function (options) {
 	// 	}
 	// }
 
-	//hide all lines first
+	//hide all lines, labels, axes first
 	var lines = element.querySelectorAll('.grid-line');
 	for (var i = 0; i < lines.length; i++) {
 		lines[i].setAttribute('hidden', true);
+	}
+	var axes = element.querySelectorAll('.grid-axis');
+	for (var i = 0; i < axes.length; i++) {
+		axes[i].setAttribute('hidden', true);
 	}
 	var labels = element.querySelectorAll('.grid-label');
 	for (var i = 0; i < labels.length; i++) {
@@ -181,7 +185,8 @@ Grid.prototype.update = function (options) {
 
 		//detect steps, if not defined, as one per each 50px
 		var values = [];
-		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight)) / 50;
+		var minW = Math.min(viewport[2], viewport[3]);
+		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : lines.orientation === 'y' ? (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight) : minW ) / 50 ;
 		if (intersteps < 1) {
 			values = [linesMin, linesMax];
 		}
@@ -271,18 +276,18 @@ Grid.prototype.update = function (options) {
 				line.style.top = (100 - ratio) + '%';
 			}
 			else if (/r/.test(lines.orientation)) {
-				var w = Math.min(viewport[2], viewport[3]);
-				line.style.marginLeft = -w*ratio*.005 + 'px';
-				line.style.marginTop = -w*ratio*.005 + 'px';
-				line.style.width = w*ratio*.01 + 'px';
-				line.style.height = w*ratio*.01 + 'px';
-				line.style.borderRadius = w + 'px';
+				line.style.marginLeft = -minW*ratio*.005 + 'px';
+				line.style.marginTop = -minW*ratio*.005 + 'px';
+				line.style.width = minW*ratio*.01 + 'px';
+				line.style.height = minW*ratio*.01 + 'px';
+				line.style.borderRadius = minW + 'px';
 			}
 			else if (/a/.test(lines.orientation)) {
 				line.style.left = 0;
 				line.style.top = '50%';
 				line.style.transform = `rotate(${ratio * 360 / 100}deg)`;
 			}
+
 			if (lines.style) {
 				for (var prop in lines.style) {
 					var val = lines.style[prop];
@@ -336,7 +341,21 @@ Grid.prototype.update = function (options) {
 			axisEl.setAttribute('data-name', axis.name);
 			axisEl.setAttribute('title', axis.name);
 			element.appendChild(axisEl);
+
 		}
+		if (/a/.test(lines.orientation)) {
+			axisEl.style.marginLeft = -minW*100*.005 + 'px';
+			axisEl.style.marginTop = -minW*100*.005 + 'px';
+			axisEl.style.width = minW*100*.01 + 'px';
+			axisEl.style.height = minW*100*.01 + 'px';
+			axisEl.style.borderRadius = minW + 'px';
+		}
+		else if (/r/.test(lines.orientation)) {
+			let w = Math.min(viewport[2], viewport[3]);
+			axisEl.style.marginTop = -w*100*.005 + 'px';
+			axisEl.style.height = w*100*.01 + 'px';
+		}
+
 		axisEl.removeAttribute('hidden');
 
 
@@ -344,58 +363,121 @@ Grid.prototype.update = function (options) {
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
 
-			var label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
-			if (!label) {
-				label = document.createElement('label');
-				label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`;
-				label.classList.add('grid-label');
-				label.classList.add(`grid-label-${lines.orientation}`);
+			if (lines.orientation === 'x' || lines.orientation === 'y') {
+				let label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+
+				if (!label) {
+					label = document.createElement('label');
+					label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`;
+					label.classList.add('grid-label');
+					label.classList.add(`grid-label-${lines.orientation}`);
+					label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+					element.appendChild(label);
+				}
+
+				label.innerHTML = labels[i];
+
+				axisTitles && label.setAttribute('title', axisTitles[i]);
+
 				label.setAttribute('data-value', value);
-				label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
-				element.appendChild(label);
-			}
 
-			if (lines.orientation === 'x') {
-				label.style.left = offsets[i] + '%';
-			}
-			else if (lines.orientation === 'y' ) {
-				label.style.top = (100 - offsets[i]) + '%';
-			}
+				//hide label for special log case to avoid overlapping
+				if (lines.logarithmic) {
+					hideLogLabel(label, value);
+				}
 
-			label.innerHTML = labels[i];
+				if (lines.orientation === 'x') {
+					label.style.left = offsets[i] + '%';
+				}
+				else if (lines.orientation === 'y') {
+					label.style.top = (100 - offsets[i]) + '%';
+				}
 
-			axisTitles && label.setAttribute('title', axisTitles[i]);
-
-			//hide label for special log case to avoid overlapping
-			if (lines.logarithmic) {
-				let start = parseInt(value.toPrecision(1)[0]);
-
-				if (values.length > intersteps * 2.4) {
-					if (start == 3) label.innerHTML = '';
-				}
-				if (values.length > intersteps * 2) {
-					if (start == 7) label.innerHTML = '';
-				}
-				if (values.length > intersteps * 1.7) {
-					if (start == 4) label.innerHTML = '';
-				}
-				if (values.length > intersteps * 1.5) {
-					if (start == 6) label.innerHTML = '';
-				}
-				if (values.length > intersteps * 1.2) {
-					if (start == 8) label.innerHTML = '';
-				}
-				if (values.length > intersteps * .9) {
-					if (start == 9) label.innerHTML = '';
+				if (within(value, linesMin, linesMax)) {
+					label.removeAttribute('hidden');
+				} else {
+					label.setAttribute('hidden', true);
 				}
 			}
+			else if (/r/.test(lines.orientation)) {
+				//ignore odds due to radius is reflected
+				if (i % 2) return;
 
-			if (within(value, linesMin, linesMax)) {
-				label.removeAttribute('hidden');
-			} else {
-				label.setAttribute('hidden', true);
+				let labelTop = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`);
+				let labelBottom = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-bottom`);
+
+				if (!labelTop) {
+					labelTop = document.createElement('label');
+					labelTop.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`;
+					labelTop.classList.add('grid-label');
+					labelTop.classList.add(`grid-label-${lines.orientation}`);
+					labelTop.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+					element.appendChild(labelTop);
+				}
+
+				labelTop.innerHTML = labels[i];
+
+				axisTitles && labelTop.setAttribute('title', axisTitles[i]);
+
+				labelTop.setAttribute('data-value', value);
+
+				if(!labelBottom) {
+					labelBottom = labelTop.cloneNode();
+					labelBottom.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-bottom`;
+					if (offsets[i]) {
+						element.appendChild(labelBottom);
+					}
+				}
+
+				labelBottom.innerHTML = labels[i];
+
+				labelTop.style.top = (50 - offsets[i]/2) + '%';
+				labelBottom.style.top = (50 + offsets[i]/2) + '%';
+
+				if (within(value, linesMin, linesMax)) {
+					labelTop.removeAttribute('hidden');
+					labelBottom.removeAttribute('hidden');
+				} else {
+					labelTop.setAttribute('hidden', true);
+					labelBottom.setAttribute('hidden', true);
+				}
+
+				//hide label for special log case to avoid overlapping
+				if (lines.logarithmic) {
+					hideLogLabel(labelTop, value);
+					hideLogLabel(labelBottom, value);
+				}
+			}
+			else if (/a/.test(lines.orientation)) {
+
 			}
 		});
+
+
+		//bloody helpers
+
+		function hideLogLabel (label, value) {
+			let start = parseInt(value.toPrecision(1)[0]);
+
+			if (values.length > intersteps * 2.4) {
+				if (start == 3) label.innerHTML = '';
+			}
+			if (values.length > intersteps * 2) {
+				if (start == 7) label.innerHTML = '';
+			}
+			if (values.length > intersteps * 1.7) {
+				if (start == 4) label.innerHTML = '';
+			}
+			if (values.length > intersteps * 1.5) {
+				if (start == 6) label.innerHTML = '';
+			}
+			if (values.length > intersteps * 1.2) {
+				if (start == 8) label.innerHTML = '';
+			}
+			if (values.length > intersteps * .9) {
+				if (start == 9) label.innerHTML = '';
+			}
+		}
 
 	}, this);
 

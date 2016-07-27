@@ -134,7 +134,23 @@
 	top: 0;
 	bottom: 0;
 	left: -1px;
-    margin-left: -.5rem;
+	margin-left: -.5rem;
+}
+.grid-axis-a {
+	height: 100%;
+	width: 100%;
+	left: 50%;
+	top: 50%;
+	border-radius: 50vw;
+	border: 2px solid;
+}
+.grid-axis-r {
+	border-left: 2px solid;
+	right: auto;
+	top: 50%;
+	height: 100%;
+	left: -1px;
+	margin-left: -.5rem;
 }
 
 .grid-label {
@@ -167,11 +183,27 @@
 }
 
 .grid-label-y {
-    right: 100%;
-    margin-right: 1.5rem;
-    margin-top: -.5rem;
+	right: 100%;
+	margin-right: 1.5rem;
+	margin-top: -.5rem;
 }
 .grid-label-y:before {
+	content: '';
+	position: absolute;
+	width: .5rem;
+	height: 0;
+	border-top: 2px solid;
+	right: -1rem;
+	top: .4rem;
+	margin-right: -1px;
+}
+
+.grid-label-r {
+	right: 100%;
+	margin-right: 1.5rem;
+	margin-top: -.5rem;
+}
+.grid-label-r:before {
 	content: '';
 	position: absolute;
 	width: .5rem;
