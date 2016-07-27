@@ -6,14 +6,25 @@ const insertCss = require('insert-styles');
 insertCss(`
 	body {
 		margin: 0;
+		padding: 0;
+	}
+
+	.frame {
+		margin-right: 300px;
+		min-height: 100vh;
 	}
 `);
 
 
-let padding = [60, 60, 60, 60]
+let frame = document.body.appendChild(document.createElement('div'));
+frame.className = 'frame';
+
+
+let padding = [60, 60, 60, 60];
 
 
 let grid = Grid({
+	container: frame,
 	viewport: function (w, h) {
 		return [padding[0], padding[1], w - padding[2] - padding[0], h - padding[3] - padding[1]];
 	},
@@ -110,6 +121,9 @@ window.addEventListener('resize', () => grid.update());
 
 
 var settings = createSettings({
+	type: {type: 'switch', value: 'Cartesian', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: v => {
+
+	}},
 	viewport: {
 		type: 'text',
 		value: padding,
@@ -121,9 +135,10 @@ var settings = createSettings({
 	color: {type: 'color', value: getComputedStyle(grid.element).color, change: c => {
 		grid.element.style.color = c;
 	}},
-	opacity: {type: 'range', value: .135, min: 0, max: 1, change: c => {
-
+	opacity: {type: 'range', value: .5, min: 0, max: 1, change: v => {
+		grid.element.style.setProperty('--opacity', v);
 	}},
+
 	x: {type: 'raw', label: '<br/><strong>X lines</strong>', title: 'Horizontal'},
 	xLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = grid.lines;
@@ -149,6 +164,13 @@ var settings = createSettings({
 	// 		lines:  lines
 	// 	});
 	// }},
+	xAxis: { type: 'checkbox', label: 'axis', value: grid.axes[0], change: v => {
+		let axes = grid.axes;
+		axes[0] = v;
+		grid.update({
+			axes:  axes
+		});
+	}},
 	xOrientation: { label: 'orientation', type: 'switch', options: ['x', 'y', 'r', 'θ'], value: 'x'},
 	xRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
 		let lines = grid.lines;
@@ -158,16 +180,9 @@ var settings = createSettings({
 			lines: lines
 		});
 	}},
-	xAxis: { type: 'checkbox', label: 'axis', value: grid.axes[0], change: v => {
-		let axes = grid.axes;
-		axes[0] = v;
-		grid.update({
-			axes:  axes
-		});
-	}},
 
 	y: {type: 'raw', label: '<br/><strong>Y lines</strong>', title: 'Vertical'},
-	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, style: 'width: 50%', change: isLog => {
+	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = grid.lines;
 		lines[1].logarithmic = isLog;
 		if (isLog) {
@@ -201,9 +216,9 @@ var settings = createSettings({
 		});
 	}}
 }, {
-	theme: require('settings-panel/theme/control'),
-	palette: ['white', 'black'],
+	theme: require('../settings-panel/theme/control'),
 	fontSize: 11,
+	// palette: ['black', 'white'],
 	fontFamily: 'monospace',
-	style: `position: absolute; top: 8px; right: 8px; width: 300px; z-index: 1; background: rgba(255,255,255,.9)`
+	style: `position: absolute; top: 0px; right: 0px; padding: 20px; height: 100%; width: 300px; z-index: 1;`
 });

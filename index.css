@@ -27,13 +27,25 @@
 	left: 0;
 	width: .5rem;
 	height: .5rem;
-	/*opacity: .135;*/
+	opacity: .25;
 }
 .grid-line[hidden] {
 	display: none;
 }
 .grid-line:hover {
-	/*opacity: .27;*/
+	opacity: .5;
+}
+
+@supports (--css: variables) {
+	.grid {
+		--opacity: .25;
+	}
+	.grid-line {
+		opacity: var(--opacity);
+	}
+	.grid-line:hover {
+		opacity: calc(var(--opacity) * 2);
+	}
 }
 
 .grid-line-x {

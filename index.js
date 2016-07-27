@@ -33,6 +33,7 @@ function Grid (options) {
 
 	//obtian container
 	this.container = options.container || document.body;
+	if (typeof this.container === 'string') this.container = document.querySelector(this.container);
 	this.container.classList.add('grid-container');
 
 	this.element = document.createElement('div');
@@ -122,6 +123,7 @@ Grid.prototype.update = function (options) {
 	}
 
 	if (!viewport) viewport = [0,0,w,h];
+	if (viewport[2] < 0 || viewport[3] < 0) throw 'Viewport size is negative, probably because grid container size is 0 or something. Please, check the container size.';
 
 	element.style.left = viewport[0] + (typeof viewport[0] === 'number' ? 'px' : '');
 	element.style.top = viewport[1] + (typeof viewport[1] === 'number' ? 'px' : '');

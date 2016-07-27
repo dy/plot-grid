@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node test.js",
-    "test:browser": "budo test.js",
+    "test:browser": "budo test.js -- -g bubleify",
     "build": "browserify test.js -t bubleify -o demo/bundle.js"
   },
   "repository": {
