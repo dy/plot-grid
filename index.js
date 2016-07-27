@@ -8,6 +8,7 @@ const lg = require('mumath/lg');
 const Emitter = require('events').EventEmitter;
 const inherits = require('inherits');
 const closestNumber = require('mumath/closest');
+const mod = require('mumath/mod');
 const mag = require('mumath/order');
 const within = require('mumath/within');
 const uid = require('get-uid');
@@ -186,10 +187,11 @@ Grid.prototype.update = function (options) {
 		//detect steps, if not defined, as one per each 50px
 		var values = [];
 		var minW = Math.min(viewport[2], viewport[3]);
-		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : lines.orientation === 'y' ? (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight) : minW ) / 50 ;
+		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : lines.orientation === 'y' ? (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight) : /a/.test(lines.orientation) ? minW * 2 : minW ) / 50 ;
 		if (intersteps < 1) {
 			values = [linesMin, linesMax];
 		}
+		//for non-log scale do even distrib
 		else if (!lines.logarithmic) {
 			var stepSize = (linesMax - linesMin) / Math.floor(intersteps);
 			var order = mag(stepSize);
@@ -255,6 +257,7 @@ Grid.prototype.update = function (options) {
 				if (value === linesMin) line.classList.add('grid-line-min');
 				if (value === linesMax) line.classList.add('grid-line-max');
 				line.setAttribute('data-value', value);
+
 				linesContainer.appendChild(line);
 			}
 
@@ -283,8 +286,10 @@ Grid.prototype.update = function (options) {
 				line.style.borderRadius = minW + 'px';
 			}
 			else if (/a/.test(lines.orientation)) {
-				line.style.left = 0;
-				line.style.top = '50%';
+				if (ratio && !mod(ratio/100 * 360, 360)) {
+					linesContainer.removeChild(line);
+				}
+				line.style.width = minW / 2 + 'px';
 				line.style.transform = `rotate(${ratio * 360 / 100}deg)`;
 			}
 

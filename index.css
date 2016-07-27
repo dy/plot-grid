@@ -99,10 +99,10 @@
 /* angular lines */
 .grid-line-a {
 	height: 0;
-	top: 0;
-	left: 0;
-	transform-origin: center center;
-	width: 100%;
+	top: 50%;
+	left: 50%;
+	transform-origin: left center;
+	width: 50%;
 	border-top: 1px dotted;
 }
 .grid-line-a:after {
