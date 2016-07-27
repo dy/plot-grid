@@ -10,7 +10,18 @@ Grid component for visualizing plots, built with oldschool HTML5 and CSS3. Becau
 [![npm install plot-grid](https://nodei.co/npm/plot-grid.png?mini=true)](https://npmjs.org/package/plot-grid/)
 
 ```js
+const plotGrid = require('plot-grid');
+
+let grid = plotGrid({
+	lines: [
+		{orientation: 'x', min: 20, max: 20000, units: 'Hz', logarithmic: true},
+		{orientation: 'y', min: -100, max: 0, units: 'Db'}
+	],
+	axes: [true, true]
+});
 ```
+
+This will create basic grid for spectrogram, [see in action](http://requirebin.com/?gist=e6371d3310dff351c027edf0bf2a9492).
 
 ## API
 
@@ -24,12 +35,13 @@ Possible options are:
 //where to place grid, by default - body
 container: el,
 
-//position within the container or function returning it
+//position rectangle within the container or function returning rect
 viewport: [0, 0, container.clientWidth, container.clientHeight],
 
-//grid lines
+//grid lines - each object will setup own lines group
 lines: [
 	{
+		//possible values: x, y, r, a
 		orientation: 'x',
 		logarithmic: true,
 		min: 20,
@@ -54,23 +66,25 @@ lines: [
 
 //grid axes, corresponding to the lines - settings or true/false
 axes: [
+	//
 	{
 		name: 'Frequency',
 		// values: null,
+		//by default labels and titles are copied from lines[n].titles
 		// titles: null,
+		//but can be overridden with custom values
 		labels: [20, 200, '2k', '20k']
 	},
-	true
-],
 
-//change container color property to nudge lines color, can be string or object
-style: `color: gray;`
+	//detect all parameters from the according lines group
+	true
+]
 ```
 
 </details>
 <details><summary>**`grid.update(options)`**</summary>
 
-Pass new options to update grid style. Also should be called on if resize is needed.
+Pass new options to update grid look. Also should be called if resize happened.
 
 ```js
 grid.update({
@@ -82,8 +96,16 @@ grid.update({
 ```
 
 </details>
+<details><summary>grid.element.style.color = 'green'</summary>
 
-You can also style axis/lines, see [index.css](./index.css) for CSS classes to override.
+Change grid lines and axes color.
+
+</details>
+<details><summary>grid.element.style.setProperty('--opacity', value)</summary>
+
+Change grid lines opacity. It will not change axes style.
+
+</details>
 
 
 ## Used by
