@@ -2229,13 +2229,14 @@ var lg = require('mumath/lg');
 var Emitter = require('events').EventEmitter;
 var inherits = require('inherits');
 var closestNumber = require('mumath/closest');
+var mod = require('mumath/mod');
 var mag = require('mumath/order');
 var within = require('mumath/within');
 var uid = require('get-uid');
 var insertStyles = require('insert-styles');
 
 
-insertStyles(Buffer("Omhvc3Qgew0KCXBvc2l0aW9uOiByZWxhdGl2ZTsNCn0NCg0KLmdyaWQgew0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl0b3A6IDA7DQoJbGVmdDogMDsNCglib3R0b206IDA7DQoJcmlnaHQ6IDA7DQoJcG9pbnRlci1ldmVudHM6IG5vbmU7DQp9DQouZ3JpZC1saW5lcyB7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCXRvcDogMDsNCglsZWZ0OiAwOw0KCWJvdHRvbTogMDsNCglyaWdodDogMDsNCglvdmVyZmxvdzogaGlkZGVuOw0KCXBvaW50ZXItZXZlbnRzOiBub25lOw0KfQ0KDQouZ3JpZC1saW5lIHsNCglwb2ludGVyLWV2ZW50czogYWxsOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl0b3A6IDA7DQoJbGVmdDogMDsNCgl3aWR0aDogLjVyZW07DQoJaGVpZ2h0OiAuNXJlbTsNCglvcGFjaXR5OiAuMjU7DQp9DQouZ3JpZC1saW5lW2hpZGRlbl0gew0KCWRpc3BsYXk6IG5vbmU7DQp9DQouZ3JpZC1saW5lOmhvdmVyIHsNCglvcGFjaXR5OiAuNTsNCn0NCg0KQHN1cHBvcnRzICgtLWNzczogdmFyaWFibGVzKSB7DQoJLmdyaWQgew0KCQktLW9wYWNpdHk6IC4yNTsNCgl9DQoJLmdyaWQtbGluZSB7DQoJCW9wYWNpdHk6IHZhcigtLW9wYWNpdHkpOw0KCX0NCgkuZ3JpZC1saW5lOmhvdmVyIHsNCgkJb3BhY2l0eTogY2FsYyh2YXIoLS1vcGFjaXR5KSAqIDIpOw0KCX0NCn0NCg0KLmdyaWQtbGluZS14IHsNCgloZWlnaHQ6IDEwMCU7DQoJd2lkdGg6IDA7DQoJYm9yZGVyLWxlZnQ6IDFweCBkb3R0ZWQ7DQoJbWFyZ2luLWxlZnQ6IC0xcHg7DQp9DQouZ3JpZC1saW5lLXg6YWZ0ZXIgew0KCWNvbnRlbnQ6ICcnOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl3aWR0aDogLjVyZW07DQoJdG9wOiAwOw0KCWJvdHRvbTogMDsNCglsZWZ0OiAtLjI1cmVtOw0KfQ0KLmdyaWQtbGluZS14LmdyaWQtbGluZS1taW4gew0KCW1hcmdpbi1sZWZ0OiAwcHg7DQp9DQoNCi5ncmlkLWxpbmUteSB7DQoJd2lkdGg6IDEwMCU7DQoJaGVpZ2h0OiAwOw0KCW1hcmdpbi10b3A6IC0xcHg7DQoJYm9yZGVyLXRvcDogMXB4IGRvdHRlZDsNCn0NCi5ncmlkLWxpbmUteTphZnRlciB7DQoJY29udGVudDogJyc7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCWhlaWdodDogLjVyZW07DQoJbGVmdDogMDsNCglyaWdodDogMDsNCgl0b3A6IC0uMjVyZW07DQp9DQouZ3JpZC1saW5lLXkuZ3JpZC1saW5lLW1heCB7DQoJbWFyZ2luLXRvcDogMHB4Ow0KfQ0KDQovKiByYWRpYWwgbGluZXMgKi8NCi5ncmlkLWxpbmUtciB7DQoJaGVpZ2h0OiAxMDAlOw0KCXdpZHRoOiAxMDAlOw0KCWxlZnQ6IDUwJTsNCgl0b3A6IDUwJTsNCglib3JkZXItcmFkaXVzOiA1MHZ3Ow0KCWJvcmRlcjogMXB4IGRvdHRlZDsNCn0NCi5ncmlkLWxpbmUtci5ncmlkLWxpbmUtbWluIHsNCn0NCg0KLyogYW5ndWxhciBsaW5lcyAqLw0KLmdyaWQtbGluZS1hIHsNCgloZWlnaHQ6IDA7DQoJdG9wOiAwOw0KCWxlZnQ6IDA7DQoJdHJhbnNmb3JtLW9yaWdpbjogY2VudGVyIGNlbnRlcjsNCgl3aWR0aDogMTAwJTsNCglib3JkZXItdG9wOiAxcHggZG90dGVkOw0KfQ0KLmdyaWQtbGluZS1hOmFmdGVyIHsNCgljb250ZW50OiAnJzsNCglwb3NpdGlvbjogYWJzb2x1dGU7DQoJaGVpZ2h0OiAuNXJlbTsNCglsZWZ0OiAwOw0KCXJpZ2h0OiAwOw0KCXRvcDogLS4yNXJlbTsNCn0NCi5ncmlkLWxpbmUtYS5ncmlkLWxpbmUtbWluIHsNCn0NCg0KDQouZ3JpZC1heGlzIHsNCglwb3NpdGlvbjogYWJzb2x1dGU7DQp9DQouZ3JpZC1heGlzLXggew0KCXRvcDogYXV0bzsNCglib3R0b206IDA7DQoJcmlnaHQ6IDA7DQoJbGVmdDogMDsNCglib3JkZXItYm90dG9tOiAycHggc29saWQ7DQoJbWFyZ2luLWJvdHRvbTogLS41cmVtOw0KfQ0KLmdyaWQtYXhpcy15IHsNCglib3JkZXItbGVmdDogMnB4IHNvbGlkOw0KCXJpZ2h0OiBhdXRvOw0KCXRvcDogMDsNCglib3R0b206IDA7DQoJbGVmdDogLTFweDsNCgltYXJnaW4tbGVmdDogLS41cmVtOw0KfQ0KLmdyaWQtYXhpcy1hIHsNCgloZWlnaHQ6IDEwMCU7DQoJd2lkdGg6IDEwMCU7DQoJbGVmdDogNTAlOw0KCXRvcDogNTAlOw0KCWJvcmRlci1yYWRpdXM6IDUwdnc7DQoJYm9yZGVyOiAycHggc29saWQ7DQp9DQouZ3JpZC1heGlzLXIgew0KCWJvcmRlci1sZWZ0OiAycHggc29saWQ7DQoJcmlnaHQ6IGF1dG87DQoJdG9wOiA1MCU7DQoJaGVpZ2h0OiAxMDAlOw0KCWxlZnQ6IC0xcHg7DQoJbWFyZ2luLWxlZnQ6IC0uNXJlbTsNCn0NCg0KLmdyaWQtbGFiZWwgew0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl0b3A6IGF1dG87DQoJbGVmdDogYXV0bzsNCgltaW4taGVpZ2h0OiAxcmVtOw0KCWZvbnQtc2l6ZTogLjhyZW07DQoJZm9udC1mYW1pbHk6IHNhbnMtc2VyaWY7DQoJcG9pbnRlci1ldmVudHM6IGFsbDsNCn0NCi5ncmlkLWxhYmVsLXggew0KCWJvdHRvbTogYXV0bzsNCgl0b3A6IDEwMCU7DQoJbWFyZ2luLXRvcDogMS41cmVtOw0KCXdpZHRoOiAycmVtOw0KCW1hcmdpbi1sZWZ0OiAtMXJlbTsNCgl0ZXh0LWFsaWduOiBjZW50ZXI7DQp9DQouZ3JpZC1sYWJlbC14OmJlZm9yZSB7DQoJY29udGVudDogJyc7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCWhlaWdodDogLjVyZW07DQoJd2lkdGg6IDA7DQoJYm9yZGVyLWxlZnQ6IDJweCBzb2xpZDsNCgl0b3A6IC0xcmVtOw0KCW1hcmdpbi1sZWZ0OiAtMXB4Ow0KCW1hcmdpbi10b3A6IC0ycHg7DQoJbGVmdDogMXJlbTsNCn0NCg0KLmdyaWQtbGFiZWwteSB7DQoJcmlnaHQ6IDEwMCU7DQoJbWFyZ2luLXJpZ2h0OiAxLjVyZW07DQoJbWFyZ2luLXRvcDogLS41cmVtOw0KfQ0KLmdyaWQtbGFiZWwteTpiZWZvcmUgew0KCWNvbnRlbnQ6ICcnOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl3aWR0aDogLjVyZW07DQoJaGVpZ2h0OiAwOw0KCWJvcmRlci10b3A6IDJweCBzb2xpZDsNCglyaWdodDogLTFyZW07DQoJdG9wOiAuNHJlbTsNCgltYXJnaW4tcmlnaHQ6IC0xcHg7DQp9DQoNCi5ncmlkLWxhYmVsLXIgew0KCXJpZ2h0OiAxMDAlOw0KCW1hcmdpbi1yaWdodDogMS41cmVtOw0KCW1hcmdpbi10b3A6IC0uNXJlbTsNCn0NCi5ncmlkLWxhYmVsLXI6YmVmb3JlIHsNCgljb250ZW50OiAnJzsNCglwb3NpdGlvbjogYWJzb2x1dGU7DQoJd2lkdGg6IC41cmVtOw0KCWhlaWdodDogMDsNCglib3JkZXItdG9wOiAycHggc29saWQ7DQoJcmlnaHQ6IC0xcmVtOw0KCXRvcDogLjRyZW07DQoJbWFyZ2luLXJpZ2h0OiAtMXB4Ow0KfQ0K","base64"));
+insertStyles(Buffer("Omhvc3Qgew0KCXBvc2l0aW9uOiByZWxhdGl2ZTsNCn0NCg0KLmdyaWQgew0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl0b3A6IDA7DQoJbGVmdDogMDsNCglib3R0b206IDA7DQoJcmlnaHQ6IDA7DQoJcG9pbnRlci1ldmVudHM6IG5vbmU7DQp9DQouZ3JpZC1saW5lcyB7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCXRvcDogMDsNCglsZWZ0OiAwOw0KCWJvdHRvbTogMDsNCglyaWdodDogMDsNCglvdmVyZmxvdzogaGlkZGVuOw0KCXBvaW50ZXItZXZlbnRzOiBub25lOw0KfQ0KDQouZ3JpZC1saW5lIHsNCglwb2ludGVyLWV2ZW50czogYWxsOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl0b3A6IDA7DQoJbGVmdDogMDsNCgl3aWR0aDogLjVyZW07DQoJaGVpZ2h0OiAuNXJlbTsNCglvcGFjaXR5OiAuMjU7DQp9DQouZ3JpZC1saW5lW2hpZGRlbl0gew0KCWRpc3BsYXk6IG5vbmU7DQp9DQouZ3JpZC1saW5lOmhvdmVyIHsNCglvcGFjaXR5OiAuNTsNCn0NCg0KQHN1cHBvcnRzICgtLWNzczogdmFyaWFibGVzKSB7DQoJLmdyaWQgew0KCQktLW9wYWNpdHk6IC4yNTsNCgl9DQoJLmdyaWQtbGluZSB7DQoJCW9wYWNpdHk6IHZhcigtLW9wYWNpdHkpOw0KCX0NCgkuZ3JpZC1saW5lOmhvdmVyIHsNCgkJb3BhY2l0eTogY2FsYyh2YXIoLS1vcGFjaXR5KSAqIDIpOw0KCX0NCn0NCg0KLmdyaWQtbGluZS14IHsNCgloZWlnaHQ6IDEwMCU7DQoJd2lkdGg6IDA7DQoJYm9yZGVyLWxlZnQ6IDFweCBkb3R0ZWQ7DQoJbWFyZ2luLWxlZnQ6IC0xcHg7DQp9DQouZ3JpZC1saW5lLXg6YWZ0ZXIgew0KCWNvbnRlbnQ6ICcnOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl3aWR0aDogLjVyZW07DQoJdG9wOiAwOw0KCWJvdHRvbTogMDsNCglsZWZ0OiAtLjI1cmVtOw0KfQ0KLmdyaWQtbGluZS14LmdyaWQtbGluZS1taW4gew0KCW1hcmdpbi1sZWZ0OiAwcHg7DQp9DQoNCi5ncmlkLWxpbmUteSB7DQoJd2lkdGg6IDEwMCU7DQoJaGVpZ2h0OiAwOw0KCW1hcmdpbi10b3A6IC0xcHg7DQoJYm9yZGVyLXRvcDogMXB4IGRvdHRlZDsNCn0NCi5ncmlkLWxpbmUteTphZnRlciB7DQoJY29udGVudDogJyc7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCWhlaWdodDogLjVyZW07DQoJbGVmdDogMDsNCglyaWdodDogMDsNCgl0b3A6IC0uMjVyZW07DQp9DQouZ3JpZC1saW5lLXkuZ3JpZC1saW5lLW1heCB7DQoJbWFyZ2luLXRvcDogMHB4Ow0KfQ0KDQovKiByYWRpYWwgbGluZXMgKi8NCi5ncmlkLWxpbmUtciB7DQoJaGVpZ2h0OiAxMDAlOw0KCXdpZHRoOiAxMDAlOw0KCWxlZnQ6IDUwJTsNCgl0b3A6IDUwJTsNCglib3JkZXItcmFkaXVzOiA1MHZ3Ow0KCWJveC1zaGFkb3c6IDAgMCAwIDFweDsNCn0NCi5ncmlkLWxpbmUtci5ncmlkLWxpbmUtbWluIHsNCn0NCg0KLyogYW5ndWxhciBsaW5lcyAqLw0KLmdyaWQtbGluZS1hIHsNCgloZWlnaHQ6IDA7DQoJdG9wOiA1MCU7DQoJbGVmdDogNTAlOw0KCXRyYW5zZm9ybS1vcmlnaW46IGxlZnQgY2VudGVyOw0KCXdpZHRoOiA1MCU7DQoJYm9yZGVyLXRvcDogMXB4IHNvbGlkOw0KfQ0KLmdyaWQtbGluZS1hOmFmdGVyIHsNCgljb250ZW50OiAnJzsNCglwb3NpdGlvbjogYWJzb2x1dGU7DQoJaGVpZ2h0OiAuNXJlbTsNCglsZWZ0OiAwOw0KCXJpZ2h0OiAwOw0KCXRvcDogLS4yNXJlbTsNCn0NCi5ncmlkLWxpbmUtYTpiZWZvcmUgew0KCWNvbnRlbnQ6ICcnOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl3aWR0aDogLjRyZW07DQoJcmlnaHQ6IDA7DQoJdG9wOiAtMXB4Ow0KCWhlaWdodDogMDsNCglib3JkZXItYm90dG9tOiAycHggc29saWQ7DQp9DQoNCg0KLmdyaWQtYXhpcyB7DQoJcG9zaXRpb246IGFic29sdXRlOw0KfQ0KLmdyaWQtYXhpcy14IHsNCgl0b3A6IGF1dG87DQoJYm90dG9tOiAwOw0KCXJpZ2h0OiAwOw0KCWxlZnQ6IDA7DQoJYm9yZGVyLWJvdHRvbTogMnB4IHNvbGlkOw0KCW1hcmdpbi1ib3R0b206IC0uNXJlbTsNCn0NCi5ncmlkLWF4aXMteSB7DQoJYm9yZGVyLWxlZnQ6IDJweCBzb2xpZDsNCglyaWdodDogYXV0bzsNCgl0b3A6IDA7DQoJYm90dG9tOiAwOw0KCWxlZnQ6IC0xcHg7DQoJbWFyZ2luLWxlZnQ6IC0uNXJlbTsNCn0NCi5ncmlkLWF4aXMtYSB7DQoJaGVpZ2h0OiAxMDAlOw0KCXdpZHRoOiAxMDAlOw0KCWxlZnQ6IDUwJTsNCgl0b3A6IDUwJTsNCglib3JkZXItcmFkaXVzOiA1MHZ3Ow0KCWJveC1zaGFkb3c6IDAgMCAwIDJweDsNCn0NCi5ncmlkLWF4aXMtciB7DQoJYm9yZGVyLWxlZnQ6IDJweCBzb2xpZDsNCglyaWdodDogYXV0bzsNCgl0b3A6IDUwJTsNCgloZWlnaHQ6IDEwMCU7DQoJbGVmdDogLTFweDsNCgltYXJnaW4tbGVmdDogLS41cmVtOw0KfQ0KDQouZ3JpZC1sYWJlbCB7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCXRvcDogYXV0bzsNCglsZWZ0OiBhdXRvOw0KCW1pbi1oZWlnaHQ6IDFyZW07DQoJbWFyZ2luLXRvcDogLS41cmVtOw0KCWZvbnQtc2l6ZTogLjhyZW07DQoJZm9udC1mYW1pbHk6IHNhbnMtc2VyaWY7DQoJcG9pbnRlci1ldmVudHM6IGFsbDsNCn0NCi5ncmlkLWxhYmVsLXggew0KCWJvdHRvbTogYXV0bzsNCgl0b3A6IDEwMCU7DQoJbWFyZ2luLXRvcDogMS41cmVtOw0KCXdpZHRoOiAycmVtOw0KCW1hcmdpbi1sZWZ0OiAtMXJlbTsNCgl0ZXh0LWFsaWduOiBjZW50ZXI7DQp9DQouZ3JpZC1sYWJlbC14OmJlZm9yZSB7DQoJY29udGVudDogJyc7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCWhlaWdodDogLjVyZW07DQoJd2lkdGg6IDA7DQoJYm9yZGVyLWxlZnQ6IDJweCBzb2xpZDsNCgl0b3A6IC0xcmVtOw0KCW1hcmdpbi1sZWZ0OiAtMXB4Ow0KCW1hcmdpbi10b3A6IC0ycHg7DQoJbGVmdDogMXJlbTsNCn0NCg0KLmdyaWQtbGFiZWwteSB7DQoJcmlnaHQ6IDEwMCU7DQoJbWFyZ2luLXJpZ2h0OiAxLjVyZW07DQoJbWFyZ2luLXRvcDogLS41cmVtOw0KfQ0KLmdyaWQtbGFiZWwteTpiZWZvcmUgew0KCWNvbnRlbnQ6ICcnOw0KCXBvc2l0aW9uOiBhYnNvbHV0ZTsNCgl3aWR0aDogLjVyZW07DQoJaGVpZ2h0OiAwOw0KCWJvcmRlci10b3A6IDJweCBzb2xpZDsNCglyaWdodDogLTFyZW07DQoJdG9wOiAuNHJlbTsNCgltYXJnaW4tcmlnaHQ6IC0xcHg7DQp9DQoNCi5ncmlkLWxhYmVsLXIgew0KCXJpZ2h0OiAxMDAlOw0KCXRvcDogY2FsYyg1MCUgLSAuNXJlbSk7DQoJbWFyZ2luLXJpZ2h0OiAxLjVyZW07DQp9DQouZ3JpZC1sYWJlbC1yOmJlZm9yZSB7DQoJY29udGVudDogJyc7DQoJcG9zaXRpb246IGFic29sdXRlOw0KCXdpZHRoOiAuNXJlbTsNCgloZWlnaHQ6IDA7DQoJYm9yZGVyLXRvcDogMnB4IHNvbGlkOw0KCXJpZ2h0OiAtMXJlbTsNCgl0b3A6IC40cmVtOw0KCW1hcmdpbi1yaWdodDogLTFweDsNCn0NCg0KDQouZ3JpZC1sYWJlbC1hIHsNCglib3R0b206IGF1dG87DQoJd2lkdGg6IDJyZW07DQoJdGV4dC1hbGlnbjogY2VudGVyOw0KfQ==","base64"));
 
 
 module.exports = Grid;
@@ -2338,9 +2339,13 @@ Grid.prototype.update = function (options) {
 	if (options.viewport) this.viewport = options.viewport;
 	var viewport = this.viewport;
 
+	//hide element to avoid live calc
+	element.setAttribute('hidden', true);
+
 	var w = this.container.offsetWidth;
 	var h = this.container === document.body ? window.innerHeight : this.container.offsetHeight;
 
+	//calc viewport
 	if (viewport instanceof Function) {
 		viewport = viewport(w, h);
 	}
@@ -2409,15 +2414,18 @@ Grid.prototype.update = function (options) {
 		//detect steps, if not defined, as one per each 50px
 		var values = [];
 		var minW = Math.min(viewport[2], viewport[3]);
-		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : lines.orientation === 'y' ? (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight) : minW ) / 50 ;
+		var intersteps = (lines.orientation === 'x' ? (typeof viewport[2] === 'number' ? viewport[2] : linesContainer.clientWidth) : lines.orientation === 'y' ? (typeof viewport[3] === 'number' ? viewport[3] : linesContainer.clientHeight) : /a/.test(lines.orientation) ? minW * 2 : minW ) / 50 ;
 		if (intersteps < 1) {
 			values = [linesMin, linesMax];
 		}
+		//for non-log scale do even distrib
 		else if (!lines.logarithmic) {
 			var stepSize = (linesMax - linesMin) / Math.floor(intersteps);
 			var order = mag(stepSize);
 
-			stepSize = closestNumber(stepSize, [1, 2, 2.5, 5, 10].map(function (v) { return v * order; }));
+			var scale = /a/.test(lines.orientation) ? [1.5, 3] : [1, 2, 2.5, 5, 10];
+
+			stepSize = closestNumber(stepSize, scale.map(function (v) { return v * order; }));
 
 			var start = stepSize * Math.round(linesMin / stepSize);
 
@@ -2467,7 +2475,7 @@ Grid.prototype.update = function (options) {
 		stats.titles = titles;
 
 		//draw lines
-		var offsets = values.map(function (value, i) {
+		var offsets = values.slice().reverse().map(function (value, i) {
 			var line = linesContainer.querySelector(("#grid-line-" + (lines.orientation) + (lines.logarithmic?'-log':'') + "-" + (value|0) + "-" + idx + "-" + id));
 			var ratio;
 			if (!line) {
@@ -2478,6 +2486,7 @@ Grid.prototype.update = function (options) {
 				if (value === linesMin) line.classList.add('grid-line-min');
 				if (value === linesMax) line.classList.add('grid-line-max');
 				line.setAttribute('data-value', value);
+
 				linesContainer.appendChild(line);
 			}
 
@@ -2506,9 +2515,11 @@ Grid.prototype.update = function (options) {
 				line.style.borderRadius = minW + 'px';
 			}
 			else if (/a/.test(lines.orientation)) {
-				line.style.left = 0;
-				line.style.top = '50%';
-				line.style.transform = "rotate(" + (ratio * 360 / 100) + "deg)";
+				if (ratio && !mod(ratio/100 * 360, 360)) {
+					linesContainer.removeChild(line);
+				}
+				line.style.width = minW / 2 + 'px';
+				line.style.transform = "rotate(" + (-ratio * 360 / 100) + "deg)";
 			}
 
 			if (lines.style) {
@@ -2521,7 +2532,7 @@ Grid.prototype.update = function (options) {
 			line.removeAttribute('hidden');
 
 			return ratio;
-		});
+		}).reverse();
 		stats.offsets = offsets;
 
 		//draw axes
@@ -2574,9 +2585,8 @@ Grid.prototype.update = function (options) {
 			axisEl.style.borderRadius = minW + 'px';
 		}
 		else if (/r/.test(lines.orientation)) {
-			var w = Math.min(viewport[2], viewport[3]);
-			axisEl.style.marginTop = -w*100*.005 + 'px';
-			axisEl.style.height = w*100*.01 + 'px';
+			axisEl.style.marginTop = -minW*100*.005 + 'px';
+			axisEl.style.height = minW*100*.01 + 'px';
 		}
 
 		axisEl.removeAttribute('hidden');
@@ -2623,9 +2633,6 @@ Grid.prototype.update = function (options) {
 				}
 			}
 			else if (/r/.test(lines.orientation)) {
-				//ignore odds due to radius is reflected
-				if (i % 2) return;
-
 				var labelTop = element.querySelector(("#grid-label-" + (lines.orientation) + (lines.logarithmic?'-log':'') + "-" + (value|0) + "-" + idx + "-" + id + "-top"));
 				var labelBottom = element.querySelector(("#grid-label-" + (lines.orientation) + (lines.logarithmic?'-log':'') + "-" + (value|0) + "-" + idx + "-" + id + "-bottom"));
 
@@ -2654,8 +2661,10 @@ Grid.prototype.update = function (options) {
 
 				labelBottom.innerHTML = labels[i];
 
-				labelTop.style.top = (50 - offsets[i]/2) + '%';
-				labelBottom.style.top = (50 + offsets[i]/2) + '%';
+				// labelTop.style.marginTop = -(minW*.5*offsets[i]/100) + 'px';
+				// labelBottom.style.marginTop = (minW*.5*offsets[i]/100) + 'px';
+				labelTop.style.top = viewport[3]/2 - (minW*.5*offsets[i]/100) + 'px';
+				labelBottom.style.top = viewport[3]/2 + (minW*.5*offsets[i]/100) + 'px';
 
 				if (within(value, linesMin, linesMax)) {
 					labelTop.removeAttribute('hidden');
@@ -2672,7 +2681,36 @@ Grid.prototype.update = function (options) {
 				}
 			}
 			else if (/a/.test(lines.orientation)) {
+				var label$1 = element.querySelector(("#grid-label-" + (lines.orientation) + (lines.logarithmic?'-log':'') + "-" + (value|0) + "-" + idx + "-" + id + "-top"));
 
+				if (!label$1) {
+					label$1 = document.createElement('label');
+					label$1.id = "grid-label-" + (lines.orientation) + (lines.logarithmic?'-log':'') + "-" + (value|0) + "-" + idx + "-" + id + "-top";
+					label$1.classList.add('grid-label');
+					label$1.classList.add(("grid-label-" + (lines.orientation)));
+					label$1.setAttribute('for', ("grid-line-" + (lines.orientation) + (lines.logarithmic?'-log':'') + "-" + (value|0) + "-" + idx + "-" + id));
+					element.appendChild(label$1);
+				}
+
+				label$1.innerHTML = labels[i];
+
+				axisTitles && label$1.setAttribute('title', axisTitles[i]);
+
+				label$1.setAttribute('data-value', value);
+
+				var angle = offsets[i] * Math.PI / 50;
+				var angleDeg = offsets[i] * 3.6;
+				// label.style.transform = `rotate(${angle}deg)`;
+				label$1.style.left = viewport[2]/2 + Math.cos(angle) * minW/2 + 'px';
+				label$1.style.top = viewport[3]/2 -Math.sin(angle) * minW/2 + 'px';
+				label$1.style.marginTop = (-Math.sin(angle) * .8 - .4) + 'rem';
+				label$1.style.marginLeft = -1 + (Math.cos(angle)) + 'rem';
+
+				if (within(value, linesMin, linesMax) && angleDeg < 360 ) {
+					label$1.removeAttribute('hidden');
+				} else {
+					label$1.setAttribute('hidden', true);
+				}
 			}
 		});
 
@@ -2704,806 +2742,14 @@ Grid.prototype.update = function (options) {
 
 	}, this);
 
+	element.removeAttribute('hidden');
+
 	this.emit('update');
 
 	return this;
 };
 }).call(this,require("buffer").Buffer)
-},{"buffer":2,"events":3,"get-uid":7,"inherits":8,"insert-styles":9,"is-browser":10,"mumath/closest":11,"mumath/lg":12,"mumath/order":13,"mumath/within":14,"xtend":16}],7:[function(require,module,exports){
-/** generate unique id for selector */
-var counter = Date.now() % 1e9;
-
-module.exports = function getUid(){
-	return (Math.random() * 1e9 >>> 0) + (counter++);
-};
-},{}],8:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-},{}],9:[function(require,module,exports){
-(function (global){
-'use strict'
-
-var cache = {}
-
-function noop () {}
-
-module.exports = !global.document ? noop : insertStyles
-
-function insertStyles (styles, options) {
-  var id = options && options.id || styles
-
-  var element = cache[id] = (cache[id] || createStyle(id))
-
-  if ('textContent' in element) {
-    element.textContent = styles
-  } else {
-    element.styleSheet.cssText = styles
-  }
-}
-
-function createStyle (id) {
-  var element = document.getElementById(id)
-
-  if (element) return element
-
-  element = document.createElement('style')
-  element.setAttribute('type', 'text/css')
-
-  document.head.appendChild(element)
-
-  return element
-}
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],10:[function(require,module,exports){
-module.exports = true;
-},{}],11:[function(require,module,exports){
-/**
- * @module  mumath/closest
- */
-
-module.exports = function closest (num, arr) {
-	var curr = arr[0];
-	var diff = Math.abs (num - curr);
-	for (var val = 0; val < arr.length; val++) {
-		var newdiff = Math.abs (num - arr[val]);
-		if (newdiff < diff) {
-			diff = newdiff;
-			curr = arr[val];
-		}
-	}
-	return curr;
-}
-},{}],12:[function(require,module,exports){
-/**
- * Base 10 logarithm
- *
- * @module mumath/lg
- */
-module.exports = require('./wrap')(function (a) {
-	return Math.log(a) / Math.log(10);
-});
-},{"./wrap":15}],13:[function(require,module,exports){
-/**
- * @module mumath/order
- */
-module.exports = require('./wrap')(function (n) {
-	n = Math.abs(n);
-	var order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001);
-	return Math.pow(10,order);
-});
-},{"./wrap":15}],14:[function(require,module,exports){
-/**
- * Whether element is between left & right including
- *
- * @param {number} a
- * @param {number} left
- * @param {number} right
- *
- * @return {Boolean}
- */
-module.exports = require('./wrap')(function(a, left, right){
-	if (left > right) {
-		var tmp = left;
-		left = right;
-		right = tmp;
-	}
-	if (a <= right && a >= left) return true;
-	return false;
-});
-},{"./wrap":15}],15:[function(require,module,exports){
-/**
- * Get fn wrapped with array/object attrs recognition
- *
- * @return {Function} Target function
- */
-module.exports = function(fn){
-	return function (a) {
-		var args = arguments;
-		if (a instanceof Array) {
-			var result = new Array(a.length), slice;
-			for (var i = 0; i < a.length; i++){
-				slice = [];
-				for (var j = 0, l = args.length, val; j < l; j++){
-					val = args[j] instanceof Array ? args[j][i] : args[j];
-					val = val;
-					slice.push(val);
-				}
-				result[i] = fn.apply(this, slice);
-			}
-			return result;
-		}
-		else if (typeof a === 'object') {
-			var result = {}, slice;
-			for (var i in a){
-				slice = [];
-				for (var j = 0, l = args.length, val; j < l; j++){
-					val = typeof args[j] === 'object' ? args[j][i] : args[j];
-					val = val;
-					slice.push(val);
-				}
-				result[i] = fn.apply(this, slice);
-			}
-			return result;
-		}
-		else {
-			return fn.apply(this, args);
-		}
-	};
-};
-},{}],16:[function(require,module,exports){
-module.exports = extend
-
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-function extend() {
-    var target = {}
-
-    for (var i = 0; i < arguments.length; i++) {
-        var source = arguments[i]
-
-        for (var key in source) {
-            if (hasOwnProperty.call(source, key)) {
-                target[key] = source[key]
-            }
-        }
-    }
-
-    return target
-}
-
-},{}],17:[function(require,module,exports){
-var Grid = require('./');
-var isBrowser = require('is-browser');
-var createSettings = require('../settings-panel');
-var insertCss = require('insert-styles');
-
-insertCss("\n\tbody {\n\t\tmargin: 0;\n\t\tpadding: 0;\n\t}\n\n\t.frame {\n\t\tmargin-right: 300px;\n\t\tmin-height: 100vh;\n\t}\n");
-
-
-var frame = document.body.appendChild(document.createElement('div'));
-frame.className = 'frame';
-
-
-var padding = [60, 60, 60, 60];
-
-
-var grid = Grid({
-	container: frame,
-	viewport: function (w, h) {
-		return [padding[0], padding[1], w - padding[2] - padding[0], h - padding[3] - padding[1]];
-	},
-	lines: [
-		{
-			min: 0,
-			max: 100,
-			orientation: 'r'
-		},
-		{
-			min: 0,
-			max: 100,
-			orientation: 'a'
-		}
-	],
-	axes: [true, true]
-});
-
-
-window.addEventListener('resize', function () { return grid.update(); });
-
-
-
-
-var settings = createSettings({
-	type: {type: 'switch', value: 'Cartesian', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: function (v) {
-		var lines = grid.lines;
-		if (v === 'Polar') {
-			settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
-			settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
-
-			lines[0].orientation = 'r';
-			lines[1].orientation = 'a';
-		}
-		else {
-			settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
-			settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
-
-			lines[0].orientation = 'x';
-			lines[1].orientation = 'y';
-		}
-
-		grid.update({lines: lines});
-	}},
-	viewport: {
-		type: 'text',
-		value: padding,
-		change: function (v) {
-			padding = v.split(/\s*,\s*/).map(function (v) { return parseInt(v); });
-			grid.update();
-		}
-	},
-	color: {type: 'color', value: getComputedStyle(grid.element).color, change: function (c) {
-		grid.element.style.color = c;
-	}},
-	opacity: {type: 'range', value: .5, min: 0, max: 1, change: function (v) {
-		grid.element.style.setProperty('--opacity', v);
-	}},
-
-	x: {type: 'raw', label: '<br/><strong>X lines</strong>', title: 'Horizontal'},
-	xLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: function (isLog) {
-		var lines = grid.lines;
-		lines[0].logarithmic = isLog;
-		if (isLog) {
-			lines[0].min = 1;
-			lines[0].max = 10000;
-			settings.set('xRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
-		}
-		else {
-			lines[0].min = 0;
-			lines[0].max = 100;
-			settings.set('xRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
-		}
-		grid.update({
-			lines: lines
-		});
-	}},
-	// xUnits: { label: 'units', type: 'text', value: '', change: v => {
-	// 	let lines = grid.lines;
-	// 	lines[0].units = v;
-	// 	grid.update({
-	// 		lines:  lines
-	// 	});
-	// }},
-	xAxis: { type: 'checkbox', label: 'axis', value: grid.axes[0], change: function (v) {
-		var axes = grid.axes;
-		axes[0] = v;
-		grid.update({
-			axes:  axes
-		});
-	}},
-	xRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: function (v) {
-		var lines = grid.lines;
-		lines[0].min = v[0];
-		lines[0].max = v[1];
-		grid.update({
-			lines: lines
-		});
-	}},
-
-	y: {type: 'raw', label: '<br/><strong>Y lines</strong>', title: 'Vertical'},
-	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: function (isLog) {
-		var lines = grid.lines;
-		lines[1].logarithmic = isLog;
-		if (isLog) {
-			lines[1].min = 1;
-			lines[1].max = 10000;
-			settings.set('yRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
-		}
-		else {
-			lines[1].min = 0;
-			lines[1].max = 100;
-			settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
-		}
-		grid.update({
-			lines: lines
-		});
-	}},
-	yAxis: {type: 'checkbox', label: 'axis', value: grid.axes[1], change: function (v) {
-		var axes = grid.axes;
-		axes[1] = v;
-		grid.update({
-			axes:  axes
-		});
-	} },
-	yRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: function (v) {
-		var lines = grid.lines;
-		lines[1].min = v[0];
-		lines[1].max = v[1];
-		grid.update({
-			lines: lines
-		});
-	}}
-}, {
-	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
-	theme: require('../settings-panel/theme/control'),
-	fontSize: 11,
-	// palette: ['black', 'white'],
-	fontFamily: 'monospace',
-	style: "position: absolute; top: 0px; right: 0px; padding: 20px; height: 100%; width: 300px; z-index: 1;",
-	css: '.settings-panel-title {text-align: left;}'
-});
-},{"../settings-panel":18,"../settings-panel/theme/control":86,"./":6,"insert-styles":9,"is-browser":10}],18:[function(require,module,exports){
-/**
- * @module settings-panel
- */
-
-var Emitter = require('events').EventEmitter;
-var inherits = require('inherits');
-var extend = require('just-extend');
-var css = require('dom-css');
-var uid = require('get-uid');
-
-var insertCss = require('insert-styles');
-var isPlainObject = require('is-plain-obj');
-var format = require('param-case');
-var px = require('add-px-to-style');
-var scopeCss = require('scope-css');
-
-module.exports = Panel
-
-
-insertCss(".settings-panel {\r\n\tposition: relative;\r\n\t-webkit-user-select: none;\r\n\t-moz-user-select: none;\r\n\t-ms-user-select: none;\r\n\tuser-select: none;\r\n\tcursor: default;\r\n\ttext-align: left;\r\n\tbox-sizing: border-box;\r\n\tfont-family: sans-serif;\r\n\tfont-size: 1rem;\r\n\twidth: 36em;\r\n\tmax-width: 100%;\r\n\tpadding: 1em;\r\n}\r\n\r\n.settings-panel [hidden] {\r\n\tdisplay: none!important;\r\n}\r\n\r\n.settings-panel * {\r\n\tbox-sizing: border-box;\r\n}\r\n\r\n.settings-panel input,\r\n.settings-panel button,\r\n.settings-panel textarea,\r\n.settings-panel select {\r\n\tfont-family: inherit;\r\n\tfont-size: inherit;\r\n}\r\n\r\n\r\n.settings-panel a {\r\n\tcolor: inherit;\r\n\ttext-decoration: none;\r\n}\r\n\r\n/** Basic layout */\r\n.settings-panel-field {\r\n\tposition: relative;\r\n\tpadding: .25em;\r\n\tdisplay: table;\r\n\twidth: 100%;\r\n}\r\n.settings-panel-field:last-child {\r\n\tmargin-bottom: 0;\r\n}\r\n.settings-panel-label {\r\n\tleft: 0;\r\n\tdisplay: table-cell;\r\n\tline-height: 1.2;\r\n\tvertical-align: baseline;\r\n\tpadding-top: 0;\r\n\tmax-width: 100%;\r\n}\r\n.settings-panel-input {\r\n\tdisplay: table-cell;\r\n\tvertical-align: baseline;\r\n\tposition: relative;\r\n}\r\n\r\n.settings-panel-orientation-left .settings-panel-label {\r\n\twidth: 9em;\r\n\tpadding-right: .5em;\r\n}\r\n.settings-panel-orientation-right .settings-panel-label {\r\n\tdisplay: block;\r\n\tmargin-right: 0;\r\n\tfloat: right;\r\n\twidth: 9em;\r\n\tpadding-top: .4em;\r\n\tpadding-left: .5em;\r\n}\r\n.settings-panel-orientation-right .settings-panel-label + .settings-panel-input {\r\n\tdisplay: block;\r\n\twidth: calc(100% - 9em);\r\n}\r\n.settings-panel-orientation-top .settings-panel-label {\r\n\tdisplay: block;\r\n\twidth: 100%;\r\n\tmargin-right: 0;\r\n\tpadding-top: 0;\r\n\tline-height: 1.5;\r\n}\r\n.settings-panel-orientation-top .settings-panel-label + .settings-panel-input {\r\n\tdisplay: block;\r\n\twidth: 100%;\r\n\tpadding: 0;\r\n}\r\n.settings-panel-orientation-bottom .settings-panel-label {\r\n\tdisplay: block;\r\n\twidth: 100%;\r\n\tmargin-right: 0;\r\n\tpadding: 0;\r\n\tline-height: 1.5;\r\n\tborder-top: 2.5em solid transparent;\r\n}\r\n.settings-panel-orientation-bottom .settings-panel-label + .settings-panel-input {\r\n\twidth: 100%;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n}\r\n\r\n.settings-panel-orientation-left > .settings-panel-label {\r\n\twidth: 9em;\r\n\tdisplay: table-cell;\r\n}\r\n\r\n.settings-panel-title {\r\n\twidth: 100%;\r\n\tfont-size: 1.6em;\r\n\tline-height: 1.25;\r\n\tmargin-top: 0;\r\n\tmargin-bottom: 0;\r\n\tpadding: .25em .25em;\r\n\ttext-align: center;\r\n}\r\n.settings-panel--collapsible .settings-panel-title {\r\n\tcursor: pointer;\r\n}\r\n.settings-panel--collapsed > *:not(.settings-panel-title) {\r\n\tdisplay: none!important;\r\n}\r\n\r\n\r\n/** Button */\r\n.settings-panel-field--button {\r\n\tdisplay: inline-block;\r\n}\r\n.settings-panel-field--button .settings-panel-input {\r\n\tdisplay: block;\r\n\ttext-align: center;\r\n}\r\n.settings-panel-button {\r\n\tvertical-align: baseline;\r\n\tline-height: 1;\r\n\tmin-height: 2em;\r\n\tpadding: .2em 1em;\r\n\twidth: 100%;\r\n\tcursor: pointer;\r\n}\r\n\r\n\r\n/** Default text and alike style */\r\n.settings-panel-text {\r\n\theight: 2em;\r\n\twidth: 100%;\r\n\tvertical-align: baseline;\r\n}\r\n.settings-panel-textarea {\r\n\twidth: 100%;\r\n\tvertical-align: top; /* allowable as we use autoheight */\r\n\tmin-height: 2em;\r\n}\r\n\r\n/** Checkbox style */\r\n.settings-panel-field--checkbox .settings-panel-input {\r\n\tline-height: 2em;\r\n}\r\n.settings-panel-checkbox {\r\n\tdisplay: inline-block;\r\n\tvertical-align: middle;\r\n\twidth: 1.2em;\r\n\theight: 1.2em;\r\n\tline-height: 1.2em;\r\n\tmargin: 0;\r\n}\r\n\r\n\r\n/** Color picker style */\r\n.settings-panel-color {\r\n\tposition: relative;\r\n\twidth: 2em;\r\n\theight: 2em;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbottom: 0;\r\n\tmargin: auto;\r\n}\r\n.settings-panel-color-value {\r\n\twidth: 100%;\r\n\theight: 2em;\r\n\tpadding: 0 0 0 2.5em;\r\n}\r\n.Scp {\r\n\t-webkit-user-select: none;\r\n\t\t -moz-user-select: none;\r\n\t\t\t-ms-user-select: none;\r\n\t\t\t\t\tuser-select: none;\r\n\tposition: absolute;\r\n\tz-index: 10;\r\n\tcursor: pointer;\r\n}\r\n.Scp-saturation {\r\n\tposition: relative;\r\n\twidth: calc(100% - 25px);\r\n\theight: 100%;\r\n\tbackground: linear-gradient(to right, #fff 0%, #f00 100%);\r\n\tfloat: left;\r\n}\r\n.Scp-brightness {\r\n\twidth: 100%;\r\n\theight: 100%;\r\n\tbackground: linear-gradient(to top, #000 0%, rgba(255,255,255,0) 100%);\r\n}\r\n.Scp-sbSelector {\r\n\tborder: 1px solid;\r\n\tposition: absolute;\r\n\twidth: 14px;\r\n\theight: 14px;\r\n\tbackground: #fff;\r\n\tborder-radius: 10px;\r\n\ttop: -7px;\r\n\tleft: -7px;\r\n\tbox-sizing: border-box;\r\n\tz-index: 10;\r\n}\r\n.Scp-hue {\r\n\twidth: 20px;\r\n\theight: 100%;\r\n\tposition: relative;\r\n\tfloat: left;\r\n\tbackground: linear-gradient(to bottom, #f00 0%, #f0f 17%, #00f 34%, #0ff 50%, #0f0 67%, #ff0 84%, #f00 100%);\r\n}\r\n.Scp-hSelector {\r\n\tposition: absolute;\r\n\tbackground: #fff;\r\n\tborder-bottom: 1px solid #000;\r\n\tright: -3px;\r\n\twidth: 10px;\r\n\theight: 2px;\r\n}\r\n\r\n\r\n\r\n/** Interval style */\r\n.settings-panel-interval {\r\n\tposition: relative;\r\n\t-webkit-appearance: none;\r\n\tdisplay: inline-block;\r\n\tvertical-align: top;\r\n\theight: 2em;\r\n\tmargin: 0px 0;\r\n\twidth: 70%;\r\n\tbackground: #ddd;\r\n\tcursor: ew-resize;\r\n\t-webkit-touch-callout: none;\r\n\t-webkit-user-select: none;\r\n\t-khtml-user-select: none;\r\n\t-moz-user-select: none;\r\n\t-ms-user-select: none;\r\n\tuser-select: none;\r\n}\r\n.settings-panel-interval-handle {\r\n\tbackground: #7a4;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbottom: 0;\r\n\tmin-width: 1px;\r\n}\r\n.settings-panel.settings-panel-interval-dragging * {\r\n\t-webkit-touch-callout: none !important;\r\n\t-webkit-user-select: none !important;\r\n\t-khtml-user-select: none !important;\r\n\t-moz-user-select: none !important;\r\n\t-ms-user-select: none !important;\r\n\tuser-select: none !important;\r\n\r\n\tcursor: ew-resize !important;\r\n}\r\n\r\n.settings-panel-interval + .settings-panel-value {\r\n\tright: 0;\r\n\tpadding-left: .5em;\r\n}\r\n\r\n\r\n\r\n/** Range style */\r\n.settings-panel-range {\r\n\twidth: 85%;\r\n\tpadding: 0;\r\n\tmargin: 0px 0;\r\n\theight: 2em;\r\n\tvertical-align: top;\r\n}\r\n.settings-panel-range + .settings-panel-value {\r\n\tpadding-left: .5em;\r\n}\r\n\r\n\r\n/** Select style */\r\n.settings-panel-select {\r\n\tdisplay: inline-block;\r\n\twidth: 100%;\r\n\theight: 2em;\r\n\tvertical-align: baseline;\r\n}\r\n\r\n/** Value style */\r\n.settings-panel-value {\r\n\t-webkit-appearance: none;\r\n\t-moz-appearance: none;\r\n\t-o-appearance: none;\r\n\tappearance: none;\r\n\tpadding: 0 0 0 0em;\r\n\tdisplay: inline-block;\r\n\tvertical-align: baseline;\r\n\tcursor: text;\r\n\theight: 2em;\r\n\tborder: none;\r\n\tborder-radius: 0;\r\n\toutline: none;\r\n\tfont-family: inherit;\r\n\tbackground: none;\r\n\tcolor: inherit;\r\n\twidth: 15%;\r\n}\r\n.settings-panel-value:focus {\r\n\toutline: 0;\r\n\tbox-shadow: 0;\r\n}\r\n\r\n.settings-panel-switch {\r\n\t-webkit-appearance: none;\r\n\t-moz-appearance: none;\r\n\tappearance: none;\r\n\tborder: none;\r\n\tdisplay: block;\r\n\tvertical-align: baseline;\r\n\tpadding: 0;\r\n\tmargin: 0;\r\n\tline-height: 2em;\r\n}\r\n.settings-panel-switch-input {\r\n\tmargin: 0;\r\n\tvertical-align: middle;\r\n\twidth: 1.2em;\r\n\theight: 1.2em;\r\n\tcursor: pointer;\r\n\tmargin-right: .25em;\r\n}\r\n.settings-panel-switch-label {\r\n\tdisplay: inline-block;\r\n\tvertical-align: baseline;\r\n\tline-height: 1.2;\r\n\tmargin-right: 1em;\r\n}\r\n\r\n\r\n.settings-panel hr {\r\n\tborder: none;\r\n\theight: 0;\r\n\tmargin: .75em .25em;\r\n\tborder-bottom: 1px dotted;\r\n}\r\n\r\n.settings-panel-field--disabled {\r\n\topacity: .5;\r\n\tpointer-events: none;\r\n}");
-
-
-/**
- * @constructor
- */
-function Panel (items, opts) {
-	var this$1 = this;
-
-	if (!(this instanceof Panel)) return new Panel(items, opts)
-
-	extend(this, opts);
-
-	//ensure container
-	if (this.container === undefined) this.container = document.body || document.documentElement;
-
-	this.container.classList.add('settings-panel-container');
-
-	//create element
-	if (!this.id) this.id = uid();
-	this.element = document.createElement('div')
-	this.element.className = 'settings-panel settings-panel-' + this.id;
-	if (this.className) this.element.className += ' ' + this.className;
-
-	//create title
-	if (this.title) {
-		this.titleEl = this.element.appendChild(document.createElement('h2'));
-		this.titleEl.className = 'settings-panel-title';
-	}
-
-	//create collapse button
-	if (this.collapsible && this.title) {
-		// this.collapseEl = this.element.appendChild(document.createElement('div'));
-		// this.collapseEl.className = 'settings-panel-collapse';
-		this.element.classList.add('settings-panel--collapsible');
-		this.titleEl.addEventListener('click', function () {
-			if (this$1.collapsed) {
-				this$1.collapsed = false;
-				this$1.element.classList.remove('settings-panel--collapsed');
-			}
-			else {
-				this$1.collapsed = true;
-				this$1.element.classList.add('settings-panel--collapsed');
-			}
-		});
-	}
-
-	//state is values of items
-	this.state = {};
-
-	//items is all items settings
-	this.items = {};
-
-	//create fields
-	this.set(items);
-
-	if (this.container) {
-		this.container.appendChild(this.element)
-	}
-
-	//create theme style
-	this.update();
-}
-
-inherits(Panel, Emitter);
-
-
-/**
- * Set item value/options
- */
-Panel.prototype.set = function (name, value) {
-	var this$1 = this;
-
-	//handle list of properties
-	if (Array.isArray(name)) {
-		var items = name;
-		items.forEach(function (item) {
-			this$1.set(item.id || item.label, item);
-		});
-
-		return this;
-	}
-
-	//handle plain object
-	if (isPlainObject(name)) {
-		var items$1 = name;
-		for (var key in items$1) {
-			var item$1 = items$1[key];
-			this$1.set(key, item$1)
-		}
-
-		return this;
-	}
-
-	//format name
-	name = name || '';
-	name = name.replace(/\-/g,'dash-');
-	name = format(name);
-
-	if (name) {
-		var item = this.items[name];
-		if (!item) item = this.items[name] = { id: name, panel: this };
-	}
-	//noname items should not be saved in state
-	else {
-		var item = {id: null, panel: this};
-	}
-
-	var initialValue = item.value;
-	var isBefore = item.before;
-	var isAfter = item.after;
-
-	if (isPlainObject(value)) {
-		item = extend(item, value);
-	}
-	else {
-		//ignore nothing-changed set
-		if (value === item.value && value !== undefined) return this;
-		item.value = value;
-	}
-
-	if (item.value === undefined) item.value = item.default;
-
-	if (name) this.state[name] = item.value;
-
-	//define label via name
-	if (item.label === undefined && item.id) {
-		item.label = item.id;
-	}
-
-	//detect type
-	if (!item.type) {
-		if (item.value && Array.isArray(item.value)) {
-			item.type = 'interval'
-		} else if (item.scale || item.max || item.steps || item.step || typeof item.value === 'number') {
-			item.type = 'range'
-		} else if (item.options) {
-			if (Array.isArray(item.options) && item.options.join('').length < 90 ) {
-				item.type = 'switch'
-			}
-			else {
-				item.type = 'select'
-			}
-		} else if (item.format) {
-			item.type = 'color'
-		} else if (typeof item.value === 'boolean') {
-			item.type = 'checkbox'
-		} else {
-			if (item.value && (item.value.length > 140 || /\n/.test(item.value))) {
-				item.type = 'textarea'
-			}
-			else {
-				item.type = 'text'
-			}
-		}
-	}
-
-	var field, fieldId;
-
-	if (item.id != null) {
-		fieldId = 'settings-panel-field-' + item.id;
-		field = this.element.querySelector('#' + fieldId);
-	}
-
-	//create field container
-	if (!field) {
-		field = document.createElement('div');
-		if (fieldId != null) field.id = fieldId;
-		this.element.appendChild(field);
-		item.field = field;
-	}
-	else {
-		//clean previous before/after
-		if (isBefore) {
-			this.element.removeChild(field.prevSibling);
-		}
-		if (isAfter) {
-			this.element.removeChild(field.nextSibling);
-		}
-	}
-
-	field.className = 'settings-panel-field settings-panel-field--' + item.type;
-
-	if (item.orientation) field.className += ' settings-panel-orientation-' + item.orientation;
-
-	if (item.className) field.className += ' ' + item.className;
-
-	if (item.style) {
-		if (isPlainObject(item.style)) {
-			css(field, item.style);
-		}
-		else if (typeof item.style === 'string') {
-			field.style.cssText = item.style;
-		}
-	}
-	else if (item.style !== undefined) {
-		field.style = null;
-	}
-
-	if (item.hidden) {
-		field.setAttribute('hidden', true);
-	}
-	else {
-		field.removeAttribute('hidden');
-	}
-
-	//createe container for the input
-	var inputContainer = field.querySelector('.settings-panel-input');
-
-	if (!inputContainer) {
-		inputContainer = document.createElement('div');
-		inputContainer.className = 'settings-panel-input';
-		item.container = inputContainer;
-		field.appendChild(inputContainer);
-	}
-
-	if (item.disabled) field.className += ' settings-panel-field--disabled';
-
-	var components = this.components;
-	var component = item.component;
-
-	if (!component) {
-		item.component = component = (components[item.type] || components.text)(item);
-
-		if (component.on) {
-			component.on('init', function (data) {
-				item.value = data
-				if (item.id) this$1.state[item.id] = item.value;
-				var state = extend({}, this$1.state);
-
-				item.init && item.init(data, state)
-				this$1.emit('init', item.id, data, state)
-				item.change && item.change(data, state)
-				this$1.emit('change', item.id, data, state)
-			});
-
-			component.on('input', function (data) {
-				item.value = data
-				if (item.id) this$1.state[item.id] = item.value;
-				var state = extend({}, this$1.state);
-
-				item.input && item.input(data, state)
-				this$1.emit('input', item.id, data, state)
-				item.change && item.change(data, state)
-				this$1.emit('change', item.id, data, state)
-			});
-
-			component.on('change', function (data) {
-				item.value = data
-				if (item.id) this$1.state[item.id] = item.value;
-				var state = extend({}, this$1.state);
-
-				item.change && item.change(data, state)
-				this$1.emit('change', item.id, data, state)
-			});
-		}
-	}
-	else {
-		component.update(item);
-	}
-
-	//create field label
-	if (component.label !== false && (item.label || item.label === '')) {
-		var label = field.querySelector('.settings-panel-label');
-		if (!label) {
-			label = document.createElement('label')
-			label.className = 'settings-panel-label';
-			field.insertBefore(label, inputContainer);
-		}
-
-		label.htmlFor = item.id;
-		label.innerHTML = item.label;
-		label.title = item.title || item.label;
-	}
-
-	//handle after and before
-	// if (item.before) {
-	// 	let before = item.before;
-	// 	if (before instanceof Function) {
-	// 		before = item.before.call(item, component);
-	// 	}
-	// 	if (before instanceof HTMLElement) {
-	// 		this.element.insertBefore(before, field);
-	// 	}
-	// 	else {
-	// 		field.insertAdjacentHTML('beforebegin', before);
-	// 	}
-	// }
-	// if (item.after) {
-	// 	let after = item.after;
-	// 	if (after instanceof Function) {
-	// 		after = item.after.call(item, component);
-	// 	}
-	// 	if (after instanceof HTMLElement) {
-	// 		this.element.insertBefore(after, field.nextSibling);
-	// 	}
-	// 	else {
-	// 		field.insertAdjacentHTML('afterend', after);
-	// 	}
-	// }
-
-	//emit change
-	if (initialValue !== item.value) {
-		this.emit('change', item.id, item.value, this.state)
-	}
-
-	return this;
-}
-
-
-/**
- * Return property value or a list
- */
-Panel.prototype.get = function (name) {
-	if (name == null) return this.state;
-	return this.state[name];
-}
-
-
-/**
- * Update theme
- */
-Panel.prototype.update = function (opts) {
-	extend(this, opts);
-
-	//FIXME: decide whether we have to reset these params
-	if (opts && opts.theme) {
-		if (opts.theme.fontSize) this.fontSize = opts.theme.fontSize;
-		if (opts.theme.inputHeight) this.inputHeight = opts.theme.inputHeight;
-		if (opts.theme.fontFamily) this.fontFamily = opts.theme.fontFamily;
-		if (opts.theme.labelWidth) this.labelWidth = opts.theme.labelWidth;
-		if (opts.theme.palette) this.palette = opts.theme.palette;
-	}
-
-	//update title, if any
-	if (this.titleEl) this.titleEl.innerHTML = this.title;
-
-	//update orientation
-	this.element.classList.remove('settings-panel-orientation-top');
-	this.element.classList.remove('settings-panel-orientation-bottom');
-	this.element.classList.remove('settings-panel-orientation-left');
-	this.element.classList.remove('settings-panel-orientation-right');
-	this.element.classList.add('settings-panel-orientation-' + this.orientation);
-
-	//apply style
-	var cssStr = '';
-	if (this.theme instanceof Function) {
-		cssStr = this.theme.call(this, this);
-	}
-	else if (typeof this.theme === 'string') {
-		cssStr = this.theme;
-	}
-
-	//append extra css
-	if (this.css) {
-		if (this.css instanceof Function) {
-			cssStr += this.css.call(this, this);
-		}
-		else if (typeof this.css === 'string') {
-			cssStr += this.css;
-		}
-	}
-
-	//scope each rule
-	cssStr = scopeCss(cssStr || '', '.settings-panel-' + this.id) || '';
-
-	insertCss(cssStr.trim(), {
-		id: this.id
-	});
-
-	if (this.style) {
-		if (isPlainObject(this.style)) {
-			css(this.element, this.style);
-		}
-		else if (typeof this.style === 'string') {
-			this.element.style.cssText = this.style;
-		}
-	}
-	else if (this.style !== undefined) {
-		this.element.style = null;
-	}
-
-	return this;
-}
-
-//instance theme
-Panel.prototype.theme = require('./theme/none');
-
-/**
- * Registered components
- */
-Panel.prototype.components = {
-	range: require('./src/range'),
-
-	button: require('./src/button'),
-	text: require('./src/text'),
-	textarea: require('./src/textarea'),
-
-	checkbox: require('./src/checkbox'),
-	toggle: require('./src/checkbox'),
-
-	switch: require('./src/switch'),
-
-	color: require('./src/color'),
-
-	interval: require('./src/interval'),
-	multirange: require('./src/interval'),
-
-	custom: require('./src/custom'),
-	raw: require('./src/custom'),
-
-	select: require('./src/select')
-};
-
-
-/**
- * Additional class name
- */
-Panel.prototype.className;
-
-
-/**
- * Additional visual setup
- */
-Panel.prototype.orientation = 'left';
-
-
-/** Display collapse button */
-Panel.prototype.collapsible = false;
-},{"./src/button":75,"./src/checkbox":76,"./src/color":77,"./src/custom":78,"./src/interval":79,"./src/range":80,"./src/select":81,"./src/switch":82,"./src/text":83,"./src/textarea":84,"./theme/none":87,"add-px-to-style":19,"dom-css":25,"events":3,"get-uid":29,"inherits":31,"insert-styles":33,"is-plain-obj":42,"just-extend":43,"param-case":60,"scope-css":63}],19:[function(require,module,exports){
+},{"buffer":2,"events":3,"get-uid":17,"inherits":19,"insert-styles":21,"is-browser":27,"mumath/closest":46,"mumath/lg":47,"mumath/mod":48,"mumath/order":49,"mumath/within":52,"xtend":83}],7:[function(require,module,exports){
 /* The following list is defined in React's core */
 var IS_UNITLESS = {
   animationIterationCount: true,
@@ -3545,9 +2791,9 @@ module.exports = function(name, value) {
     return value;
   }
 };
-},{}],20:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /*!
-	Autosize 3.0.16
+	Autosize 3.0.17
 	license: MIT
 	http://www.jacklmoore.com/autosize
 */
@@ -3596,23 +2842,14 @@ module.exports = function(name, value) {
 	}
 
 	function assign(ta) {
-		var _ref = arguments[1] === undefined ? {} : arguments[1];
-
-		var _ref$setOverflowX = _ref.setOverflowX;
-		var setOverflowX = _ref$setOverflowX === undefined ? true : _ref$setOverflowX;
-		var _ref$setOverflowY = _ref.setOverflowY;
-		var setOverflowY = _ref$setOverflowY === undefined ? true : _ref$setOverflowY;
-
 		if (!ta || !ta.nodeName || ta.nodeName !== 'TEXTAREA' || set.has(ta)) return;
 
 		var heightOffset = null;
-		var overflowY = null;
 		var clientWidth = ta.clientWidth;
+		var cachedHeight = null;
 
 		function init() {
 			var style = window.getComputedStyle(ta, null);
-
-			overflowY = style.overflowY;
 
 			if (style.resize === 'vertical') {
 				ta.style.resize = 'none';
@@ -3647,11 +2884,7 @@ module.exports = function(name, value) {
 				ta.style.width = width;
 			}
 
-			overflowY = value;
-
-			if (setOverflowY) {
-				ta.style.overflowY = value;
-			}
+			ta.style.overflowY = value;
 
 			resize();
 		}
@@ -3702,23 +2935,27 @@ module.exports = function(name, value) {
 		}
 
 		function update() {
-			var startHeight = ta.style.height;
-
 			resize();
 
-			var style = window.getComputedStyle(ta, null);
+			var computed = window.getComputedStyle(ta, null);
+			var computedHeight = Math.round(parseFloat(computed.height));
+			var styleHeight = Math.round(parseFloat(ta.style.height));
 
-			if (style.height !== ta.style.height) {
-				if (overflowY !== 'visible') {
+			// The computed height not matching the height set via resize indicates that
+			// the max-height has been exceeded, in which case the overflow should be set to visible.
+			if (computedHeight !== styleHeight) {
+				if (computed.overflowY !== 'visible') {
 					changeOverflow('visible');
 				}
 			} else {
-				if (overflowY !== 'hidden') {
+				// Normally keep overflow set to hidden, to avoid flash of scrollbar as the textarea expands.
+				if (computed.overflowY !== 'hidden') {
 					changeOverflow('hidden');
 				}
 			}
 
-			if (startHeight !== ta.style.height) {
+			if (cachedHeight !== computedHeight) {
+				cachedHeight = computedHeight;
 				var evt = createEvent('autosize:resized');
 				ta.dispatchEvent(evt);
 			}
@@ -3761,11 +2998,8 @@ module.exports = function(name, value) {
 		ta.addEventListener('input', update, false);
 		ta.addEventListener('autosize:update', update, false);
 		set.add(ta);
-
-		if (setOverflowX) {
-			ta.style.overflowX = 'hidden';
-			ta.style.wordWrap = 'break-word';
-		}
+		ta.style.overflowX = 'hidden';
+		ta.style.wordWrap = 'break-word';
 
 		init();
 	}
@@ -3820,7 +3054,7 @@ module.exports = function(name, value) {
 
 	module.exports = autosize;
 });
-},{}],21:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /**
  * @module  caret-position/get
  *
@@ -3870,7 +3104,7 @@ module.exports = function (input) {
 	}
 	return result;
 };
-},{}],22:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * @module  caret-position
  */
@@ -3884,7 +3118,7 @@ function caret(a,b,c){
 
 caret.get = require('./get');
 caret.set = require('./set');
-},{"./get":21,"./set":23}],23:[function(require,module,exports){
+},{"./get":9,"./set":11}],11:[function(require,module,exports){
 /**
  * @module  caret-position/set
  *
@@ -3908,7 +3142,7 @@ module.exports = function(input, start, end) {
 		range.select();
 	}
 };
-},{}],24:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -4073,7 +3307,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var prefix = require('prefix-style')
 var toCamelCase = require('to-camel-case')
 var cache = { 'float': 'cssFloat' }
@@ -4132,7 +3366,7 @@ module.exports.get = function (element, properties) {
   }
 }
 
-},{"add-px-to-style":19,"prefix-style":61,"to-camel-case":71}],26:[function(require,module,exports){
+},{"add-px-to-style":7,"prefix-style":55,"to-camel-case":79}],14:[function(require,module,exports){
 'use strict';
 
 var trim = require('trim');
@@ -4220,7 +3454,7 @@ function numToString(value) {
   return value;
 }
 
-},{"./lib/properties":28,"prefix":62,"trim":74}],27:[function(require,module,exports){
+},{"./lib/properties":16,"prefix":56,"trim":82}],15:[function(require,module,exports){
 'use strict';
 
 exports = module.exports = compose;
@@ -4237,7 +3471,7 @@ function compose() {
   };
 }
 
-},{}],28:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 var trim = require('trim');
@@ -4360,9 +3594,14 @@ function defaultUnit(unit) {
   };
 }
 
-},{"./compose":27,"trim":74}],29:[function(require,module,exports){
-arguments[4][7][0].apply(exports,arguments)
-},{"dup":7}],30:[function(require,module,exports){
+},{"./compose":15,"trim":82}],17:[function(require,module,exports){
+/** generate unique id for selector */
+var counter = Date.now() % 1e9;
+
+module.exports = function getUid(){
+	return (Math.random() * 1e9 >>> 0) + (counter++);
+};
+},{}],18:[function(require,module,exports){
 module.exports = asString
 module.exports.add = append
 
@@ -4402,9 +3641,32 @@ function makeArray(arr) {
   return Array.isArray(arr) ? arr : [arr]
 }
 
-},{}],31:[function(require,module,exports){
-arguments[4][8][0].apply(exports,arguments)
-},{"dup":8}],32:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],20:[function(require,module,exports){
 /**
  * @module  input-number
  */
@@ -4493,9 +3755,43 @@ function numerify (input, opts) {
 
 	return input;
 }
-},{"caret-position2":22,"mumath/clamp":56,"mumath/round":58}],33:[function(require,module,exports){
-arguments[4][9][0].apply(exports,arguments)
-},{"dup":9}],34:[function(require,module,exports){
+},{"caret-position2":10,"mumath/clamp":45,"mumath/round":51}],21:[function(require,module,exports){
+(function (global){
+'use strict'
+
+var cache = {}
+
+function noop () {}
+
+module.exports = !global.document ? noop : insertStyles
+
+function insertStyles (styles, options) {
+  var id = options && options.id || styles
+
+  var element = cache[id] = (cache[id] || createStyle(id))
+
+  if ('textContent' in element) {
+    element.textContent = styles
+  } else {
+    element.styleSheet.cssText = styles
+  }
+}
+
+function createStyle (id) {
+  var element = document.getElementById(id)
+
+  if (element) return element
+
+  element = document.createElement('style')
+  element.setAttribute('type', 'text/css')
+
+  document.head.appendChild(element)
+
+  return element
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],22:[function(require,module,exports){
 var builder = require( 'interpolation-values' );
 
 module.exports = function( values, interpolationFunc ) {
@@ -4512,7 +3808,7 @@ module.exports = function( values, interpolationFunc ) {
 		return interpolationFunc( values[ sIdx ], values[ eIdx ], t );
 	};
 };
-},{"interpolation-values":35}],35:[function(require,module,exports){
+},{"interpolation-values":23}],23:[function(require,module,exports){
 var interpolation = require( 'interpolation' );
 
 module.exports = function( exVal, interpolationFunction ) {
@@ -4533,7 +3829,7 @@ module.exports = function( exVal, interpolationFunction ) {
 		throw 'Value of type ' + ( typeof exVal ) + ' cannot be interpolated';
 	}
 }
-},{"./lib/array":36,"./lib/object":37,"interpolation":38}],36:[function(require,module,exports){
+},{"./lib/array":24,"./lib/object":25,"interpolation":26}],24:[function(require,module,exports){
 module.exports = function( interpolate ) {
 
 	return function( val1, val2, t ) {
@@ -4548,7 +3844,7 @@ module.exports = function( interpolate ) {
 		return rVal;
 	};
 };
-},{}],37:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 module.exports = function( exVal, interpolate ) {
 
 	var keys = [];
@@ -4575,7 +3871,7 @@ module.exports = function( exVal, interpolate ) {
 		return rVal;
 	};
 };
-},{}],38:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /** Utility function for linear interpolation. */
 module.exports.lerp = function(v0, v1, t) {
     return v0*(1-t)+v1*t;
@@ -4588,7 +3884,9 @@ module.exports.smoothstep = function(v0, v1, t) {
     // Evaluate polynomial
     return t*t*(3 - 2*t);
 };
-},{}],39:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
+module.exports = true;
+},{}],28:[function(require,module,exports){
 module.exports = isMobile;
 
 function isMobile (ua) {
@@ -4602,7 +3900,7 @@ function isMobile (ua) {
 }
 
 
-},{}],40:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*!
  * is-number <https://github.com/jonschlinkert/is-number>
  *
@@ -4618,7 +3916,7 @@ module.exports = function isNumber(n) {
     || n === 0;
 };
 
-},{}],41:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function(root) {
   'use strict';
 
@@ -4644,7 +3942,7 @@ module.exports = function isNumber(n) {
 
 })(this);
 
-},{}],42:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 'use strict';
 var toString = Object.prototype.toString;
 
@@ -4653,7 +3951,7 @@ module.exports = function (x) {
 	return toString.call(x) === '[object Object]' && (prototype = Object.getPrototypeOf(x), prototype === null || prototype === Object.getPrototypeOf({}));
 };
 
-},{}],43:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 module.exports = extend;
 
 /*
@@ -4703,7 +4001,7 @@ function extend(obj1, obj2 /*, [objn]*/) {
   return result;
 }
 
-},{}],44:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /**
  * lodash 3.1.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4836,7 +4134,7 @@ function isLength(value) {
 
 module.exports = baseFlatten;
 
-},{"lodash.isarguments":50,"lodash.isarray":51}],45:[function(require,module,exports){
+},{"lodash.isarguments":39,"lodash.isarray":40}],34:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -4873,7 +4171,7 @@ function baseFunctions(object, props) {
 
 module.exports = baseFunctions;
 
-},{"lodash.isfunction":52}],46:[function(require,module,exports){
+},{"lodash.isfunction":41}],35:[function(require,module,exports){
 /**
  * lodash 3.2.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
@@ -5550,7 +4848,7 @@ function toNumber(value) {
 
 module.exports = createWrapper;
 
-},{"lodash._root":47}],47:[function(require,module,exports){
+},{"lodash._root":36}],36:[function(require,module,exports){
 (function (global){
 /**
  * lodash 3.0.1 (Custom Build) <https://lodash.com/>
@@ -5613,7 +4911,7 @@ function checkGlobal(value) {
 module.exports = root;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],48:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /**
  * lodash 3.1.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -5673,7 +4971,7 @@ var bindAll = restParam(function(object, methodNames) {
 
 module.exports = bindAll;
 
-},{"lodash._baseflatten":44,"lodash._createwrapper":46,"lodash.functions":49,"lodash.restparam":54}],49:[function(require,module,exports){
+},{"lodash._baseflatten":33,"lodash._createwrapper":35,"lodash.functions":38,"lodash.restparam":43}],38:[function(require,module,exports){
 /**
  * lodash 3.0.0 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -5706,14 +5004,14 @@ function functions(object) {
 
 module.exports = functions;
 
-},{"lodash._basefunctions":45,"lodash.keysin":53}],50:[function(require,module,exports){
+},{"lodash._basefunctions":34,"lodash.keysin":42}],39:[function(require,module,exports){
 /**
- * lodash 3.0.8 (Custom Build) <https://lodash.com/>
+ * lodash (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
- * Copyright 2012-2016 The Dojo Foundation <http://dojofoundation.org/>
+ * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+ * Released under MIT license <https://lodash.com/license>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
- * Copyright 2009-2016 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
- * Available under MIT license <https://lodash.com/license>
+ * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
 
 /** Used as references for various `Number` constants. */
@@ -5724,6 +5022,19 @@ var argsTag = '[object Arguments]',
     funcTag = '[object Function]',
     genTag = '[object GeneratorFunction]';
 
+/**
+ * The base implementation of `_.property` without support for deep paths.
+ *
+ * @private
+ * @param {string} key The key of the property to get.
+ * @returns {Function} Returns the new accessor function.
+ */
+function baseProperty(key) {
+  return function(object) {
+    return object == null ? undefined : object[key];
+  };
+}
+
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -5731,7 +5042,8 @@ var objectProto = Object.prototype;
 var hasOwnProperty = objectProto.hasOwnProperty;
 
 /**
- * Used to resolve the [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/6.0/#sec-object.prototype.tostring)
  * of values.
  */
 var objectToString = objectProto.toString;
@@ -5740,23 +5052,11 @@ var objectToString = objectProto.toString;
 var propertyIsEnumerable = objectProto.propertyIsEnumerable;
 
 /**
- * The base implementation of `_.property` without support for deep paths.
- *
- * @private
- * @param {string} key The key of the property to get.
- * @returns {Function} Returns the new function.
- */
-function baseProperty(key) {
-  return function(object) {
-    return object == null ? undefined : object[key];
-  };
-}
-
-/**
  * Gets the "length" property value of `object`.
  *
- * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
- * that affects Safari on at least iOS 8.1-8.3 ARM64.
+ * **Note:** This function is used to avoid a
+ * [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792) that affects
+ * Safari on at least iOS 8.1-8.3 ARM64.
  *
  * @private
  * @param {Object} object The object to query.
@@ -5769,9 +5069,11 @@ var getLength = baseProperty('length');
  *
  * @static
  * @memberOf _
+ * @since 0.1.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+ *  else `false`.
  * @example
  *
  * _.isArguments(function() { return arguments; }());
@@ -5793,6 +5095,7 @@ function isArguments(value) {
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
@@ -5820,9 +5123,11 @@ function isArrayLike(value) {
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array-like object, else `false`.
+ * @returns {boolean} Returns `true` if `value` is an array-like object,
+ *  else `false`.
  * @example
  *
  * _.isArrayLikeObject([1, 2, 3]);
@@ -5846,9 +5151,10 @@ function isArrayLikeObject(value) {
  *
  * @static
  * @memberOf _
+ * @since 0.1.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+ * @returns {boolean} Returns `true` if `value` is a function, else `false`.
  * @example
  *
  * _.isFunction(_);
@@ -5868,13 +5174,16 @@ function isFunction(value) {
 /**
  * Checks if `value` is a valid array-like length.
  *
- * **Note:** This function is loosely based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
+ * **Note:** This function is loosely based on
+ * [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+ * @returns {boolean} Returns `true` if `value` is a valid length,
+ *  else `false`.
  * @example
  *
  * _.isLength(3);
@@ -5895,11 +5204,13 @@ function isLength(value) {
 }
 
 /**
- * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
- * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/6.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
  *
  * @static
  * @memberOf _
+ * @since 0.1.0
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is an object, else `false`.
@@ -5928,6 +5239,7 @@ function isObject(value) {
  *
  * @static
  * @memberOf _
+ * @since 4.0.0
  * @category Lang
  * @param {*} value The value to check.
  * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
@@ -5951,7 +5263,7 @@ function isObjectLike(value) {
 
 module.exports = isArguments;
 
-},{}],51:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 /**
  * lodash 3.0.4 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -6133,7 +5445,7 @@ function isNative(value) {
 
 module.exports = isArray;
 
-},{}],52:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /**
  * lodash 3.0.8 (Custom Build) <https://lodash.com/>
  * Build: `lodash modularize exports="npm" -o ./`
@@ -6210,7 +5522,7 @@ function isObject(value) {
 
 module.exports = isFunction;
 
-},{}],53:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 /**
  * lodash 3.0.8 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -6344,7 +5656,7 @@ function keysIn(object) {
 
 module.exports = keysIn;
 
-},{"lodash.isarguments":50,"lodash.isarray":51}],54:[function(require,module,exports){
+},{"lodash.isarguments":39,"lodash.isarray":40}],43:[function(require,module,exports){
 /**
  * lodash 3.6.1 (Custom Build) <https://lodash.com/>
  * Build: `lodash modern modularize exports="npm" -o ./`
@@ -6413,7 +5725,7 @@ function restParam(func, start) {
 
 module.exports = restParam;
 
-},{}],55:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 /**
  * Special language-specific overrides.
  *
@@ -6469,7 +5781,7 @@ module.exports = function (str, locale) {
   return str.toLowerCase()
 }
 
-},{}],56:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 /**
  * Clamp value.
  * Detects proper clamp min/max.
@@ -6484,7 +5796,73 @@ module.exports = function (str, locale) {
 module.exports = require('./wrap')(function(a, min, max){
 	return max > min ? Math.max(Math.min(a,max),min) : Math.max(Math.min(a,min),max);
 });
-},{"./wrap":59}],57:[function(require,module,exports){
+},{"./wrap":53}],46:[function(require,module,exports){
+/**
+ * @module  mumath/closest
+ */
+
+module.exports = function closest (num, arr) {
+	var curr = arr[0];
+	var diff = Math.abs (num - curr);
+	for (var val = 0; val < arr.length; val++) {
+		var newdiff = Math.abs (num - arr[val]);
+		if (newdiff < diff) {
+			diff = newdiff;
+			curr = arr[val];
+		}
+	}
+	return curr;
+}
+},{}],47:[function(require,module,exports){
+/**
+ * Base 10 logarithm
+ *
+ * @module mumath/lg
+ */
+module.exports = require('./wrap')(function (a) {
+	return Math.log(a) / Math.log(10);
+});
+},{"./wrap":53}],48:[function(require,module,exports){
+/**
+ * Looping function for any framesize.
+ * Like fmod.
+ *
+ * @module  mumath/loop
+ *
+ */
+
+module.exports = require('./wrap')(function (value, left, right) {
+	//detect single-arg case, like mod-loop or fmod
+	if (right === undefined) {
+		right = left;
+		left = 0;
+	}
+
+	//swap frame order
+	if (left > right) {
+		var tmp = right;
+		right = left;
+		left = tmp;
+	}
+
+	var frame = right - left;
+
+	value = ((value + left) % frame) - left;
+	if (value < left) value += frame;
+	if (value > right) value -= frame;
+
+	return value;
+});
+},{"./wrap":53}],49:[function(require,module,exports){
+/**
+ * @module mumath/order
+ */
+module.exports = require('./wrap')(function (n) {
+	n = Math.abs(n);
+	var order = Math.floor(Math.log(n) / Math.LN10 + 0.000000001);
+	return Math.pow(10,order);
+});
+},{"./wrap":53}],50:[function(require,module,exports){
 /**
  * @module  mumath/precision
  *
@@ -6504,7 +5882,7 @@ module.exports = require('./wrap')(function(n){
 
 	return !d ? 0 : s.length - d;
 });
-},{"./wrap":59}],58:[function(require,module,exports){
+},{"./wrap":53}],51:[function(require,module,exports){
 /**
  * Precision round
  *
@@ -6527,9 +5905,66 @@ module.exports = require('./wrap')(function(value, step) {
 	value = Math.round(value / step) * step;
 	return parseFloat(value.toFixed(precision(step)));
 });
-},{"./precision":57,"./wrap":59}],59:[function(require,module,exports){
-arguments[4][15][0].apply(exports,arguments)
-},{"dup":15}],60:[function(require,module,exports){
+},{"./precision":50,"./wrap":53}],52:[function(require,module,exports){
+/**
+ * Whether element is between left & right including
+ *
+ * @param {number} a
+ * @param {number} left
+ * @param {number} right
+ *
+ * @return {Boolean}
+ */
+module.exports = require('./wrap')(function(a, left, right){
+	if (left > right) {
+		var tmp = left;
+		left = right;
+		right = tmp;
+	}
+	if (a <= right && a >= left) return true;
+	return false;
+});
+},{"./wrap":53}],53:[function(require,module,exports){
+/**
+ * Get fn wrapped with array/object attrs recognition
+ *
+ * @return {Function} Target function
+ */
+module.exports = function(fn){
+	return function (a) {
+		var args = arguments;
+		if (a instanceof Array) {
+			var result = new Array(a.length), slice;
+			for (var i = 0; i < a.length; i++){
+				slice = [];
+				for (var j = 0, l = args.length, val; j < l; j++){
+					val = args[j] instanceof Array ? args[j][i] : args[j];
+					val = val;
+					slice.push(val);
+				}
+				result[i] = fn.apply(this, slice);
+			}
+			return result;
+		}
+		else if (typeof a === 'object') {
+			var result = {}, slice;
+			for (var i in a){
+				slice = [];
+				for (var j = 0, l = args.length, val; j < l; j++){
+					val = typeof args[j] === 'object' ? args[j][i] : args[j];
+					val = val;
+					slice.push(val);
+				}
+				result[i] = fn.apply(this, slice);
+			}
+			return result;
+		}
+		else {
+			return fn.apply(this, args);
+		}
+	};
+};
+},{}],54:[function(require,module,exports){
 var sentenceCase = require('sentence-case')
 
 /**
@@ -6543,7 +5978,7 @@ module.exports = function (string, locale) {
   return sentenceCase(string, locale, '-')
 }
 
-},{"sentence-case":64}],61:[function(require,module,exports){
+},{"sentence-case":58}],55:[function(require,module,exports){
 var div = null
 var prefixes = [ 'Webkit', 'Moz', 'O', 'ms' ]
 
@@ -6575,14 +6010,14 @@ module.exports = function prefixStyle (prop) {
   return false
 }
 
-},{}],62:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 function identity(x) { return x; }
 
 module.exports = identity;
 module.exports.dash = identity;
 module.exports.dash = identity;
 
-},{}],63:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 module.exports = scope;
 scope.replace = replace;
 
@@ -6615,7 +6050,7 @@ function replace (css, replacer) {
 	return css.replace(/([^\r\n,{}]+)(,(?=[^}]*{)|\s*{)/g, replacer);
 }
 
-},{}],64:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 var lowerCase = require('lower-case')
 
 var NON_WORD_REGEXP = require('./vendor/non-word-regexp')
@@ -6657,16 +6092,1849 @@ module.exports = function (str, locale, replacement) {
   return lowerCase(str, locale)
 }
 
-},{"./vendor/camel-case-regexp":65,"./vendor/non-word-regexp":66,"./vendor/trailing-digit-regexp":67,"lower-case":55}],65:[function(require,module,exports){
+},{"./vendor/camel-case-regexp":59,"./vendor/non-word-regexp":60,"./vendor/trailing-digit-regexp":61,"lower-case":44}],59:[function(require,module,exports){
 module.exports = /([\u0061-\u007A\u00B5\u00DF-\u00F6\u00F8-\u00FF\u0101\u0103\u0105\u0107\u0109\u010B\u010D\u010F\u0111\u0113\u0115\u0117\u0119\u011B\u011D\u011F\u0121\u0123\u0125\u0127\u0129\u012B\u012D\u012F\u0131\u0133\u0135\u0137\u0138\u013A\u013C\u013E\u0140\u0142\u0144\u0146\u0148\u0149\u014B\u014D\u014F\u0151\u0153\u0155\u0157\u0159\u015B\u015D\u015F\u0161\u0163\u0165\u0167\u0169\u016B\u016D\u016F\u0171\u0173\u0175\u0177\u017A\u017C\u017E-\u0180\u0183\u0185\u0188\u018C\u018D\u0192\u0195\u0199-\u019B\u019E\u01A1\u01A3\u01A5\u01A8\u01AA\u01AB\u01AD\u01B0\u01B4\u01B6\u01B9\u01BA\u01BD-\u01BF\u01C6\u01C9\u01CC\u01CE\u01D0\u01D2\u01D4\u01D6\u01D8\u01DA\u01DC\u01DD\u01DF\u01E1\u01E3\u01E5\u01E7\u01E9\u01EB\u01ED\u01EF\u01F0\u01F3\u01F5\u01F9\u01FB\u01FD\u01FF\u0201\u0203\u0205\u0207\u0209\u020B\u020D\u020F\u0211\u0213\u0215\u0217\u0219\u021B\u021D\u021F\u0221\u0223\u0225\u0227\u0229\u022B\u022D\u022F\u0231\u0233-\u0239\u023C\u023F\u0240\u0242\u0247\u0249\u024B\u024D\u024F-\u0293\u0295-\u02AF\u0371\u0373\u0377\u037B-\u037D\u0390\u03AC-\u03CE\u03D0\u03D1\u03D5-\u03D7\u03D9\u03DB\u03DD\u03DF\u03E1\u03E3\u03E5\u03E7\u03E9\u03EB\u03ED\u03EF-\u03F3\u03F5\u03F8\u03FB\u03FC\u0430-\u045F\u0461\u0463\u0465\u0467\u0469\u046B\u046D\u046F\u0471\u0473\u0475\u0477\u0479\u047B\u047D\u047F\u0481\u048B\u048D\u048F\u0491\u0493\u0495\u0497\u0499\u049B\u049D\u049F\u04A1\u04A3\u04A5\u04A7\u04A9\u04AB\u04AD\u04AF\u04B1\u04B3\u04B5\u04B7\u04B9\u04BB\u04BD\u04BF\u04C2\u04C4\u04C6\u04C8\u04CA\u04CC\u04CE\u04CF\u04D1\u04D3\u04D5\u04D7\u04D9\u04DB\u04DD\u04DF\u04E1\u04E3\u04E5\u04E7\u04E9\u04EB\u04ED\u04EF\u04F1\u04F3\u04F5\u04F7\u04F9\u04FB\u04FD\u04FF\u0501\u0503\u0505\u0507\u0509\u050B\u050D\u050F\u0511\u0513\u0515\u0517\u0519\u051B\u051D\u051F\u0521\u0523\u0525\u0527\u0561-\u0587\u1D00-\u1D2B\u1D6B-\u1D77\u1D79-\u1D9A\u1E01\u1E03\u1E05\u1E07\u1E09\u1E0B\u1E0D\u1E0F\u1E11\u1E13\u1E15\u1E17\u1E19\u1E1B\u1E1D\u1E1F\u1E21\u1E23\u1E25\u1E27\u1E29\u1E2B\u1E2D\u1E2F\u1E31\u1E33\u1E35\u1E37\u1E39\u1E3B\u1E3D\u1E3F\u1E41\u1E43\u1E45\u1E47\u1E49\u1E4B\u1E4D\u1E4F\u1E51\u1E53\u1E55\u1E57\u1E59\u1E5B\u1E5D\u1E5F\u1E61\u1E63\u1E65\u1E67\u1E69\u1E6B\u1E6D\u1E6F\u1E71\u1E73\u1E75\u1E77\u1E79\u1E7B\u1E7D\u1E7F\u1E81\u1E83\u1E85\u1E87\u1E89\u1E8B\u1E8D\u1E8F\u1E91\u1E93\u1E95-\u1E9D\u1E9F\u1EA1\u1EA3\u1EA5\u1EA7\u1EA9\u1EAB\u1EAD\u1EAF\u1EB1\u1EB3\u1EB5\u1EB7\u1EB9\u1EBB\u1EBD\u1EBF\u1EC1\u1EC3\u1EC5\u1EC7\u1EC9\u1ECB\u1ECD\u1ECF\u1ED1\u1ED3\u1ED5\u1ED7\u1ED9\u1EDB\u1EDD\u1EDF\u1EE1\u1EE3\u1EE5\u1EE7\u1EE9\u1EEB\u1EED\u1EEF\u1EF1\u1EF3\u1EF5\u1EF7\u1EF9\u1EFB\u1EFD\u1EFF-\u1F07\u1F10-\u1F15\u1F20-\u1F27\u1F30-\u1F37\u1F40-\u1F45\u1F50-\u1F57\u1F60-\u1F67\u1F70-\u1F7D\u1F80-\u1F87\u1F90-\u1F97\u1FA0-\u1FA7\u1FB0-\u1FB4\u1FB6\u1FB7\u1FBE\u1FC2-\u1FC4\u1FC6\u1FC7\u1FD0-\u1FD3\u1FD6\u1FD7\u1FE0-\u1FE7\u1FF2-\u1FF4\u1FF6\u1FF7\u210A\u210E\u210F\u2113\u212F\u2134\u2139\u213C\u213D\u2146-\u2149\u214E\u2184\u2C30-\u2C5E\u2C61\u2C65\u2C66\u2C68\u2C6A\u2C6C\u2C71\u2C73\u2C74\u2C76-\u2C7B\u2C81\u2C83\u2C85\u2C87\u2C89\u2C8B\u2C8D\u2C8F\u2C91\u2C93\u2C95\u2C97\u2C99\u2C9B\u2C9D\u2C9F\u2CA1\u2CA3\u2CA5\u2CA7\u2CA9\u2CAB\u2CAD\u2CAF\u2CB1\u2CB3\u2CB5\u2CB7\u2CB9\u2CBB\u2CBD\u2CBF\u2CC1\u2CC3\u2CC5\u2CC7\u2CC9\u2CCB\u2CCD\u2CCF\u2CD1\u2CD3\u2CD5\u2CD7\u2CD9\u2CDB\u2CDD\u2CDF\u2CE1\u2CE3\u2CE4\u2CEC\u2CEE\u2CF3\u2D00-\u2D25\u2D27\u2D2D\uA641\uA643\uA645\uA647\uA649\uA64B\uA64D\uA64F\uA651\uA653\uA655\uA657\uA659\uA65B\uA65D\uA65F\uA661\uA663\uA665\uA667\uA669\uA66B\uA66D\uA681\uA683\uA685\uA687\uA689\uA68B\uA68D\uA68F\uA691\uA693\uA695\uA697\uA723\uA725\uA727\uA729\uA72B\uA72D\uA72F-\uA731\uA733\uA735\uA737\uA739\uA73B\uA73D\uA73F\uA741\uA743\uA745\uA747\uA749\uA74B\uA74D\uA74F\uA751\uA753\uA755\uA757\uA759\uA75B\uA75D\uA75F\uA761\uA763\uA765\uA767\uA769\uA76B\uA76D\uA76F\uA771-\uA778\uA77A\uA77C\uA77F\uA781\uA783\uA785\uA787\uA78C\uA78E\uA791\uA793\uA7A1\uA7A3\uA7A5\uA7A7\uA7A9\uA7FA\uFB00-\uFB06\uFB13-\uFB17\uFF41-\uFF5A])([\u0041-\u005A\u00C0-\u00D6\u00D8-\u00DE\u0100\u0102\u0104\u0106\u0108\u010A\u010C\u010E\u0110\u0112\u0114\u0116\u0118\u011A\u011C\u011E\u0120\u0122\u0124\u0126\u0128\u012A\u012C\u012E\u0130\u0132\u0134\u0136\u0139\u013B\u013D\u013F\u0141\u0143\u0145\u0147\u014A\u014C\u014E\u0150\u0152\u0154\u0156\u0158\u015A\u015C\u015E\u0160\u0162\u0164\u0166\u0168\u016A\u016C\u016E\u0170\u0172\u0174\u0176\u0178\u0179\u017B\u017D\u0181\u0182\u0184\u0186\u0187\u0189-\u018B\u018E-\u0191\u0193\u0194\u0196-\u0198\u019C\u019D\u019F\u01A0\u01A2\u01A4\u01A6\u01A7\u01A9\u01AC\u01AE\u01AF\u01B1-\u01B3\u01B5\u01B7\u01B8\u01BC\u01C4\u01C7\u01CA\u01CD\u01CF\u01D1\u01D3\u01D5\u01D7\u01D9\u01DB\u01DE\u01E0\u01E2\u01E4\u01E6\u01E8\u01EA\u01EC\u01EE\u01F1\u01F4\u01F6-\u01F8\u01FA\u01FC\u01FE\u0200\u0202\u0204\u0206\u0208\u020A\u020C\u020E\u0210\u0212\u0214\u0216\u0218\u021A\u021C\u021E\u0220\u0222\u0224\u0226\u0228\u022A\u022C\u022E\u0230\u0232\u023A\u023B\u023D\u023E\u0241\u0243-\u0246\u0248\u024A\u024C\u024E\u0370\u0372\u0376\u0386\u0388-\u038A\u038C\u038E\u038F\u0391-\u03A1\u03A3-\u03AB\u03CF\u03D2-\u03D4\u03D8\u03DA\u03DC\u03DE\u03E0\u03E2\u03E4\u03E6\u03E8\u03EA\u03EC\u03EE\u03F4\u03F7\u03F9\u03FA\u03FD-\u042F\u0460\u0462\u0464\u0466\u0468\u046A\u046C\u046E\u0470\u0472\u0474\u0476\u0478\u047A\u047C\u047E\u0480\u048A\u048C\u048E\u0490\u0492\u0494\u0496\u0498\u049A\u049C\u049E\u04A0\u04A2\u04A4\u04A6\u04A8\u04AA\u04AC\u04AE\u04B0\u04B2\u04B4\u04B6\u04B8\u04BA\u04BC\u04BE\u04C0\u04C1\u04C3\u04C5\u04C7\u04C9\u04CB\u04CD\u04D0\u04D2\u04D4\u04D6\u04D8\u04DA\u04DC\u04DE\u04E0\u04E2\u04E4\u04E6\u04E8\u04EA\u04EC\u04EE\u04F0\u04F2\u04F4\u04F6\u04F8\u04FA\u04FC\u04FE\u0500\u0502\u0504\u0506\u0508\u050A\u050C\u050E\u0510\u0512\u0514\u0516\u0518\u051A\u051C\u051E\u0520\u0522\u0524\u0526\u0531-\u0556\u10A0-\u10C5\u10C7\u10CD\u1E00\u1E02\u1E04\u1E06\u1E08\u1E0A\u1E0C\u1E0E\u1E10\u1E12\u1E14\u1E16\u1E18\u1E1A\u1E1C\u1E1E\u1E20\u1E22\u1E24\u1E26\u1E28\u1E2A\u1E2C\u1E2E\u1E30\u1E32\u1E34\u1E36\u1E38\u1E3A\u1E3C\u1E3E\u1E40\u1E42\u1E44\u1E46\u1E48\u1E4A\u1E4C\u1E4E\u1E50\u1E52\u1E54\u1E56\u1E58\u1E5A\u1E5C\u1E5E\u1E60\u1E62\u1E64\u1E66\u1E68\u1E6A\u1E6C\u1E6E\u1E70\u1E72\u1E74\u1E76\u1E78\u1E7A\u1E7C\u1E7E\u1E80\u1E82\u1E84\u1E86\u1E88\u1E8A\u1E8C\u1E8E\u1E90\u1E92\u1E94\u1E9E\u1EA0\u1EA2\u1EA4\u1EA6\u1EA8\u1EAA\u1EAC\u1EAE\u1EB0\u1EB2\u1EB4\u1EB6\u1EB8\u1EBA\u1EBC\u1EBE\u1EC0\u1EC2\u1EC4\u1EC6\u1EC8\u1ECA\u1ECC\u1ECE\u1ED0\u1ED2\u1ED4\u1ED6\u1ED8\u1EDA\u1EDC\u1EDE\u1EE0\u1EE2\u1EE4\u1EE6\u1EE8\u1EEA\u1EEC\u1EEE\u1EF0\u1EF2\u1EF4\u1EF6\u1EF8\u1EFA\u1EFC\u1EFE\u1F08-\u1F0F\u1F18-\u1F1D\u1F28-\u1F2F\u1F38-\u1F3F\u1F48-\u1F4D\u1F59\u1F5B\u1F5D\u1F5F\u1F68-\u1F6F\u1FB8-\u1FBB\u1FC8-\u1FCB\u1FD8-\u1FDB\u1FE8-\u1FEC\u1FF8-\u1FFB\u2102\u2107\u210B-\u210D\u2110-\u2112\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u2130-\u2133\u213E\u213F\u2145\u2183\u2C00-\u2C2E\u2C60\u2C62-\u2C64\u2C67\u2C69\u2C6B\u2C6D-\u2C70\u2C72\u2C75\u2C7E-\u2C80\u2C82\u2C84\u2C86\u2C88\u2C8A\u2C8C\u2C8E\u2C90\u2C92\u2C94\u2C96\u2C98\u2C9A\u2C9C\u2C9E\u2CA0\u2CA2\u2CA4\u2CA6\u2CA8\u2CAA\u2CAC\u2CAE\u2CB0\u2CB2\u2CB4\u2CB6\u2CB8\u2CBA\u2CBC\u2CBE\u2CC0\u2CC2\u2CC4\u2CC6\u2CC8\u2CCA\u2CCC\u2CCE\u2CD0\u2CD2\u2CD4\u2CD6\u2CD8\u2CDA\u2CDC\u2CDE\u2CE0\u2CE2\u2CEB\u2CED\u2CF2\uA640\uA642\uA644\uA646\uA648\uA64A\uA64C\uA64E\uA650\uA652\uA654\uA656\uA658\uA65A\uA65C\uA65E\uA660\uA662\uA664\uA666\uA668\uA66A\uA66C\uA680\uA682\uA684\uA686\uA688\uA68A\uA68C\uA68E\uA690\uA692\uA694\uA696\uA722\uA724\uA726\uA728\uA72A\uA72C\uA72E\uA732\uA734\uA736\uA738\uA73A\uA73C\uA73E\uA740\uA742\uA744\uA746\uA748\uA74A\uA74C\uA74E\uA750\uA752\uA754\uA756\uA758\uA75A\uA75C\uA75E\uA760\uA762\uA764\uA766\uA768\uA76A\uA76C\uA76E\uA779\uA77B\uA77D\uA77E\uA780\uA782\uA784\uA786\uA78B\uA78D\uA790\uA792\uA7A0\uA7A2\uA7A4\uA7A6\uA7A8\uA7AA\uFF21-\uFF3A\u0030-\u0039\u00B2\u00B3\u00B9\u00BC-\u00BE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19])/g
 
-},{}],66:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 module.exports = /[^\u0041-\u005A\u0061-\u007A\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u0527\u0531-\u0556\u0559\u0561-\u0587\u05D0-\u05EA\u05F0-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u08A0\u08A2-\u08AC\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0977\u0979-\u097F\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D\u0C58\u0C59\u0C60\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D60\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1877\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191C\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19C1-\u19C7\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1CE9-\u1CEC\u1CEE-\u1CF1\u1CF5\u1CF6\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2183\u2184\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2E2F\u3005\u3006\u3031-\u3035\u303B\u303C\u3041-\u3096\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA697\uA6A0-\uA6E5\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA80-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC\u0030-\u0039\u00B2\u00B3\u00B9\u00BC-\u00BE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]+/g
 
-},{}],67:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 module.exports = /([\u0030-\u0039\u00B2\u00B3\u00B9\u00BC-\u00BE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19])([^\u0030-\u0039\u00B2\u00B3\u00B9\u00BC-\u00BE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19])/g
 
-},{}],68:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
+/**
+ * @module settings-panel
+ */
+
+const Emitter = require('events').EventEmitter;
+const inherits = require('inherits');
+const extend = require('just-extend');
+const css = require('dom-css');
+const uid = require('get-uid');
+
+const insertCss = require('insert-styles');
+const isPlainObject = require('is-plain-obj');
+const format = require('param-case');
+const px = require('add-px-to-style');
+const scopeCss = require('scope-css');
+
+module.exports = Panel
+
+
+insertCss(".settings-panel {\r\n\tposition: relative;\r\n\t-webkit-user-select: none;\r\n\t-moz-user-select: none;\r\n\t-ms-user-select: none;\r\n\tuser-select: none;\r\n\tcursor: default;\r\n\ttext-align: left;\r\n\tbox-sizing: border-box;\r\n\tfont-family: sans-serif;\r\n\tfont-size: 1rem;\r\n\twidth: 36em;\r\n\tmax-width: 100%;\r\n\tpadding: 1em;\r\n}\r\n\r\n.settings-panel [hidden] {\r\n\tdisplay: none!important;\r\n}\r\n\r\n.settings-panel * {\r\n\tbox-sizing: border-box;\r\n}\r\n\r\n.settings-panel input,\r\n.settings-panel button,\r\n.settings-panel textarea,\r\n.settings-panel select {\r\n\tfont-family: inherit;\r\n\tfont-size: inherit;\r\n}\r\n\r\n\r\n.settings-panel a {\r\n\tcolor: inherit;\r\n\ttext-decoration: none;\r\n}\r\n\r\n/** Basic layout */\r\n.settings-panel-field {\r\n\tposition: relative;\r\n\tpadding: .25em;\r\n\tdisplay: table;\r\n\twidth: 100%;\r\n}\r\n.settings-panel-field:last-child {\r\n\tmargin-bottom: 0;\r\n}\r\n.settings-panel-label {\r\n\tleft: 0;\r\n\tdisplay: table-cell;\r\n\tline-height: 1.2;\r\n\tvertical-align: baseline;\r\n\tpadding-top: 0;\r\n\tmax-width: 100%;\r\n}\r\n.settings-panel-input {\r\n\tdisplay: table-cell;\r\n\tvertical-align: baseline;\r\n\tposition: relative;\r\n}\r\n\r\n.settings-panel-orientation-left .settings-panel-label {\r\n\twidth: 9em;\r\n\tpadding-right: .5em;\r\n}\r\n.settings-panel-orientation-right .settings-panel-label {\r\n\tdisplay: block;\r\n\tmargin-right: 0;\r\n\tfloat: right;\r\n\twidth: 9em;\r\n\tpadding-top: .4em;\r\n\tpadding-left: .5em;\r\n}\r\n.settings-panel-orientation-right .settings-panel-label + .settings-panel-input {\r\n\tdisplay: block;\r\n\twidth: calc(100% - 9em);\r\n}\r\n.settings-panel-orientation-top .settings-panel-label {\r\n\tdisplay: block;\r\n\twidth: 100%;\r\n\tmargin-right: 0;\r\n\tpadding-top: 0;\r\n\tline-height: 1.5;\r\n}\r\n.settings-panel-orientation-top .settings-panel-label + .settings-panel-input {\r\n\tdisplay: block;\r\n\twidth: 100%;\r\n\tpadding: 0;\r\n}\r\n.settings-panel-orientation-bottom .settings-panel-label {\r\n\tdisplay: block;\r\n\twidth: 100%;\r\n\tmargin-right: 0;\r\n\tpadding: 0;\r\n\tline-height: 1.5;\r\n\tborder-top: 2.5em solid transparent;\r\n}\r\n.settings-panel-orientation-bottom .settings-panel-label + .settings-panel-input {\r\n\twidth: 100%;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n}\r\n\r\n.settings-panel-orientation-left > .settings-panel-label {\r\n\twidth: 9em;\r\n\tdisplay: table-cell;\r\n}\r\n\r\n.settings-panel-title {\r\n\twidth: 100%;\r\n\tfont-size: 1.6em;\r\n\tline-height: 1.25;\r\n\tmargin-top: 0;\r\n\tmargin-bottom: 0;\r\n\tpadding: .25em .25em;\r\n\ttext-align: center;\r\n}\r\n.settings-panel--collapsible .settings-panel-title {\r\n\tcursor: pointer;\r\n}\r\n.settings-panel--collapsed > *:not(.settings-panel-title) {\r\n\tdisplay: none!important;\r\n}\r\n\r\n\r\n/** Button */\r\n.settings-panel-field--button {\r\n\tdisplay: inline-block;\r\n}\r\n.settings-panel-field--button .settings-panel-input {\r\n\tdisplay: block;\r\n\ttext-align: center;\r\n}\r\n.settings-panel-button {\r\n\tvertical-align: baseline;\r\n\tline-height: 1;\r\n\tmin-height: 2em;\r\n\tpadding: .2em 1em;\r\n\twidth: 100%;\r\n\tcursor: pointer;\r\n}\r\n\r\n\r\n/** Default text and alike style */\r\n.settings-panel-text {\r\n\theight: 2em;\r\n\twidth: 100%;\r\n\tvertical-align: baseline;\r\n}\r\n.settings-panel-textarea {\r\n\twidth: 100%;\r\n\tvertical-align: top; /* allowable as we use autoheight */\r\n\tmin-height: 2em;\r\n}\r\n\r\n/** Checkbox style */\r\n.settings-panel-field--checkbox .settings-panel-input {\r\n\tline-height: 2em;\r\n}\r\n.settings-panel-checkbox {\r\n\tdisplay: inline-block;\r\n\tvertical-align: middle;\r\n\twidth: 1.2em;\r\n\theight: 1.2em;\r\n\tline-height: 1.2em;\r\n\tmargin: 0;\r\n}\r\n\r\n\r\n/** Color picker style */\r\n.settings-panel-color {\r\n\tposition: relative;\r\n\twidth: 2em;\r\n\theight: 2em;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbottom: 0;\r\n\tmargin: auto;\r\n}\r\n.settings-panel-color-value {\r\n\twidth: 100%;\r\n\theight: 2em;\r\n\tpadding: 0 0 0 2.5em;\r\n}\r\n.Scp {\r\n\t-webkit-user-select: none;\r\n\t\t -moz-user-select: none;\r\n\t\t\t-ms-user-select: none;\r\n\t\t\t\t\tuser-select: none;\r\n\tposition: absolute;\r\n\tz-index: 10;\r\n\tcursor: pointer;\r\n}\r\n.Scp-saturation {\r\n\tposition: relative;\r\n\twidth: calc(100% - 25px);\r\n\theight: 100%;\r\n\tbackground: linear-gradient(to right, #fff 0%, #f00 100%);\r\n\tfloat: left;\r\n}\r\n.Scp-brightness {\r\n\twidth: 100%;\r\n\theight: 100%;\r\n\tbackground: linear-gradient(to top, #000 0%, rgba(255,255,255,0) 100%);\r\n}\r\n.Scp-sbSelector {\r\n\tborder: 1px solid;\r\n\tposition: absolute;\r\n\twidth: 14px;\r\n\theight: 14px;\r\n\tbackground: #fff;\r\n\tborder-radius: 10px;\r\n\ttop: -7px;\r\n\tleft: -7px;\r\n\tbox-sizing: border-box;\r\n\tz-index: 10;\r\n}\r\n.Scp-hue {\r\n\twidth: 20px;\r\n\theight: 100%;\r\n\tposition: relative;\r\n\tfloat: left;\r\n\tbackground: linear-gradient(to bottom, #f00 0%, #f0f 17%, #00f 34%, #0ff 50%, #0f0 67%, #ff0 84%, #f00 100%);\r\n}\r\n.Scp-hSelector {\r\n\tposition: absolute;\r\n\tbackground: #fff;\r\n\tborder-bottom: 1px solid #000;\r\n\tright: -3px;\r\n\twidth: 10px;\r\n\theight: 2px;\r\n}\r\n\r\n\r\n\r\n/** Interval style */\r\n.settings-panel-interval {\r\n\tposition: relative;\r\n\t-webkit-appearance: none;\r\n\tdisplay: inline-block;\r\n\tvertical-align: top;\r\n\theight: 2em;\r\n\tmargin: 0px 0;\r\n\twidth: 70%;\r\n\tbackground: #ddd;\r\n\tcursor: ew-resize;\r\n\t-webkit-touch-callout: none;\r\n\t-webkit-user-select: none;\r\n\t-khtml-user-select: none;\r\n\t-moz-user-select: none;\r\n\t-ms-user-select: none;\r\n\tuser-select: none;\r\n}\r\n.settings-panel-interval-handle {\r\n\tbackground: #7a4;\r\n\tposition: absolute;\r\n\ttop: 0;\r\n\tbottom: 0;\r\n\tmin-width: 1px;\r\n}\r\n.settings-panel.settings-panel-interval-dragging * {\r\n\t-webkit-touch-callout: none !important;\r\n\t-webkit-user-select: none !important;\r\n\t-khtml-user-select: none !important;\r\n\t-moz-user-select: none !important;\r\n\t-ms-user-select: none !important;\r\n\tuser-select: none !important;\r\n\r\n\tcursor: ew-resize !important;\r\n}\r\n\r\n.settings-panel-interval + .settings-panel-value {\r\n\tright: 0;\r\n\tpadding-left: .5em;\r\n}\r\n\r\n\r\n\r\n/** Range style */\r\n.settings-panel-range {\r\n\twidth: 85%;\r\n\tpadding: 0;\r\n\tmargin: 0px 0;\r\n\theight: 2em;\r\n\tvertical-align: top;\r\n}\r\n.settings-panel-range + .settings-panel-value {\r\n\tpadding-left: .5em;\r\n}\r\n\r\n\r\n/** Select style */\r\n.settings-panel-select {\r\n\tdisplay: inline-block;\r\n\twidth: 100%;\r\n\theight: 2em;\r\n\tvertical-align: baseline;\r\n}\r\n\r\n/** Value style */\r\n.settings-panel-value {\r\n\t-webkit-appearance: none;\r\n\t-moz-appearance: none;\r\n\t-o-appearance: none;\r\n\tappearance: none;\r\n\tpadding: 0 0 0 0em;\r\n\tdisplay: inline-block;\r\n\tvertical-align: baseline;\r\n\tcursor: text;\r\n\theight: 2em;\r\n\tborder: none;\r\n\tborder-radius: 0;\r\n\toutline: none;\r\n\tfont-family: inherit;\r\n\tbackground: none;\r\n\tcolor: inherit;\r\n\twidth: 15%;\r\n}\r\n.settings-panel-value:focus {\r\n\toutline: 0;\r\n\tbox-shadow: 0;\r\n}\r\n\r\n.settings-panel-switch {\r\n\t-webkit-appearance: none;\r\n\t-moz-appearance: none;\r\n\tappearance: none;\r\n\tborder: none;\r\n\tdisplay: block;\r\n\tvertical-align: baseline;\r\n\tpadding: 0;\r\n\tmargin: 0;\r\n\tline-height: 2em;\r\n}\r\n.settings-panel-switch-input {\r\n\tmargin: 0;\r\n\tvertical-align: middle;\r\n\twidth: 1.2em;\r\n\theight: 1.2em;\r\n\tcursor: pointer;\r\n\tmargin-right: .25em;\r\n}\r\n.settings-panel-switch-label {\r\n\tdisplay: inline-block;\r\n\tvertical-align: baseline;\r\n\tline-height: 1.2;\r\n\tmargin-right: 1em;\r\n}\r\n\r\n\r\n.settings-panel hr {\r\n\tborder: none;\r\n\theight: 0;\r\n\tmargin: .75em .25em;\r\n\tborder-bottom: 1px dotted;\r\n}\r\n\r\n.settings-panel-field--disabled {\r\n\topacity: .5;\r\n\tpointer-events: none;\r\n}");
+
+
+/**
+ * @constructor
+ */
+function Panel (items, opts) {
+	if (!(this instanceof Panel)) return new Panel(items, opts)
+
+	extend(this, opts);
+
+	//ensure container
+	if (this.container === undefined) this.container = document.body || document.documentElement;
+
+	this.container.classList.add('settings-panel-container');
+
+	//create element
+	if (!this.id) this.id = uid();
+	this.element = document.createElement('div')
+	this.element.className = 'settings-panel settings-panel-' + this.id;
+	if (this.className) this.element.className += ' ' + this.className;
+
+	//create title
+	if (this.title) {
+		this.titleEl = this.element.appendChild(document.createElement('h2'));
+		this.titleEl.className = 'settings-panel-title';
+	}
+
+	//create collapse button
+	if (this.collapsible && this.title) {
+		// this.collapseEl = this.element.appendChild(document.createElement('div'));
+		// this.collapseEl.className = 'settings-panel-collapse';
+		this.element.classList.add('settings-panel--collapsible');
+		this.titleEl.addEventListener('click', () => {
+			if (this.collapsed) {
+				this.collapsed = false;
+				this.element.classList.remove('settings-panel--collapsed');
+			}
+			else {
+				this.collapsed = true;
+				this.element.classList.add('settings-panel--collapsed');
+			}
+		});
+	}
+
+	//state is values of items
+	this.state = {};
+
+	//items is all items settings
+	this.items = {};
+
+	//create fields
+	this.set(items);
+
+	if (this.container) {
+		this.container.appendChild(this.element)
+	}
+
+	//create theme style
+	this.update();
+}
+
+inherits(Panel, Emitter);
+
+
+/**
+ * Set item value/options
+ */
+Panel.prototype.set = function (name, value) {
+	//handle list of properties
+	if (Array.isArray(name)) {
+		let items = name;
+		items.forEach((item) => {
+			this.set(item.id || item.label, item);
+		});
+
+		return this;
+	}
+
+	//handle plain object
+	if (isPlainObject(name)) {
+		let items = name;
+		for (let key in items) {
+			let item = items[key];
+			this.set(key, item)
+		}
+
+		return this;
+	}
+
+	//format name
+	name = name || '';
+	name = name.replace(/\-/g,'dash-');
+	name = format(name);
+
+	if (name) {
+		var item = this.items[name];
+		if (!item) item = this.items[name] = { id: name, panel: this };
+	}
+	//noname items should not be saved in state
+	else {
+		var item = {id: null, panel: this};
+	}
+
+	var initialValue = item.value;
+	var isBefore = item.before;
+	var isAfter = item.after;
+
+	if (isPlainObject(value)) {
+		item = extend(item, value);
+	}
+	else {
+		//ignore nothing-changed set
+		if (value === item.value && value !== undefined) return this;
+		item.value = value;
+	}
+
+	if (item.value === undefined) item.value = item.default;
+
+	if (name) this.state[name] = item.value;
+
+	//define label via name
+	if (item.label === undefined && item.id) {
+		item.label = item.id;
+	}
+
+	//detect type
+	if (!item.type) {
+		if (item.value && Array.isArray(item.value)) {
+			item.type = 'interval'
+		} else if (item.scale || item.max || item.steps || item.step || typeof item.value === 'number') {
+			item.type = 'range'
+		} else if (item.options) {
+			if (Array.isArray(item.options) && item.options.join('').length < 90 ) {
+				item.type = 'switch'
+			}
+			else {
+				item.type = 'select'
+			}
+		} else if (item.format) {
+			item.type = 'color'
+		} else if (typeof item.value === 'boolean') {
+			item.type = 'checkbox'
+		} else {
+			if (item.value && (item.value.length > 140 || /\n/.test(item.value))) {
+				item.type = 'textarea'
+			}
+			else {
+				item.type = 'text'
+			}
+		}
+	}
+
+	var field, fieldId;
+
+	if (item.id != null) {
+		fieldId = 'settings-panel-field-' + item.id;
+		field = this.element.querySelector('#' + fieldId);
+	}
+
+	//create field container
+	if (!field) {
+		field = document.createElement('div');
+		if (fieldId != null) field.id = fieldId;
+		this.element.appendChild(field);
+		item.field = field;
+	}
+	else {
+		//clean previous before/after
+		if (isBefore) {
+			this.element.removeChild(field.prevSibling);
+		}
+		if (isAfter) {
+			this.element.removeChild(field.nextSibling);
+		}
+	}
+
+	field.className = 'settings-panel-field settings-panel-field--' + item.type;
+
+	if (item.orientation) field.className += ' settings-panel-orientation-' + item.orientation;
+
+	if (item.className) field.className += ' ' + item.className;
+
+	if (item.style) {
+		if (isPlainObject(item.style)) {
+			css(field, item.style);
+		}
+		else if (typeof item.style === 'string') {
+			field.style.cssText = item.style;
+		}
+	}
+	else if (item.style !== undefined) {
+		field.style = null;
+	}
+
+	if (item.hidden) {
+		field.setAttribute('hidden', true);
+	}
+	else {
+		field.removeAttribute('hidden');
+	}
+
+	//createe container for the input
+	let inputContainer = field.querySelector('.settings-panel-input');
+
+	if (!inputContainer) {
+		inputContainer = document.createElement('div');
+		inputContainer.className = 'settings-panel-input';
+		item.container = inputContainer;
+		field.appendChild(inputContainer);
+	}
+
+	if (item.disabled) field.className += ' settings-panel-field--disabled';
+
+	let components = this.components;
+	let component = item.component;
+
+	if (!component) {
+		item.component = component = (components[item.type] || components.text)(item);
+
+		if (component.on) {
+			component.on('init', (data) => {
+				item.value = data
+				if (item.id) this.state[item.id] = item.value;
+				let state = extend({}, this.state);
+
+				item.init && item.init(data, state)
+				this.emit('init', item.id, data, state)
+				item.change && item.change(data, state)
+				this.emit('change', item.id, data, state)
+			});
+
+			component.on('input', (data) => {
+				item.value = data
+				if (item.id) this.state[item.id] = item.value;
+				let state = extend({}, this.state);
+
+				item.input && item.input(data, state)
+				this.emit('input', item.id, data, state)
+				item.change && item.change(data, state)
+				this.emit('change', item.id, data, state)
+			});
+
+			component.on('change', (data) => {
+				item.value = data
+				if (item.id) this.state[item.id] = item.value;
+				let state = extend({}, this.state);
+
+				item.change && item.change(data, state)
+				this.emit('change', item.id, data, state)
+			});
+		}
+	}
+	else {
+		component.update(item);
+	}
+
+	//create field label
+	if (component.label !== false && (item.label || item.label === '')) {
+		let label = field.querySelector('.settings-panel-label');
+		if (!label) {
+			label = document.createElement('label')
+			label.className = 'settings-panel-label';
+			field.insertBefore(label, inputContainer);
+		}
+
+		label.htmlFor = item.id;
+		label.innerHTML = item.label;
+		label.title = item.title || item.label;
+	}
+
+	//handle after and before
+	// if (item.before) {
+	// 	let before = item.before;
+	// 	if (before instanceof Function) {
+	// 		before = item.before.call(item, component);
+	// 	}
+	// 	if (before instanceof HTMLElement) {
+	// 		this.element.insertBefore(before, field);
+	// 	}
+	// 	else {
+	// 		field.insertAdjacentHTML('beforebegin', before);
+	// 	}
+	// }
+	// if (item.after) {
+	// 	let after = item.after;
+	// 	if (after instanceof Function) {
+	// 		after = item.after.call(item, component);
+	// 	}
+	// 	if (after instanceof HTMLElement) {
+	// 		this.element.insertBefore(after, field.nextSibling);
+	// 	}
+	// 	else {
+	// 		field.insertAdjacentHTML('afterend', after);
+	// 	}
+	// }
+
+	//emit change
+	if (initialValue !== item.value) {
+		this.emit('change', item.id, item.value, this.state)
+	}
+
+	return this;
+}
+
+
+/**
+ * Return property value or a list
+ */
+Panel.prototype.get = function (name) {
+	if (name == null) return this.state;
+	return this.state[name];
+}
+
+
+/**
+ * Update theme
+ */
+Panel.prototype.update = function (opts) {
+	extend(this, opts);
+
+	//FIXME: decide whether we have to reset these params
+	if (opts && opts.theme) {
+		if (opts.theme.fontSize) this.fontSize = opts.theme.fontSize;
+		if (opts.theme.inputHeight) this.inputHeight = opts.theme.inputHeight;
+		if (opts.theme.fontFamily) this.fontFamily = opts.theme.fontFamily;
+		if (opts.theme.labelWidth) this.labelWidth = opts.theme.labelWidth;
+		if (opts.theme.palette) this.palette = opts.theme.palette;
+	}
+
+	//update title, if any
+	if (this.titleEl) this.titleEl.innerHTML = this.title;
+
+	//update orientation
+	this.element.classList.remove('settings-panel-orientation-top');
+	this.element.classList.remove('settings-panel-orientation-bottom');
+	this.element.classList.remove('settings-panel-orientation-left');
+	this.element.classList.remove('settings-panel-orientation-right');
+	this.element.classList.add('settings-panel-orientation-' + this.orientation);
+
+	//apply style
+	let cssStr = '';
+	if (this.theme instanceof Function) {
+		cssStr = this.theme.call(this, this);
+	}
+	else if (typeof this.theme === 'string') {
+		cssStr = this.theme;
+	}
+
+	//append extra css
+	if (this.css) {
+		if (this.css instanceof Function) {
+			cssStr += this.css.call(this, this);
+		}
+		else if (typeof this.css === 'string') {
+			cssStr += this.css;
+		}
+	}
+
+	//scope each rule
+	cssStr = scopeCss(cssStr || '', '.settings-panel-' + this.id) || '';
+
+	insertCss(cssStr.trim(), {
+		id: this.id
+	});
+
+	if (this.style) {
+		if (isPlainObject(this.style)) {
+			css(this.element, this.style);
+		}
+		else if (typeof this.style === 'string') {
+			this.element.style.cssText = this.style;
+		}
+	}
+	else if (this.style !== undefined) {
+		this.element.style = null;
+	}
+
+	return this;
+}
+
+//instance theme
+Panel.prototype.theme = require('./theme/none');
+
+/**
+ * Registered components
+ */
+Panel.prototype.components = {
+	range: require('./src/range'),
+
+	button: require('./src/button'),
+	text: require('./src/text'),
+	textarea: require('./src/textarea'),
+
+	checkbox: require('./src/checkbox'),
+	toggle: require('./src/checkbox'),
+
+	switch: require('./src/switch'),
+
+	color: require('./src/color'),
+
+	interval: require('./src/interval'),
+	multirange: require('./src/interval'),
+
+	custom: require('./src/custom'),
+	raw: require('./src/custom'),
+
+	select: require('./src/select')
+};
+
+
+/**
+ * Additional class name
+ */
+Panel.prototype.className;
+
+
+/**
+ * Additional visual setup
+ */
+Panel.prototype.orientation = 'left';
+
+
+/** Display collapse button */
+Panel.prototype.collapsible = false;
+},{"./src/button":63,"./src/checkbox":64,"./src/color":65,"./src/custom":66,"./src/interval":67,"./src/range":68,"./src/select":69,"./src/switch":70,"./src/text":71,"./src/textarea":72,"./theme/none":75,"add-px-to-style":7,"dom-css":13,"events":3,"get-uid":17,"inherits":19,"insert-styles":21,"is-plain-obj":31,"just-extend":32,"param-case":54,"scope-css":57}],63:[function(require,module,exports){
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits')
+
+module.exports = Button
+inherits(Button, EventEmitter)
+
+function Button (opts) {
+	if (!(this instanceof Button)) return new Button(opts)
+
+	var input = opts.container.querySelector('.settings-panel-button');
+	if (!input) {
+		this.element = input = opts.container.appendChild(document.createElement('button'))
+		input.className = 'settings-panel-button';
+		input.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.emit('input');
+		})
+	}
+
+	this.update(opts);
+}
+
+Button.prototype.update = function (opts) {
+	this.element.innerHTML = opts.value || opts.label;
+	return this;
+};
+
+Button.prototype.label = false;
+},{"events":3,"inherits":19}],64:[function(require,module,exports){
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits')
+const format = require('param-case')
+const extend = require('just-extend');
+
+module.exports = Checkbox
+inherits(Checkbox, EventEmitter)
+
+function Checkbox (opts) {
+	if (!(this instanceof Checkbox)) return new Checkbox(opts)
+	opts = opts || {}
+	var self = this
+
+	let input = opts.container.querySelector('.settings-panel-checkbox');
+	let label = opts.container.querySelector('.settings-panel-checkbox-label');
+	if (!input) {
+		this.element = input = opts.container.appendChild(document.createElement('input'));
+		input.className = 'settings-panel-checkbox';
+		this.labelEl = label = opts.container.appendChild(document.createElement('label'));
+		this.labelEl.innerHTML = '&nbsp;';
+		label.className = 'settings-panel-checkbox-label';
+		input.onchange = function (data) {
+			self.emit('input', data.target.checked)
+		}
+		setTimeout(function () {
+			self.emit('init', input.checked)
+		})
+	}
+
+	this.update(opts);
+}
+
+Checkbox.prototype.update = function (opts) {
+	extend(this, opts);
+
+	this.labelEl.htmlFor = this.id
+	this.element.id = this.id
+	this.element.type = 'checkbox';
+	this.element.checked = !!this.value;
+	this.element.disabled = !!this.disabled;
+
+	return this;
+}
+
+},{"events":3,"inherits":19,"just-extend":32,"param-case":54}],65:[function(require,module,exports){
+const EventEmitter = require('events').EventEmitter
+const ColorPicker = require('simple-color-picker')
+const inherits = require('inherits')
+const css = require('dom-css')
+const tinycolor = require('tinycolor2')
+const formatParam = require('param-case')
+const num = require('input-number')
+
+module.exports = Color
+inherits(Color, EventEmitter)
+
+function Color (opts) {
+	if (!(this instanceof Color)) return new Color(opts)
+
+	this.update(opts);
+}
+
+Color.prototype.update = function (opts) {
+	opts.container.innerHTML = '';
+
+	opts = opts || {}
+	opts.format = opts.format || 'rgb'
+	opts.value = opts.value || '#123456';
+	var icon = opts.container.appendChild(document.createElement('div'))
+	//FIXME: this needed to make el vertical-aligned by baseline
+	icon.innerHTML = '&nbsp;';
+	icon.className = 'settings-panel-color'
+
+	var valueInput = opts.container.appendChild(document.createElement('input'));
+	valueInput.id = opts.id;
+	valueInput.className = 'settings-panel-color-value';
+	num(valueInput);
+	valueInput.onchange = () => {
+		picker.setColor(valueInput.value);
+	};
+	valueInput.oninput = () => {
+		picker.setColor(valueInput.value);
+	};
+
+	icon.onmouseover = function () {
+		picker.$el.style.display = ''
+	}
+
+	var initial = opts.value
+	switch (opts.format) {
+		case 'rgb':
+			initial = tinycolor(initial).toHexString()
+			break
+		case 'hex':
+			initial = tinycolor(initial).toHexString()
+			break
+		case 'array':
+			initial = tinycolor.fromRatio({r: initial[0], g: initial[1], b: initial[2]}).toHexString()
+			break
+		default:
+			break
+	}
+
+	var picker = new ColorPicker({
+		el: icon,
+		color: initial,
+		width: 160,
+		height: 120
+	});
+
+	picker.$el.style.display = 'none';
+
+	icon.onmouseout = (e) => {
+		picker.$el.style.display = 'none'
+	}
+
+	setTimeout(() => {
+		this.emit('init', initial)
+	})
+
+	picker.onChange((hex) => {
+		let v = format(hex);
+		if (v !== valueInput.value) valueInput.value = v;
+		css(icon, {backgroundColor: hex})
+		this.emit('input', format(hex))
+	})
+
+	function format (hex) {
+		switch (opts.format) {
+			case 'rgb':
+				return tinycolor(hex).toRgbString()
+			case 'hex':
+				return tinycolor(hex).toHexString()
+			case 'array':
+				var rgb = tinycolor(hex).toRgb()
+				return [rgb.r / 255, rgb.g / 255, rgb.b / 255].map(function (x) {
+					return x.toFixed(2)
+				})
+			default:
+				return hex
+		}
+	};
+
+	return this;
+}
+
+},{"dom-css":13,"events":3,"inherits":19,"input-number":20,"param-case":54,"simple-color-picker":76,"tinycolor2":78}],66:[function(require,module,exports){
+/**
+ * @module  settings-panel/src/custom
+ *
+ * A custom html component
+ */
+
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits')
+const extend = require('just-extend')
+
+module.exports = Custom
+inherits(Custom, EventEmitter)
+
+function Custom (opts) {
+	if (!(this instanceof Custom)) return new Custom(opts);
+
+	//FIXME: these guys force unnecessary events, esp if element returns wrong value
+	// opts.container.addEventListener('input', (e) => {
+	// 	this.emit('input', e.target.value);
+	// });
+	// opts.container.addEventListener('change', (e) => {
+	// 	this.emit('change', e.target.value);
+	// });
+
+	this.update(opts);
+}
+
+Custom.prototype.update = function (opts) {
+	extend(this, opts);
+	var el = this.content;
+	if (this.content instanceof Function) {
+		el = this.content(this);
+		if (!el) return;
+
+		if (typeof el === 'string') {
+			this.container.innerHTML = el;
+		}
+		else if (!this.container.contains(el)) {
+			this.container.appendChild(el);
+		}
+	}
+	else if (typeof this.content === 'string') {
+		this.container.innerHTML = el;
+	}
+	else if (this.content instanceof Element && (!this.container.contains(el))) {
+		this.container.appendChild(el);
+	}
+	else {
+		//empty content is allowable, in case if user wants to show only label for example
+		// throw Error('`content` should be a function returning html element or string');
+	}
+};
+},{"events":3,"inherits":19,"just-extend":32}],67:[function(require,module,exports){
+const isNumeric = require('is-numeric')
+const css = require('dom-css')
+const isMobile = require('is-mobile')()
+const format = require('param-case')
+const clamp = require('mumath/clamp')
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits');
+const precision = require('mumath/precision');
+
+module.exports = Range
+
+inherits(Range, EventEmitter);
+
+function Range (opts) {
+	if (!(this instanceof Range)) return new Range(opts);
+
+	this.update(opts);
+}
+
+Range.prototype.update = function (opts) {
+	var self = this
+	var scaleValue, scaleValueInverse, logmin, logmax, logsign, input, handle, panel;
+
+	if (!!opts.step && !!opts.steps) {
+		throw new Error('Cannot specify both step and steps. Got step = ' + opts.step + ', steps = ', opts.steps)
+	}
+
+	opts.container.innerHTML = '';
+
+	if (opts.step) {
+		var prec = precision(opts.step) || 1;
+	}
+	else {
+		var prec = precision( (opts.max - opts.min) / opts.steps ) || 1;
+	}
+
+	// Create scale functions for converting to/from the desired scale:
+	if (opts.scale === 'log' || opts.log) {
+		scaleValue = function (x) {
+			return logsign * Math.exp(Math.log(logmin) + (Math.log(logmax) - Math.log(logmin)) * x / 100)
+		}
+		scaleValueInverse = function (y) {
+			return (Math.log(y * logsign) - Math.log(logmin)) * 100 / (Math.log(logmax) - Math.log(logmin))
+		}
+	} else {
+		scaleValue = scaleValueInverse = function (x) { return x }
+	}
+
+	if (!Array.isArray(opts.value)) {
+		opts.value = []
+	}
+	if (opts.scale === 'log' || opts.log) {
+		// Get options or set defaults:
+		opts.max = (isNumeric(opts.max)) ? opts.max : 100
+		opts.min = (isNumeric(opts.min)) ? opts.min : 0.1
+
+		// Check if all signs are valid:
+		if (opts.min * opts.max <= 0) {
+			throw new Error('Log range min/max must have the same sign and not equal zero. Got min = ' + opts.min + ', max = ' + opts.max)
+		} else {
+			// Pull these into separate variables so that opts can define the *slider* mapping
+			logmin = opts.min
+			logmax = opts.max
+			logsign = opts.min > 0 ? 1 : -1
+
+			// Got the sign so force these positive:
+			logmin = Math.abs(logmin)
+			logmax = Math.abs(logmax)
+
+			// These are now simply 0-100 to which we map the log range:
+			opts.min = 0
+			opts.max = 100
+
+			// Step is invalid for a log range:
+			if (isNumeric(opts.step)) {
+				throw new Error('Log may only use steps (integer number of steps), not a step value. Got step =' + opts.step)
+			}
+			// Default step is simply 1 in linear slider space:
+			opts.step = 1
+		}
+
+		opts.value = [
+			scaleValueInverse(isNumeric(opts.value[0]) ? opts.value[0] : scaleValue(opts.min + (opts.max - opts.min) * 0.25)),
+			scaleValueInverse(isNumeric(opts.value[1]) ? opts.value[1] : scaleValue(opts.min + (opts.max - opts.min) * 0.75))
+		]
+
+		if (scaleValue(opts.value[0]) * scaleValue(opts.max) <= 0 || scaleValue(opts.value[1]) * scaleValue(opts.max) <= 0) {
+			throw new Error('Log range initial value must have the same sign as min/max and must not equal zero. Got initial value = [' + scaleValue(opts.value[0]) + ', ' + scaleValue(opts.value[1]) + ']')
+		}
+	} else {
+		// If linear, this is much simpler:
+		opts.max = (isNumeric(opts.max)) ? opts.max : 100
+		opts.min = (isNumeric(opts.min)) ? opts.min : 0
+		opts.step = (isNumeric(opts.step)) ? opts.step : (opts.max - opts.min) / 100
+
+		opts.value = [
+			isNumeric(opts.value[0]) ? opts.value[0] : (opts.min + opts.max) * 0.25,
+			isNumeric(opts.value[1]) ? opts.value[1] : (opts.min + opts.max) * 0.75
+		]
+	}
+
+	// If we got a number of steps, use that instead:
+	if (isNumeric(opts.steps)) {
+		opts.step = isNumeric(opts.steps) ? (opts.max - opts.min) / opts.steps : opts.step
+	}
+
+	// Quantize the initial value to the requested step:
+	opts.value[0] = opts.min + opts.step * Math.round((opts.value[0] - opts.min) / opts.step)
+	opts.value[1] = opts.min + opts.step * Math.round((opts.value[1] - opts.min) / opts.step)
+
+
+	//create DOM
+	var lValue = require('./value')({
+		container: opts.container,
+		value: scaleValue(opts.value[0]).toFixed(prec),
+		type: 'text',
+		left: true,
+		disabled: opts.disabled,
+		id: opts.id,
+		input: v => {
+			//TODO
+		}
+	})
+
+	panel = opts.container.parentNode;
+
+	input = opts.container.appendChild(document.createElement('span'))
+	input.id = 'settings-panel-interval'
+	input.className = 'settings-panel-interval'
+
+	handle = document.createElement('span')
+	handle.className = 'settings-panel-interval-handle'
+	handle.value = 50;
+	handle.min = 0;
+	handle.max = 50;
+	input.appendChild(handle)
+
+	var value = opts.value
+
+	// Display the values:
+	var rValue = require('./value')({
+		container: opts.container,
+		disabled: opts.disabled,
+		value: scaleValue(opts.value[1]).toFixed(prec),
+		type: 'text',
+		input: v => {
+			//TODO
+		}
+	})
+
+	function setHandleCSS () {
+		let left = ((value[0] - opts.min) / (opts.max - opts.min) * 100);
+		let right = (100 - (value[1] - opts.min) / (opts.max - opts.min) * 100);
+		css(handle, {
+			left:  left + '%',
+			width: (100 - left - right) + '%'
+		})
+	}
+
+	// Initialize CSS:
+	setHandleCSS()
+	// An index to track what's being dragged:
+	var activeIndex = -1
+
+	function mouseX (ev) {
+		// Get mouse/touch position in page coords relative to the container:
+		return (ev.touches && ev.touches[0] || ev).pageX - input.getBoundingClientRect().left
+	}
+
+	function setActiveValue (fraction) {
+		if (activeIndex === -1) {
+			return
+		}
+
+		// Get the position in the range [0, 1]:
+		var lofrac = (value[0] - opts.min) / (opts.max - opts.min)
+		var hifrac = (value[1] - opts.min) / (opts.max - opts.min)
+
+		// Clip against the other bound:
+		if (activeIndex === 0) {
+			fraction = Math.min(hifrac, fraction)
+		} else {
+			fraction = Math.max(lofrac, fraction)
+		}
+
+		// Compute and quantize the new value:
+		var newValue = opts.min + Math.round((opts.max - opts.min) * fraction / opts.step) * opts.step
+
+		// Update value, in linearized coords:
+		value[activeIndex] = newValue
+
+		// Update and send the event:
+		setHandleCSS()
+		input.oninput()
+	}
+
+	var mousemoveListener = function (ev) {
+		if (ev.target === input || ev.target === handle) ev.preventDefault()
+
+		var fraction = clamp(mouseX(ev) / input.offsetWidth, 0, 1)
+
+		setActiveValue(fraction)
+	}
+
+	var mouseupListener = function (ev) {
+		panel.classList.remove('settings-panel-interval-dragging')
+
+		document.removeEventListener(isMobile ? 'touchmove' : 'mousemove', mousemoveListener)
+		document.removeEventListener(isMobile ? 'touchend' : 'mouseup', mouseupListener)
+
+		activeIndex = -1
+	}
+
+	input.addEventListener(isMobile ? 'touchstart' : 'mousedown', function (ev) {
+		// Tweak control to make dragging experience a little nicer:
+		panel.classList.add('settings-panel-interval-dragging')
+
+		// Get mouse position fraction:
+		var fraction = clamp(mouseX(ev) / input.offsetWidth, 0, 1)
+
+		// Get the current fraction of position --> [0, 1]:
+		var lofrac = (value[0] - opts.min) / (opts.max - opts.min)
+		var hifrac = (value[1] - opts.min) / (opts.max - opts.min)
+
+		// This is just for making decisions, so perturb it ever
+		// so slightly just in case the bounds are numerically equal:
+		lofrac -= Math.abs(opts.max - opts.min) * 1e-15
+		hifrac += Math.abs(opts.max - opts.min) * 1e-15
+
+		// Figure out which is closer:
+		var lodiff = Math.abs(lofrac - fraction)
+		var hidiff = Math.abs(hifrac - fraction)
+
+		activeIndex = lodiff < hidiff ? 0 : 1
+
+		// Attach this to *document* so that we can still drag if the mouse
+		// passes outside the container:
+		document.addEventListener(isMobile ? 'touchmove' : 'mousemove', mousemoveListener)
+		document.addEventListener(isMobile ? 'touchend' : 'mouseup', mouseupListener)
+	})
+
+	setTimeout(() => {
+		var scaledLValue = scaleValue(value[0])
+		var scaledRValue = scaleValue(value[1])
+		lValue.value = scaledLValue.toFixed(prec)
+		rValue.value = scaledRValue.toFixed(prec)
+		this.emit('init', [scaledLValue, scaledRValue])
+	})
+
+	input.oninput = () => {
+		var scaledLValue = scaleValue(value[0])
+		var scaledRValue = scaleValue(value[1])
+		lValue.value = scaledLValue.toFixed(prec)
+		rValue.value = scaledRValue.toFixed(prec)
+		this.emit('input', [scaledLValue, scaledRValue])
+	}
+
+	return this;
+}
+},{"./value":73,"dom-css":13,"events":3,"inherits":19,"is-mobile":28,"is-numeric":30,"mumath/clamp":45,"mumath/precision":50,"param-case":54}],68:[function(require,module,exports){
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits')
+const isNumeric = require('is-numeric')
+const css = require('dom-css')
+const format = require('param-case')
+const precision = require('mumath/precision')
+
+module.exports = Range
+inherits(Range, EventEmitter)
+
+function Range (opts) {
+	if (!(this instanceof Range)) return new Range(opts);
+
+	this.update(opts);
+}
+
+Range.prototype.update = function (opts) {
+	var scaleValue, scaleValueInverse, logmin, logmax, logsign
+
+	if (!!opts.step && !!opts.steps) {
+		throw new Error('Cannot specify both step and steps. Got step = ' + opts.step + ', steps = ', opts.steps)
+	}
+
+	opts.container.innerHTML = '';
+
+	if (!opts.container) opts.container = document.body;
+
+	var input = opts.container.querySelector('.settings-panel-range');
+
+	if (!input) {
+		input = opts.container.appendChild(document.createElement('input'))
+		input.type = 'range'
+		input.className = 'settings-panel-range'
+	}
+
+	if (opts.disabled) input.disabled = true;
+
+	// Create scale functions for converting to/from the desired scale:
+	if (opts.scale === 'log') {
+		scaleValue = function (x) {
+			return logsign * Math.exp(Math.log(logmin) + (Math.log(logmax) - Math.log(logmin)) * x / 100)
+		}
+		scaleValueInverse = function (y) {
+			return (Math.log(y * logsign) - Math.log(logmin)) * 100 / (Math.log(logmax) - Math.log(logmin))
+		}
+	} else {
+		scaleValue = scaleValueInverse = function (x) { return x }
+	}
+
+	// Get initial value:
+	if (opts.scale === 'log') {
+		// Get options or set defaults:
+		opts.max = (isNumeric(opts.max)) ? opts.max : 100
+		opts.min = (isNumeric(opts.min)) ? opts.min : 0.1
+
+		// Check if all signs are valid:
+		if (opts.min * opts.max <= 0) {
+			throw new Error('Log range min/max must have the same sign and not equal zero. Got min = ' + opts.min + ', max = ' + opts.max)
+		} else {
+			// Pull these into separate variables so that opts can define the *slider* mapping
+			logmin = opts.min
+			logmax = opts.max
+			logsign = opts.min > 0 ? 1 : -1
+
+			// Got the sign so force these positive:
+			logmin = Math.abs(logmin)
+			logmax = Math.abs(logmax)
+
+			// These are now simply 0-100 to which we map the log range:
+			opts.min = 0
+			opts.max = 100
+
+			// Step is invalid for a log range:
+			if (isNumeric(opts.step)) {
+				throw new Error('Log may only use steps (integer number of steps), not a step value. Got step =' + opts.step)
+			}
+			// Default step is simply 1 in linear slider space:
+			opts.step = 1
+		}
+
+		opts.value = scaleValueInverse(isNumeric(opts.value) ? opts.value : scaleValue((opts.min + opts.max) * 0.5))
+
+		if (opts.value * scaleValueInverse(opts.max) <= 0) {
+			throw new Error('Log range initial value must have the same sign as min/max and must not equal zero. Got initial value = ' + opts.value)
+		}
+	} else {
+		// If linear, this is much simpler:
+		opts.max = (isNumeric(opts.max)) ? opts.max : 100
+		opts.min = (isNumeric(opts.min)) ? opts.min : 0
+		opts.step = (isNumeric(opts.step)) ? opts.step : (opts.max - opts.min) / 100
+
+		opts.value = isNumeric(opts.value) ? opts.value : (opts.min + opts.max) * 0.5
+	}
+
+	// If we got a number of steps, use that instead:
+	if (isNumeric(opts.steps)) {
+		opts.step = isNumeric(opts.steps) ? (opts.max - opts.min) / opts.steps : opts.step
+	}
+
+	// Quantize the initial value to the requested step:
+	var initialStep = Math.round((opts.value - opts.min) / opts.step)
+	opts.value = opts.min + opts.step * initialStep
+
+	// Set value on the input itself:
+	input.min = opts.min
+	input.max = opts.max
+	input.step = opts.step
+	input.value = opts.value
+	input.style.setProperty('--value', 100 * (opts.value - opts.min) / (opts.max - opts.min) + '%');
+
+	//preser container data for display
+	opts.container.setAttribute('data-min', opts.min);
+	opts.container.setAttribute('data-max', opts.max);
+
+	if (opts.scale === 'log') {
+		//FIXME: not every log is of precision 3
+		var prec = 3;
+	}
+	else {
+		if (opts.step) {
+			var prec = precision(opts.step);
+		}
+		else if (opts.steps) {
+			var prec = precision( (opts.max - opts.min) / opts.steps );
+		}
+	}
+
+	var value = require('./value')({
+		id: opts.id,
+		container: opts.container,
+		className: 'settings-panel-range-value',
+		value: scaleValue(opts.value).toFixed(prec),
+		type: opts.scale === 'log' ? 'text' : 'number',
+		min: scaleValue(opts.min),
+		max: scaleValue(opts.max),
+		disabled: opts.disabled,
+		//FIXME: step here might vary
+		step: opts.scale === 'log' ? 0.01 : opts.step,
+		input: (v) => {
+			input.value = scaleValueInverse(v)
+			// value.value = v
+			this.emit('input', v)
+		}
+	})
+
+	setTimeout(() => {
+		this.emit('init', parseFloat(input.value))
+	});
+
+	input.oninput = (data) => {
+		var scaledValue = scaleValue(parseFloat(data.target.value));
+		value.value = scaledValue.toFixed(prec);
+		input.style.setProperty('--value', 100 * (data.target.value - opts.min) / (opts.max - opts.min) + '%');
+		this.emit('input', scaledValue);
+	}
+
+	return this;
+}
+
+},{"./value":73,"dom-css":13,"events":3,"inherits":19,"is-numeric":30,"mumath/precision":50,"param-case":54}],69:[function(require,module,exports){
+var EventEmitter = require('events').EventEmitter
+var inherits = require('inherits')
+var format = require('param-case')
+
+module.exports = Select
+inherits(Select, EventEmitter)
+
+function Select (opts) {
+	if (!(this instanceof Select)) return new Select(opts);
+
+	this.update(opts);
+}
+
+Select.prototype.update = function (opts) {
+	var i, container, input, downTriangle, upTriangle, key, option, el, keys
+
+	opts.container.innerHTML = '';
+
+	input = document.createElement('select')
+	input.id = opts.id
+	input.className = 'settings-panel-select';
+
+	if (opts.disabled) input.disabled = true;
+
+	downTriangle = document.createElement('span')
+	downTriangle.className = 'settings-panel-select-triangle settings-panel-select-triangle--down'
+
+	upTriangle = document.createElement('span')
+	upTriangle.className = 'settings-panel-select-triangle settings-panel-select-triangle--up'
+
+	if (Array.isArray(opts.options)) {
+		for (i = 0; i < opts.options.length; i++) {
+			option = opts.options[i]
+			el = document.createElement('option')
+			el.value = el.textContent = option
+			if (opts.value === option) {
+				el.selected = 'selected'
+			}
+			input.appendChild(el)
+		}
+	} else {
+		keys = Object.keys(opts.options)
+		for (i = 0; i < keys.length; i++) {
+			key = keys[i]
+			el = document.createElement('option')
+			el.value = key
+			if (opts.value === key) {
+				el.selected = 'selected'
+			}
+			el.textContent = opts.options[key]
+			input.appendChild(el)
+		}
+	}
+
+	opts.container.appendChild(input)
+	opts.container.appendChild(downTriangle)
+	opts.container.appendChild(upTriangle)
+
+	setTimeout(() => {
+		this.emit('init', opts.value)
+	})
+
+	input.onchange = (data) => {
+		this.emit('input', data.target.value)
+	}
+
+	return this;
+}
+},{"events":3,"inherits":19,"param-case":54}],70:[function(require,module,exports){
+const inherits = require('inherits');
+const Emitter = require('events').EventEmitter;
+const format = require('param-case');
+const extend = require('just-extend');
+
+module.exports = Switch;
+
+inherits(Switch, Emitter);
+
+function Switch (opts) {
+	if (!(this instanceof Switch)) return new Switch(opts);
+
+	this.switch = opts.container.querySelector('.settings-panel-switch');
+
+	if (!this.switch) {
+		this.switch = document.createElement('fieldset');
+		this.switch.className = 'settings-panel-switch';
+		opts.container.appendChild(this.switch);
+
+		var html = '';
+
+		if (Array.isArray(opts.options)) {
+			for (i = 0; i < opts.options.length; i++) {
+				let option = opts.options[i]
+				html += createOption(option, option);
+			}
+		} else {
+			for (let key in opts.options) {
+				html += createOption(opts.options[key], key);
+			}
+		}
+
+		this.switch.innerHTML = html;
+
+		this.switch.onchange = (e) => {
+			this.emit('input', e.target.getAttribute('data-value'));
+		}
+
+		setTimeout(() => {
+			this.emit('init', opts.value)
+		})
+	}
+
+	this.switch.id = opts.id;
+
+	this.update(opts);
+
+	function createOption (label, value) {
+		let htmlFor = `settings-panel-${format(opts.panel.id)}-${format(opts.id)}-input-${format(value)}`;
+
+		let html = `<input type="radio" class="settings-panel-switch-input" ${value === opts.value ? 'checked' : ''} id="${htmlFor}" name="${format(opts.id)}" data-value="${value}" title="${value}"/><label for="${htmlFor}" class="settings-panel-switch-label" title="${value}">${label}</label>`;
+		return html;
+	}
+}
+
+Switch.prototype.update = function (opts) {
+	return this;
+}
+},{"events":3,"inherits":19,"just-extend":32,"param-case":54}],71:[function(require,module,exports){
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits')
+const css = require('dom-css')
+const num = require('input-number');
+const extend = require('just-extend');
+
+module.exports = Text
+inherits(Text, EventEmitter)
+
+function Text (opts) {
+	if (!(this instanceof Text)) return new Text(opts)
+
+	let element = opts.container.querySelector('.settings-panel-text');
+
+	if (!element) {
+		element = opts.container.appendChild(document.createElement('input'));
+		element.className = 'settings-panel-text';
+		num(element);
+
+		if (opts.placeholder) element.placeholder = opts.placeholder;
+
+		this.element = element;
+
+		element.oninput = (data) => {
+			this.emit('input', data.target.value)
+		}
+		setTimeout(() => {
+			this.emit('init', element.value)
+		});
+	}
+
+	this.update(opts);
+}
+
+Text.prototype.update = function (opts) {
+	extend(this, opts);
+	this.element.type = this.type
+	this.element.id = this.id
+	this.element.value = this.value || ''
+	this.element.disabled = !!this.disabled;
+	return this;
+}
+
+},{"dom-css":13,"events":3,"inherits":19,"input-number":20,"just-extend":32}],72:[function(require,module,exports){
+const EventEmitter = require('events').EventEmitter
+const inherits = require('inherits')
+const css = require('dom-css')
+const autosize = require('autosize');
+const extend = require('just-extend');
+
+module.exports = Textarea
+inherits(Textarea, EventEmitter)
+
+function Textarea (opts) {
+	if (!(this instanceof Textarea)) return new Textarea(opts)
+
+	//<textarea rows="1" placeholder="${param.placeholder || 'value...'}" id="${param.name}" class="prama-input prama-textarea" title="${param.value}">${param.value}</textarea>
+	let input = opts.container.querySelector('.settings-panel-textarea');
+	if (!input) {
+		input = opts.container.appendChild(document.createElement('textarea'));
+		input.className = 'settings-panel-textarea';
+
+		this.element = input;
+
+		setTimeout(() => {
+			this.emit('init', input.value)
+			autosize.update(input);
+		})
+
+		input.oninput = (data) => {
+			this.emit('input', data.target.value)
+		}
+
+		autosize(input);
+	}
+
+	this.update(opts);
+}
+
+Textarea.prototype.update = function (opts) {
+	extend(this, opts);
+
+	this.element.rows = this.rows || 1;
+	this.element.placeholder = this.placeholder || '';
+	this.element.id = this.id
+
+	this.element.value = this.value || '';
+
+	this.element.disabled = !!this.disabled;
+
+	return this;
+}
+},{"autosize":8,"dom-css":13,"events":3,"inherits":19,"just-extend":32}],73:[function(require,module,exports){
+const num = require('input-number');
+
+module.exports = function (opts) {
+  opts = opts || {}
+  var value = document.createElement('input')
+
+  num(value, opts);
+
+  if (opts.input) {
+    value.addEventListener('input', function () {
+      let v = value.value;
+      if (opts.type === 'number') v = parseFloat(v);
+      opts.input(v)
+    })
+  }
+  if (opts.change) {
+    value.addEventListener('change', function () {
+      let v = value.value;
+      if (opts.type === 'number') v = parseFloat(v);
+      opts.change(v)
+    })
+  }
+
+  if (opts.disabled) value.disabled = true;
+
+  value.value = opts.value
+
+  if (opts.id) value.id = opts.id;
+  value.className = 'settings-panel-value';
+  if (opts.className) value.className += ' ' + opts.className;
+  opts.container.appendChild(value)
+
+  return value
+}
+
+},{"input-number":20}],74:[function(require,module,exports){
+/**
+ * @module prama/theme/control
+ *
+ * Control-panel theme on steroids
+ */
+const px = require('add-px-to-style');
+const fonts = require('google-fonts');
+const color = require('tinycolor2');
+const scopeCss = require('scope-css');
+const lerp = require('interpolation-arrays');
+const none = require('./none');
+
+module.exports = control;
+
+control.palette = ['#292929', '#e7e7e7'];
+
+control.fontSize = '12px';
+control.fontFamily = '"Space Mono", monospace';
+control.labelWidth = '33.3%';
+control.inputHeight = 1.66666;
+
+fonts.add({
+	'Space Mono': true
+});
+
+
+function control (opts) {
+	opts = opts || {};
+	let fs = opts.fontSize || control.fontSize;
+	let font = opts.fontFamily || control.fontFamily;
+	let h = opts.inputHeight || control.inputHeight;
+	let labelWidth = opts.labelWidth || none.labelWidth;
+
+	let palette = (opts.palette || control.palette).map(v => color(v).toRgb());
+	let pick = lerp(palette);
+
+	let white = color(pick(.0)).toString();
+	let light = color(pick(.1)).toString();
+	let gray = color(pick(.75)).toString();
+	let dark = color(pick(.95)).toString();
+	let black = color(pick(1)).toString();
+
+	//NOTE: this is in case of scaling palette to black/white range
+	// let white = color(pick(0.1607843137254902)).toString();
+	// let light = color(pick(0.23529411764705882)).toString();
+	// let gray = color(pick(0.5705882352941177)).toString();
+	// let dark = color(pick(0.7196078431372549)).toString();
+	// let black = color(pick(0.9058823529411765)).toString();
+
+	//none theme defines sizes, the rest (ours) is up to style
+	return none({
+		fontSize: fs,
+		fontFamily: font,
+		inputHeight: h,
+		labelWidth: labelWidth,
+	}) + `
+	:host {
+		background: ${white};
+		font-family: ${font};
+		font-size: ${px('font-size',fs)};
+		color: ${gray};
+		padding: ${h/2}em;
+	}
+
+	.settings-panel-title {
+		font-size: 1.25em;
+		letter-spacing: .15ex;
+		padding-bottom: ${h/2}em;
+	}
+
+	/** Text */
+	.settings-panel-text,
+	.settings-panel-textarea {
+		padding-left: ${h/4}em;
+		border: none;
+		font-family: inherit;
+		background: ${light};
+		color: inherit;
+		border-radius: 0;
+	}
+	.settings-panel-text:hover,
+	.settings-panel-textarea:hover,
+	.settings-panel-text:focus,
+	.settings-panel-textarea:focus {
+		outline: none;
+		color: ${dark};
+	}
+
+
+	/** Range */
+	.settings-panel-range {
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+		background: ${light};
+		width: 80%;
+		border-radius: 0;
+	}
+	.settings-panel-range:focus {
+		outline: none;
+	}
+	.settings-panel-range::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		height: ${h}em;
+		width: ${h/2}em;
+		background: ${gray};
+		border: 0;
+		margin-top: 0px;
+	}
+	.settings-panel-range:hover::-webkit-slider-thumb {
+		background: ${dark};
+	}
+	.settings-panel-range::-moz-range-track {
+		-moz-appearance: none;
+		background: none;
+	}
+	.settings-panel-range::-moz-range-thumb {
+		-moz-appearance: none;
+		background: ${gray};
+		border: none;
+		border-radius: 0px;
+		height: ${h}em;
+		width: ${h/2}em;
+	}
+	.settings-panel-range:hover::-moz-range-thumb {
+		background: ${dark};
+	}
+	.settings-panel-range::-ms-track {
+		background: none;
+		border: none;
+		outline: none;
+		color: transparent;
+	}
+	.settings-panel-range::-ms-fill-lower {
+		background: none;
+	}
+	.settings-panel-range::-ms-fill-upper {
+		background: none;
+	}
+	.settings-panel-range::-ms-thumb {
+		border-radius: 0px;
+		border: 0;
+		background: ${gray};
+		width: ${h/2}em;
+		height: ${h}em;
+	}
+	.settings-panel-range:hover::-ms-thumb {
+		background: ${dark};
+	}
+	.settings-panel-range:focus::-ms-fill-lower {
+		background: none;
+		outline: none;
+	}
+	.settings-panel-range:focus::-ms-fill-upper {
+		background: none;
+		outline: none;
+	}
+
+
+	/** Interval */
+	.settings-panel-interval-handle {
+		background: ${gray};
+	}
+	.settings-panel-interval {
+		background: ${light};
+		position: relative;
+		width: 60%;
+	}
+	.settings-panel-interval:hover .settings-panel-interval-handle {
+		background: ${dark};
+	}
+
+	/** Values */
+	.settings-panel-value {
+		background: ${light};
+		margin-left: ${h/4}em;
+		width: calc(20% - ${h/4}em);
+		padding-left: ${h/4}em;
+	}
+	.settings-panel-value:first-child {
+		margin-left: 0;
+		margin-right: ${h/4}em;
+	}
+	.settings-panel-value:hover,
+	.settings-panel-value:focus {
+		color: ${dark};
+	}
+
+
+	/** Select */
+	.settings-panel-select {
+		font-family: inherit;
+		background: ${light};
+		color: inherit;
+		padding-left: ${h/4}em;
+		border-radius: 0;
+		outline: none;
+		border: none;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		-o-appearance:none;
+		appearance:none;
+	}
+	.settings-panel-select:hover,
+	.settings-panel-select:focus {
+		color: ${dark};
+	}
+	.settings-panel-select::-ms-expand {
+		display: none;
+	}
+	.settings-panel-select-triangle {
+		display: block;
+	}
+
+
+	/** Checkbox */
+	.settings-panel-checkbox {
+		display: none;
+	}
+	.settings-panel-checkbox-label {
+		position: relative;
+		display: block;
+		margin: ${h*.075}em 0;
+		width: ${h*.85}em;
+		height: ${h*.85}em;
+		line-height: ${h*.85}em;
+		background: ${light};
+	}
+	.settings-panel-checkbox:checked + .settings-panel-checkbox-label {
+		background: ${gray};
+		box-shadow: inset 0 0 0 ${h*.2}em ${light};
+	}
+	.settings-panel-checkbox:checked + .settings-panel-checkbox-label:hover {
+		background: ${dark};
+	}
+
+
+	/** Color */
+	.settings-panel-color {
+		position: relative;
+		width: calc(20% - ${h/4}em);
+		margin-right: ${h/4}em;
+		display: inline-block;
+		vertical-align: baseline;
+	}
+	.settings-panel-color-value {
+		border: none;
+		padding-left: ${h/4}em;
+		width: 80%;
+		font-family: inherit;
+		background: ${light};
+		color: inherit;
+		border-radius: 0;
+	}
+	.settings-panel-color-value:hover,
+	.settings-panel-color-value:focus {
+		outline: none;
+		color: ${dark};
+	}
+
+
+	/** Button */
+	.settings-panel-button {
+		color: ${black};
+		background: ${light};
+		text-align: center;
+		border: none;
+	}
+	.settings-panel-button:focus {
+		outline: none;
+	}
+	.settings-panel-button:hover {
+		background: ${gray};
+	}
+	.settings-panel-button:active {
+		background: ${dark};
+	}
+
+
+	/** Switch style */
+	.settings-panel-switch {
+	}
+	.settings-panel-switch-input {
+		display: none;
+	}
+	.settings-panel-switch-label {
+		position: relative;
+		display: inline-block;
+		padding: 0 ${h/2}em;
+		margin: 0;
+		z-index: 2;
+		text-align: center;
+	}
+	.settings-panel-switch-input:checked + .settings-panel-switch-label {
+		background: ${light};
+		color: ${gray};
+	}
+	.settings-panel-switch-input + .settings-panel-switch-label:hover {
+		color: ${dark};
+	}
+
+	/** Decorations */
+	::-webkit-input-placeholder {
+		color: ${gray};
+	}
+	::-moz-placeholder {
+		color: ${gray};
+	}
+	:-ms-input-placeholder {
+		color: ${gray};
+	}
+	:-moz-placeholder {
+		color: ${gray};
+	}
+	::-moz-selection {
+		color: ${white};
+		background: ${dark};
+	}
+	::selection {
+		color: ${white};
+		background: ${black};
+	}
+	:host hr {
+		margin: ${h/4}em ${h/8}em;
+		color: ${light};
+		opacity: 1;
+	}
+	:host a {
+		border-bottom: 1px solid ${alpha(gray, .15)};
+	}
+	:host a:hover {
+		color: ${dark};
+		border-bottom: 1px solid ${gray};
+	}
+`};
+
+
+function alpha (c, value) {
+	return color(c).setAlpha(value).toString();
+}
+
+},{"./none":75,"add-px-to-style":7,"google-fonts":18,"interpolation-arrays":22,"scope-css":57,"tinycolor2":78}],75:[function(require,module,exports){
+/**
+ * @module  settings-panel/theme/none
+ */
+
+const px = require('add-px-to-style');
+
+module.exports = none;
+
+none.palette = ['white', 'black'];
+none.fontSize = '13px';
+none.fontFamily = 'sans-serif';
+none.labelWidth = '9em';
+none.inputHeight = 2;
+
+function none (opts) {
+	opts = opts || {};
+	let fs = opts.fontSize || none.fontSize;
+	let font = opts.fontFamily || none.fontFamily;
+	let h = opts.inputHeight || none.inputHeight;
+	let labelWidth = opts.labelWidth || none.labelWidth;
+
+	let palette = opts.palette || none.palette;
+	let white = palette[0];
+	let black = palette[palette.length - 1];
+
+	//just size part
+	return `
+		:host {
+			background: ${white};
+			color: ${black};
+			font-family: ${font};
+			font-size: ${px('font-size', fs)};
+			padding: ${h*.666}em;
+		}
+
+		.settings-panel-title {
+			min-height: ${h}em;
+		}
+
+		.settings-panel-field {
+			padding: ${h/8}em;
+		}
+
+		:host.settings-panel-orientation-left .settings-panel-label,
+		:host .settings-panel-orientation-left .settings-panel-label,
+		:host.settings-panel-orientation-right .settings-panel-label,
+		:host .settings-panel-orientation-right .settings-panel-label {
+			width: ${px('width', labelWidth)};
+		}
+		:host.settings-panel-orientation-bottom .settings-panel-label {
+			border-top-width: ${h}em;
+		}
+		:host.settings-panel-orientation-bottom .settings-panel-label + .settings-panel-input {
+			top: ${h/8}em;
+		}
+		:host.settings-panel-orientation-left .settings-panel-label {
+			padding-right: ${h/2}em;
+		}
+		:host.settings-panel-orientation-right .settings-panel-label {
+			padding-left: ${h/2}em;
+		}
+		:host.settings-panel-orientation-right .settings-panel-label + .settings-panel-input {
+			width: calc(100% - ${labelWidth});
+		}
+
+		.settings-panel-text,
+		.settings-panel-textarea,
+		.settings-panel-range,
+		.settings-panel-interval,
+		.settings-panel-select,
+		.settings-panel-color,
+		.settings-panel-color-value,
+		.settings-panel-value {
+			height: ${h}em;
+		}
+
+		.settings-panel-button,
+		.settings-panel-input,
+		.settings-panel-switch,
+		.settings-panel-switch-label {
+			min-height: ${h}em;
+		}
+		.settings-panel-input,
+		.settings-panel-switch,
+		.settings-panel-switch-label {
+			line-height: ${h}em;
+		}
+
+		.settings-panel-switch-label,
+		.settings-panel-checkbox,
+		.settings-panel-checkbox-label,
+		.settings-panel-button {
+			cursor: pointer;
+		}
+
+		.settings-panel-range::-webkit-slider-thumb {
+			cursor: ew-resize;
+		}
+		.settings-panel-range::-moz-range-thumb {
+			cursor: ew-resize;
+		}
+		.settings-panel-range::-ms-track {
+			cursor: ew-resize;
+		}
+		.settings-panel-range::-ms-thumb {
+			cursor: ew-resize;
+		}
+
+		/* Default triangle styles are from control theme, just set display: block */
+		.settings-panel-select-triangle {
+			display: none;
+			position: absolute;
+			border-right: .3em solid transparent;
+			border-left: .3em solid transparent;
+			line-height: ${h}em;
+			right: 2.5%;
+			height: 0;
+			z-index: 1;
+			pointer-events: none;
+		}
+		.settings-panel-select-triangle--up {
+			top: 50%;
+			margin-top: -${h/4 + h/16}em;
+			border-bottom: ${h/4}em solid;
+			border-top: 0px transparent;
+		}
+		.settings-panel-select-triangle--down {
+			top: 50%;
+			margin-top: ${h/16}em;
+			border-top: ${h/4}em solid;
+			border-bottom: .0 transparent;
+		}
+
+		:host hr {
+			opacity: .5;
+			color: ${black}
+		}
+	`;
+}
+},{"add-px-to-style":7}],76:[function(require,module,exports){
 'use strict';
 
 var bindAll = require('lodash.bindall');
@@ -7029,13 +8297,13 @@ SimpleColorPicker.prototype._onHueMouseUp = function() {
 
 module.exports = SimpleColorPicker;
 
-},{"./src/utils/maths/clamp":69,"component-emitter":24,"dom-transform":26,"is-number":40,"lodash.bindall":48,"tinycolor2":70}],69:[function(require,module,exports){
+},{"./src/utils/maths/clamp":77,"component-emitter":12,"dom-transform":14,"is-number":29,"lodash.bindall":37,"tinycolor2":78}],77:[function(require,module,exports){
 'use strict';
 
 module.exports = function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 };
-},{}],70:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 // TinyColor v1.4.1
 // https://github.com/bgrins/TinyColor
 // Brian Grinstead, MIT License
@@ -8232,7 +9500,7 @@ else {
 
 })(Math);
 
-},{}],71:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 
 var space = require('to-space-case')
 
@@ -8255,7 +9523,7 @@ function toCamelCase(string) {
   })
 }
 
-},{"to-space-case":73}],72:[function(require,module,exports){
+},{"to-space-case":81}],80:[function(require,module,exports){
 
 /**
  * Export.
@@ -8324,7 +9592,7 @@ function uncamelize(string) {
   })
 }
 
-},{}],73:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 
 var clean = require('to-no-case')
 
@@ -8347,7 +9615,7 @@ function toSpaceCase(string) {
   }).trim()
 }
 
-},{"to-no-case":72}],74:[function(require,module,exports){
+},{"to-no-case":80}],82:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -8363,1012 +9631,198 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],75:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
+},{}],83:[function(require,module,exports){
+module.exports = extend
 
-module.exports = Button
-inherits(Button, EventEmitter)
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-function Button (opts) {
-	var this$1 = this;
+function extend() {
+    var target = {}
 
-	if (!(this instanceof Button)) return new Button(opts)
+    for (var i = 0; i < arguments.length; i++) {
+        var source = arguments[i]
 
-	var input = opts.container.querySelector('.settings-panel-button');
-	if (!input) {
-		this.element = input = opts.container.appendChild(document.createElement('button'))
-		input.className = 'settings-panel-button';
-		input.addEventListener('click', function (e) {
-			e.preventDefault();
-			this$1.emit('input');
-		})
-	}
+        for (var key in source) {
+            if (hasOwnProperty.call(source, key)) {
+                target[key] = source[key]
+            }
+        }
+    }
 
-	this.update(opts);
+    return target
 }
 
-Button.prototype.update = function (opts) {
-	this.element.innerHTML = opts.value || opts.label;
-	return this;
-};
+},{}],84:[function(require,module,exports){
+var Grid = require('./');
+var isBrowser = require('is-browser');
+var createSettings = require('settings-panel');
+var insertCss = require('insert-styles');
 
-Button.prototype.label = false;
-},{"events":3,"inherits":31}],76:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
-var format = require('param-case')
-var extend = require('just-extend');
+// prepare mobile
+// var meta = document.createElement('meta')
+// meta.setAttribute('name', 'viewport')
+// meta.setAttribute('content', 'width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0')
+// document.head.appendChild(meta)
 
-module.exports = Checkbox
-inherits(Checkbox, EventEmitter)
 
-function Checkbox (opts) {
-	if (!(this instanceof Checkbox)) return new Checkbox(opts)
-	opts = opts || {}
-	var self = this
+insertCss("\n\tbody {\n\t\tmargin: 0;\n\t\tpadding: 0;\n\t}\n\n\t.frame {\n\t\tmargin-right: 300px;\n\t\tmin-height: 100vh;\n\t}\n");
 
-	var input = opts.container.querySelector('.settings-panel-checkbox');
-	var label = opts.container.querySelector('.settings-panel-checkbox-label');
-	if (!input) {
-		this.element = input = opts.container.appendChild(document.createElement('input'));
-		input.className = 'settings-panel-checkbox';
-		this.labelEl = label = opts.container.appendChild(document.createElement('label'));
-		this.labelEl.innerHTML = '&nbsp;';
-		label.className = 'settings-panel-checkbox-label';
-		input.onchange = function (data) {
-			self.emit('input', data.target.checked)
+
+var frame = document.body.appendChild(document.createElement('div'));
+frame.className = 'frame';
+
+
+var padding = [60, 60, 60, 60];
+
+
+var grid = Grid({
+	container: frame,
+	viewport: function (w, h) {
+		return [padding[0], padding[1], w - padding[2] - padding[0], h - padding[3] - padding[1]];
+	},
+	lines: [
+		{
+			min: 0,
+			max: 100,
+			orientation: 'r'
+		},
+		{
+			min: 0,
+			max: 100,
+			orientation: 'a'
 		}
-		setTimeout(function () {
-			self.emit('init', input.checked)
-		})
-	}
-
-	this.update(opts);
-}
-
-Checkbox.prototype.update = function (opts) {
-	extend(this, opts);
-
-	this.labelEl.htmlFor = this.id
-	this.element.id = this.id
-	this.element.type = 'checkbox';
-	this.element.checked = !!this.value;
-	this.element.disabled = !!this.disabled;
-
-	return this;
-}
-},{"events":3,"inherits":31,"just-extend":43,"param-case":60}],77:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var ColorPicker = require('simple-color-picker')
-var inherits = require('inherits')
-var css = require('dom-css')
-var tinycolor = require('tinycolor2')
-var formatParam = require('param-case')
-var num = require('input-number')
-
-module.exports = Color
-inherits(Color, EventEmitter)
-
-function Color (opts) {
-	if (!(this instanceof Color)) return new Color(opts)
-
-	this.update(opts);
-}
-
-Color.prototype.update = function (opts) {
-	var this$1 = this;
-
-	opts.container.innerHTML = '';
-
-	opts = opts || {}
-	opts.format = opts.format || 'rgb'
-	opts.value = opts.value || '#123456';
-	var icon = opts.container.appendChild(document.createElement('div'))
-	//FIXME: this needed to make el vertical-aligned by baseline
-	icon.innerHTML = '&nbsp;';
-	icon.className = 'settings-panel-color'
-
-	var valueInput = opts.container.appendChild(document.createElement('input'));
-	valueInput.id = opts.id;
-	valueInput.className = 'settings-panel-color-value';
-	num(valueInput);
-	valueInput.onchange = function () {
-		picker.setColor(valueInput.value);
-	};
-	valueInput.oninput = function () {
-		picker.setColor(valueInput.value);
-	};
-
-	icon.onmouseover = function () {
-		picker.$el.style.display = ''
-	}
-
-	var initial = opts.value
-	switch (opts.format) {
-		case 'rgb':
-			initial = tinycolor(initial).toHexString()
-			break
-		case 'hex':
-			initial = tinycolor(initial).toHexString()
-			break
-		case 'array':
-			initial = tinycolor.fromRatio({r: initial[0], g: initial[1], b: initial[2]}).toHexString()
-			break
-		default:
-			break
-	}
-
-	var picker = new ColorPicker({
-		el: icon,
-		color: initial,
-		width: 160,
-		height: 120
-	});
-
-	picker.$el.style.display = 'none';
-
-	icon.onmouseout = function (e) {
-		picker.$el.style.display = 'none'
-	}
-
-	setTimeout(function () {
-		this$1.emit('init', initial)
-	})
-
-	picker.onChange(function (hex) {
-		var v = format(hex);
-		if (v !== valueInput.value) valueInput.value = v;
-		css(icon, {backgroundColor: hex})
-		this$1.emit('input', format(hex))
-	})
-
-	function format (hex) {
-		switch (opts.format) {
-			case 'rgb':
-				return tinycolor(hex).toRgbString()
-			case 'hex':
-				return tinycolor(hex).toHexString()
-			case 'array':
-				var rgb = tinycolor(hex).toRgb()
-				return [rgb.r / 255, rgb.g / 255, rgb.b / 255].map(function (x) {
-					return x.toFixed(2)
-				})
-			default:
-				return hex
-		}
-	};
-
-	return this;
-}
-},{"dom-css":25,"events":3,"inherits":31,"input-number":32,"param-case":60,"simple-color-picker":68,"tinycolor2":70}],78:[function(require,module,exports){
-/**
- * @module  settings-panel/src/custom
- *
- * A custom html component
- */
-
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
-var extend = require('just-extend')
-
-module.exports = Custom
-inherits(Custom, EventEmitter)
-
-function Custom (opts) {
-	if (!(this instanceof Custom)) return new Custom(opts);
-
-	//FIXME: these guys force unnecessary events, esp if element returns wrong value
-	// opts.container.addEventListener('input', (e) => {
-	// 	this.emit('input', e.target.value);
-	// });
-	// opts.container.addEventListener('change', (e) => {
-	// 	this.emit('change', e.target.value);
-	// });
-
-	this.update(opts);
-}
-
-Custom.prototype.update = function (opts) {
-	extend(this, opts);
-	var el = this.content;
-	if (this.content instanceof Function) {
-		el = this.content(this);
-		if (!el) return;
-
-		if (typeof el === 'string') {
-			this.container.innerHTML = el;
-		}
-		else if (!this.container.contains(el)) {
-			this.container.appendChild(el);
-		}
-	}
-	else if (typeof this.content === 'string') {
-		this.container.innerHTML = el;
-	}
-	else if (this.content instanceof Element && (!this.container.contains(el))) {
-		this.container.appendChild(el);
-	}
-	else {
-		//empty content is allowable, in case if user wants to show only label for example
-		// throw Error('`content` should be a function returning html element or string');
-	}
-};
-},{"events":3,"inherits":31,"just-extend":43}],79:[function(require,module,exports){
-var isNumeric = require('is-numeric')
-var css = require('dom-css')
-var isMobile = require('is-mobile')()
-var format = require('param-case')
-var clamp = require('mumath/clamp')
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits');
-var precision = require('mumath/precision');
-
-module.exports = Range
-
-inherits(Range, EventEmitter);
-
-function Range (opts) {
-	if (!(this instanceof Range)) return new Range(opts);
-
-	this.update(opts);
-}
-
-Range.prototype.update = function (opts) {
-	var this$1 = this;
-
-	var self = this
-	var scaleValue, scaleValueInverse, logmin, logmax, logsign, input, handle, panel;
-
-	if (!!opts.step && !!opts.steps) {
-		throw new Error('Cannot specify both step and steps. Got step = ' + opts.step + ', steps = ', opts.steps)
-	}
-
-	opts.container.innerHTML = '';
-
-	if (opts.step) {
-		var prec = precision(opts.step) || 1;
-	}
-	else {
-		var prec = precision( (opts.max - opts.min) / opts.steps ) || 1;
-	}
-
-	// Create scale functions for converting to/from the desired scale:
-	if (opts.scale === 'log' || opts.log) {
-		scaleValue = function (x) {
-			return logsign * Math.exp(Math.log(logmin) + (Math.log(logmax) - Math.log(logmin)) * x / 100)
-		}
-		scaleValueInverse = function (y) {
-			return (Math.log(y * logsign) - Math.log(logmin)) * 100 / (Math.log(logmax) - Math.log(logmin))
-		}
-	} else {
-		scaleValue = scaleValueInverse = function (x) { return x }
-	}
-
-	if (!Array.isArray(opts.value)) {
-		opts.value = []
-	}
-	if (opts.scale === 'log' || opts.log) {
-		// Get options or set defaults:
-		opts.max = (isNumeric(opts.max)) ? opts.max : 100
-		opts.min = (isNumeric(opts.min)) ? opts.min : 0.1
-
-		// Check if all signs are valid:
-		if (opts.min * opts.max <= 0) {
-			throw new Error('Log range min/max must have the same sign and not equal zero. Got min = ' + opts.min + ', max = ' + opts.max)
-		} else {
-			// Pull these into separate variables so that opts can define the *slider* mapping
-			logmin = opts.min
-			logmax = opts.max
-			logsign = opts.min > 0 ? 1 : -1
-
-			// Got the sign so force these positive:
-			logmin = Math.abs(logmin)
-			logmax = Math.abs(logmax)
-
-			// These are now simply 0-100 to which we map the log range:
-			opts.min = 0
-			opts.max = 100
-
-			// Step is invalid for a log range:
-			if (isNumeric(opts.step)) {
-				throw new Error('Log may only use steps (integer number of steps), not a step value. Got step =' + opts.step)
-			}
-			// Default step is simply 1 in linear slider space:
-			opts.step = 1
-		}
-
-		opts.value = [
-			scaleValueInverse(isNumeric(opts.value[0]) ? opts.value[0] : scaleValue(opts.min + (opts.max - opts.min) * 0.25)),
-			scaleValueInverse(isNumeric(opts.value[1]) ? opts.value[1] : scaleValue(opts.min + (opts.max - opts.min) * 0.75))
-		]
-
-		if (scaleValue(opts.value[0]) * scaleValue(opts.max) <= 0 || scaleValue(opts.value[1]) * scaleValue(opts.max) <= 0) {
-			throw new Error('Log range initial value must have the same sign as min/max and must not equal zero. Got initial value = [' + scaleValue(opts.value[0]) + ', ' + scaleValue(opts.value[1]) + ']')
-		}
-	} else {
-		// If linear, this is much simpler:
-		opts.max = (isNumeric(opts.max)) ? opts.max : 100
-		opts.min = (isNumeric(opts.min)) ? opts.min : 0
-		opts.step = (isNumeric(opts.step)) ? opts.step : (opts.max - opts.min) / 100
-
-		opts.value = [
-			isNumeric(opts.value[0]) ? opts.value[0] : (opts.min + opts.max) * 0.25,
-			isNumeric(opts.value[1]) ? opts.value[1] : (opts.min + opts.max) * 0.75
-		]
-	}
-
-	// If we got a number of steps, use that instead:
-	if (isNumeric(opts.steps)) {
-		opts.step = isNumeric(opts.steps) ? (opts.max - opts.min) / opts.steps : opts.step
-	}
-
-	// Quantize the initial value to the requested step:
-	opts.value[0] = opts.min + opts.step * Math.round((opts.value[0] - opts.min) / opts.step)
-	opts.value[1] = opts.min + opts.step * Math.round((opts.value[1] - opts.min) / opts.step)
-
-
-	//create DOM
-	var lValue = require('./value')({
-		container: opts.container,
-		value: scaleValue(opts.value[0]).toFixed(prec),
-		type: 'text',
-		left: true,
-		disabled: opts.disabled,
-		id: opts.id,
-		input: function (v) {
-			//TODO
-		}
-	})
-
-	panel = opts.container.parentNode;
-
-	input = opts.container.appendChild(document.createElement('span'))
-	input.id = 'settings-panel-interval'
-	input.className = 'settings-panel-interval'
-
-	handle = document.createElement('span')
-	handle.className = 'settings-panel-interval-handle'
-	handle.value = 50;
-	handle.min = 0;
-	handle.max = 50;
-	input.appendChild(handle)
-
-	var value = opts.value
-
-	// Display the values:
-	var rValue = require('./value')({
-		container: opts.container,
-		disabled: opts.disabled,
-		value: scaleValue(opts.value[1]).toFixed(prec),
-		type: 'text',
-		input: function (v) {
-			//TODO
-		}
-	})
-
-	function setHandleCSS () {
-		var left = ((value[0] - opts.min) / (opts.max - opts.min) * 100);
-		var right = (100 - (value[1] - opts.min) / (opts.max - opts.min) * 100);
-		css(handle, {
-			left:  left + '%',
-			width: (100 - left - right) + '%'
-		})
-	}
-
-	// Initialize CSS:
-	setHandleCSS()
-	// An index to track what's being dragged:
-	var activeIndex = -1
-
-	function mouseX (ev) {
-		// Get mouse/touch position in page coords relative to the container:
-		return (ev.touches && ev.touches[0] || ev).pageX - input.getBoundingClientRect().left
-	}
-
-	function setActiveValue (fraction) {
-		if (activeIndex === -1) {
-			return
-		}
-
-		// Get the position in the range [0, 1]:
-		var lofrac = (value[0] - opts.min) / (opts.max - opts.min)
-		var hifrac = (value[1] - opts.min) / (opts.max - opts.min)
-
-		// Clip against the other bound:
-		if (activeIndex === 0) {
-			fraction = Math.min(hifrac, fraction)
-		} else {
-			fraction = Math.max(lofrac, fraction)
-		}
-
-		// Compute and quantize the new value:
-		var newValue = opts.min + Math.round((opts.max - opts.min) * fraction / opts.step) * opts.step
-
-		// Update value, in linearized coords:
-		value[activeIndex] = newValue
-
-		// Update and send the event:
-		setHandleCSS()
-		input.oninput()
-	}
-
-	var mousemoveListener = function (ev) {
-		if (ev.target === input || ev.target === handle) ev.preventDefault()
-
-		var fraction = clamp(mouseX(ev) / input.offsetWidth, 0, 1)
-
-		setActiveValue(fraction)
-	}
-
-	var mouseupListener = function (ev) {
-		panel.classList.remove('settings-panel-interval-dragging')
-
-		document.removeEventListener(isMobile ? 'touchmove' : 'mousemove', mousemoveListener)
-		document.removeEventListener(isMobile ? 'touchend' : 'mouseup', mouseupListener)
-
-		activeIndex = -1
-	}
-
-	input.addEventListener(isMobile ? 'touchstart' : 'mousedown', function (ev) {
-		// Tweak control to make dragging experience a little nicer:
-		panel.classList.add('settings-panel-interval-dragging')
-
-		// Get mouse position fraction:
-		var fraction = clamp(mouseX(ev) / input.offsetWidth, 0, 1)
-
-		// Get the current fraction of position --> [0, 1]:
-		var lofrac = (value[0] - opts.min) / (opts.max - opts.min)
-		var hifrac = (value[1] - opts.min) / (opts.max - opts.min)
-
-		// This is just for making decisions, so perturb it ever
-		// so slightly just in case the bounds are numerically equal:
-		lofrac -= Math.abs(opts.max - opts.min) * 1e-15
-		hifrac += Math.abs(opts.max - opts.min) * 1e-15
-
-		// Figure out which is closer:
-		var lodiff = Math.abs(lofrac - fraction)
-		var hidiff = Math.abs(hifrac - fraction)
-
-		activeIndex = lodiff < hidiff ? 0 : 1
-
-		// Attach this to *document* so that we can still drag if the mouse
-		// passes outside the container:
-		document.addEventListener(isMobile ? 'touchmove' : 'mousemove', mousemoveListener)
-		document.addEventListener(isMobile ? 'touchend' : 'mouseup', mouseupListener)
-	})
-
-	setTimeout(function () {
-		var scaledLValue = scaleValue(value[0])
-		var scaledRValue = scaleValue(value[1])
-		lValue.value = scaledLValue.toFixed(prec)
-		rValue.value = scaledRValue.toFixed(prec)
-		this$1.emit('init', [scaledLValue, scaledRValue])
-	})
-
-	input.oninput = function () {
-		var scaledLValue = scaleValue(value[0])
-		var scaledRValue = scaleValue(value[1])
-		lValue.value = scaledLValue.toFixed(prec)
-		rValue.value = scaledRValue.toFixed(prec)
-		this$1.emit('input', [scaledLValue, scaledRValue])
-	}
-
-	return this;
-}
-},{"./value":85,"dom-css":25,"events":3,"inherits":31,"is-mobile":39,"is-numeric":41,"mumath/clamp":56,"mumath/precision":57,"param-case":60}],80:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
-var isNumeric = require('is-numeric')
-var css = require('dom-css')
-var format = require('param-case')
-var precision = require('mumath/precision')
-
-module.exports = Range
-inherits(Range, EventEmitter)
-
-function Range (opts) {
-	if (!(this instanceof Range)) return new Range(opts);
-
-	this.update(opts);
-}
-
-Range.prototype.update = function (opts) {
-	var this$1 = this;
-
-	var scaleValue, scaleValueInverse, logmin, logmax, logsign
-
-	if (!!opts.step && !!opts.steps) {
-		throw new Error('Cannot specify both step and steps. Got step = ' + opts.step + ', steps = ', opts.steps)
-	}
-
-	opts.container.innerHTML = '';
-
-	if (!opts.container) opts.container = document.body;
-
-	var input = opts.container.querySelector('.settings-panel-range');
-
-	if (!input) {
-		input = opts.container.appendChild(document.createElement('input'))
-		input.type = 'range'
-		input.className = 'settings-panel-range'
-	}
-
-	if (opts.disabled) input.disabled = true;
-
-	// Create scale functions for converting to/from the desired scale:
-	if (opts.scale === 'log') {
-		scaleValue = function (x) {
-			return logsign * Math.exp(Math.log(logmin) + (Math.log(logmax) - Math.log(logmin)) * x / 100)
-		}
-		scaleValueInverse = function (y) {
-			return (Math.log(y * logsign) - Math.log(logmin)) * 100 / (Math.log(logmax) - Math.log(logmin))
-		}
-	} else {
-		scaleValue = scaleValueInverse = function (x) { return x }
-	}
-
-	// Get initial value:
-	if (opts.scale === 'log') {
-		// Get options or set defaults:
-		opts.max = (isNumeric(opts.max)) ? opts.max : 100
-		opts.min = (isNumeric(opts.min)) ? opts.min : 0.1
-
-		// Check if all signs are valid:
-		if (opts.min * opts.max <= 0) {
-			throw new Error('Log range min/max must have the same sign and not equal zero. Got min = ' + opts.min + ', max = ' + opts.max)
-		} else {
-			// Pull these into separate variables so that opts can define the *slider* mapping
-			logmin = opts.min
-			logmax = opts.max
-			logsign = opts.min > 0 ? 1 : -1
-
-			// Got the sign so force these positive:
-			logmin = Math.abs(logmin)
-			logmax = Math.abs(logmax)
-
-			// These are now simply 0-100 to which we map the log range:
-			opts.min = 0
-			opts.max = 100
-
-			// Step is invalid for a log range:
-			if (isNumeric(opts.step)) {
-				throw new Error('Log may only use steps (integer number of steps), not a step value. Got step =' + opts.step)
-			}
-			// Default step is simply 1 in linear slider space:
-			opts.step = 1
-		}
-
-		opts.value = scaleValueInverse(isNumeric(opts.value) ? opts.value : scaleValue((opts.min + opts.max) * 0.5))
-
-		if (opts.value * scaleValueInverse(opts.max) <= 0) {
-			throw new Error('Log range initial value must have the same sign as min/max and must not equal zero. Got initial value = ' + opts.value)
-		}
-	} else {
-		// If linear, this is much simpler:
-		opts.max = (isNumeric(opts.max)) ? opts.max : 100
-		opts.min = (isNumeric(opts.min)) ? opts.min : 0
-		opts.step = (isNumeric(opts.step)) ? opts.step : (opts.max - opts.min) / 100
-
-		opts.value = isNumeric(opts.value) ? opts.value : (opts.min + opts.max) * 0.5
-	}
-
-	// If we got a number of steps, use that instead:
-	if (isNumeric(opts.steps)) {
-		opts.step = isNumeric(opts.steps) ? (opts.max - opts.min) / opts.steps : opts.step
-	}
-
-	// Quantize the initial value to the requested step:
-	var initialStep = Math.round((opts.value - opts.min) / opts.step)
-	opts.value = opts.min + opts.step * initialStep
-
-	// Set value on the input itself:
-	input.min = opts.min
-	input.max = opts.max
-	input.step = opts.step
-	input.value = opts.value
-	input.style.setProperty('--value', 100 * (opts.value - opts.min) / (opts.max - opts.min) + '%');
-
-	//preser container data for display
-	opts.container.setAttribute('data-min', opts.min);
-	opts.container.setAttribute('data-max', opts.max);
-
-	if (opts.scale === 'log') {
-		//FIXME: not every log is of precision 3
-		var prec = 3;
-	}
-	else {
-		if (opts.step) {
-			var prec = precision(opts.step);
-		}
-		else if (opts.steps) {
-			var prec = precision( (opts.max - opts.min) / opts.steps );
-		}
-	}
-
-	var value = require('./value')({
-		id: opts.id,
-		container: opts.container,
-		className: 'settings-panel-range-value',
-		value: scaleValue(opts.value).toFixed(prec),
-		type: opts.scale === 'log' ? 'text' : 'number',
-		min: scaleValue(opts.min),
-		max: scaleValue(opts.max),
-		disabled: opts.disabled,
-		//FIXME: step here might vary
-		step: opts.scale === 'log' ? 0.01 : opts.step,
-		input: function (v) {
-			input.value = scaleValueInverse(v)
-			// value.value = v
-			this$1.emit('input', v)
-		}
-	})
-
-	setTimeout(function () {
-		this$1.emit('init', parseFloat(input.value))
-	});
-
-	input.oninput = function (data) {
-		var scaledValue = scaleValue(parseFloat(data.target.value));
-		value.value = scaledValue.toFixed(prec);
-		input.style.setProperty('--value', 100 * (data.target.value - opts.min) / (opts.max - opts.min) + '%');
-		this$1.emit('input', scaledValue);
-	}
-
-	return this;
-}
-},{"./value":85,"dom-css":25,"events":3,"inherits":31,"is-numeric":41,"mumath/precision":57,"param-case":60}],81:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
-var format = require('param-case')
-
-module.exports = Select
-inherits(Select, EventEmitter)
-
-function Select (opts) {
-	if (!(this instanceof Select)) return new Select(opts);
-
-	this.update(opts);
-}
-
-Select.prototype.update = function (opts) {
-	var this$1 = this;
-
-	var i, container, input, downTriangle, upTriangle, key, option, el, keys
-
-	opts.container.innerHTML = '';
-
-	input = document.createElement('select')
-	input.id = opts.id
-	input.className = 'settings-panel-select';
-
-	if (opts.disabled) input.disabled = true;
-
-	downTriangle = document.createElement('span')
-	downTriangle.className = 'settings-panel-select-triangle settings-panel-select-triangle--down'
-
-	upTriangle = document.createElement('span')
-	upTriangle.className = 'settings-panel-select-triangle settings-panel-select-triangle--up'
-
-	if (Array.isArray(opts.options)) {
-		for (i = 0; i < opts.options.length; i++) {
-			option = opts.options[i]
-			el = document.createElement('option')
-			el.value = el.textContent = option
-			if (opts.value === option) {
-				el.selected = 'selected'
-			}
-			input.appendChild(el)
-		}
-	} else {
-		keys = Object.keys(opts.options)
-		for (i = 0; i < keys.length; i++) {
-			key = keys[i]
-			el = document.createElement('option')
-			el.value = key
-			if (opts.value === key) {
-				el.selected = 'selected'
-			}
-			el.textContent = opts.options[key]
-			input.appendChild(el)
-		}
-	}
-
-	opts.container.appendChild(input)
-	opts.container.appendChild(downTriangle)
-	opts.container.appendChild(upTriangle)
-
-	setTimeout(function () {
-		this$1.emit('init', opts.value)
-	})
-
-	input.onchange = function (data) {
-		this$1.emit('input', data.target.value)
-	}
-
-	return this;
-}
-},{"events":3,"inherits":31,"param-case":60}],82:[function(require,module,exports){
-var inherits = require('inherits');
-var Emitter = require('events').EventEmitter;
-var format = require('param-case');
-var extend = require('just-extend');
-
-module.exports = Switch;
-
-inherits(Switch, Emitter);
-
-function Switch (opts) {
-	var this$1 = this;
-
-	if (!(this instanceof Switch)) return new Switch(opts);
-
-	this.switch = opts.container.querySelector('.settings-panel-switch');
-
-	if (!this.switch) {
-		this.switch = document.createElement('fieldset');
-		this.switch.className = 'settings-panel-switch';
-		opts.container.appendChild(this.switch);
-
-		var html = '';
-
-		if (Array.isArray(opts.options)) {
-			for (i = 0; i < opts.options.length; i++) {
-				var option = opts.options[i]
-				html += createOption(option, option);
-			}
-		} else {
-			for (var key in opts.options) {
-				html += createOption(opts.options[key], key);
-			}
-		}
-
-		this.switch.innerHTML = html;
-
-		this.switch.onchange = function (e) {
-			this$1.emit('input', e.target.getAttribute('data-value'));
-		}
-
-		setTimeout(function () {
-			this$1.emit('init', opts.value)
-		})
-	}
-
-	this.switch.id = opts.id;
-
-	this.update(opts);
-
-	function createOption (label, value) {
-		var htmlFor = "settings-panel-" + (format(opts.panel.id)) + "-" + (format(opts.id)) + "-input-" + (format(value));
-
-		var html = "<input type=\"radio\" class=\"settings-panel-switch-input\" " + (value === opts.value ? 'checked' : '') + " id=\"" + htmlFor + "\" name=\"" + (format(opts.id)) + "\" data-value=\"" + value + "\" title=\"" + value + "\"/><label for=\"" + htmlFor + "\" class=\"settings-panel-switch-label\" title=\"" + value + "\">" + label + "</label>";
-		return html;
-	}
-}
-
-Switch.prototype.update = function (opts) {
-	return this;
-}
-},{"events":3,"inherits":31,"just-extend":43,"param-case":60}],83:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
-var css = require('dom-css')
-var num = require('input-number');
-var extend = require('just-extend');
-
-module.exports = Text
-inherits(Text, EventEmitter)
-
-function Text (opts) {
-	var this$1 = this;
-
-	if (!(this instanceof Text)) return new Text(opts)
-
-	var element = opts.container.querySelector('.settings-panel-text');
-
-	if (!element) {
-		element = opts.container.appendChild(document.createElement('input'));
-		element.className = 'settings-panel-text';
-		num(element);
-
-		if (opts.placeholder) element.placeholder = opts.placeholder;
-
-		this.element = element;
-
-		element.oninput = function (data) {
-			this$1.emit('input', data.target.value)
-		}
-		setTimeout(function () {
-			this$1.emit('init', element.value)
-		});
-	}
-
-	this.update(opts);
-}
-
-Text.prototype.update = function (opts) {
-	extend(this, opts);
-	this.element.type = this.type
-	this.element.id = this.id
-	this.element.value = this.value || ''
-	this.element.disabled = !!this.disabled;
-	return this;
-}
-},{"dom-css":25,"events":3,"inherits":31,"input-number":32,"just-extend":43}],84:[function(require,module,exports){
-var EventEmitter = require('events').EventEmitter
-var inherits = require('inherits')
-var css = require('dom-css')
-var autosize = require('autosize');
-var extend = require('just-extend');
-
-module.exports = Textarea
-inherits(Textarea, EventEmitter)
-
-function Textarea (opts) {
-	var this$1 = this;
-
-	if (!(this instanceof Textarea)) return new Textarea(opts)
-
-	//<textarea rows="1" placeholder="${param.placeholder || 'value...'}" id="${param.name}" class="prama-input prama-textarea" title="${param.value}">${param.value}</textarea>
-	var input = opts.container.querySelector('.settings-panel-textarea');
-	if (!input) {
-		input = opts.container.appendChild(document.createElement('textarea'));
-		input.className = 'settings-panel-textarea';
-
-		this.element = input;
-
-		setTimeout(function () {
-			this$1.emit('init', input.value)
-			autosize.update(input);
-		})
-
-		input.oninput = function (data) {
-			this$1.emit('input', data.target.value)
-		}
-
-		autosize(input);
-	}
-
-	this.update(opts);
-}
-
-Textarea.prototype.update = function (opts) {
-	extend(this, opts);
-
-	this.element.rows = this.rows || 1;
-	this.element.placeholder = this.placeholder || '';
-	this.element.id = this.id
-
-	this.element.value = this.value || '';
-
-	this.element.disabled = !!this.disabled;
-
-	return this;
-}
-},{"autosize":20,"dom-css":25,"events":3,"inherits":31,"just-extend":43}],85:[function(require,module,exports){
-var num = require('input-number');
-
-module.exports = function (opts) {
-  opts = opts || {}
-  var value = document.createElement('input')
-
-  num(value, opts);
-
-  if (opts.input) {
-    value.addEventListener('input', function () {
-      var v = value.value;
-      if (opts.type === 'number') v = parseFloat(v);
-      opts.input(v)
-    })
-  }
-  if (opts.change) {
-    value.addEventListener('change', function () {
-      var v = value.value;
-      if (opts.type === 'number') v = parseFloat(v);
-      opts.change(v)
-    })
-  }
-
-  if (opts.disabled) value.disabled = true;
-
-  value.value = opts.value
-
-  if (opts.id) value.id = opts.id;
-  value.className = 'settings-panel-value';
-  if (opts.className) value.className += ' ' + opts.className;
-  opts.container.appendChild(value)
-
-  return value
-}
-},{"input-number":32}],86:[function(require,module,exports){
-/**
- * @module prama/theme/control
- *
- * Control-panel theme on steroids
- */
-var px = require('add-px-to-style');
-var fonts = require('google-fonts');
-var color = require('tinycolor2');
-var scopeCss = require('scope-css');
-var lerp = require('interpolation-arrays');
-var none = require('./none');
-
-module.exports = control;
-
-control.palette = ['#292929', '#e7e7e7'];
-
-control.fontSize = '12px';
-control.fontFamily = '"Space Mono", monospace';
-control.labelWidth = '33.3%';
-control.inputHeight = 1.66666;
-
-fonts.add({
-	'Space Mono': true
+	],
+	axes: [true, true]
 });
 
 
-function control (opts) {
-	opts = opts || {};
-	var fs = opts.fontSize || control.fontSize;
-	var font = opts.fontFamily || control.fontFamily;
-	var h = opts.inputHeight || control.inputHeight;
-	var labelWidth = opts.labelWidth || none.labelWidth;
-
-	var palette = (opts.palette || control.palette).map(function (v) { return color(v).toRgb(); });
-	var pick = lerp(palette);
-
-	var white = color(pick(.0)).toString();
-	var light = color(pick(.1)).toString();
-	var gray = color(pick(.75)).toString();
-	var dark = color(pick(.95)).toString();
-	var black = color(pick(1)).toString();
-
-	//NOTE: this is in case of scaling palette to black/white range
-	// let white = color(pick(0.1607843137254902)).toString();
-	// let light = color(pick(0.23529411764705882)).toString();
-	// let gray = color(pick(0.5705882352941177)).toString();
-	// let dark = color(pick(0.7196078431372549)).toString();
-	// let black = color(pick(0.9058823529411765)).toString();
-
-	//none theme defines sizes, the rest (ours) is up to style
-	return none({
-		fontSize: fs,
-		fontFamily: font,
-		inputHeight: h,
-		labelWidth: labelWidth,
-	}) + "\n\t:host {\n\t\tbackground: " + white + ";\n\t\tfont-family: " + font + ";\n\t\tfont-size: " + (px('font-size',fs)) + ";\n\t\tcolor: " + gray + ";\n\t\tpadding: " + (h/2) + "em;\n\t}\n\n\t.settings-panel-title {\n\t\tfont-size: 1.25em;\n\t\tletter-spacing: .15ex;\n\t\tpadding-bottom: " + (h/2) + "em;\n\t}\n\n\t/** Text */\n\t.settings-panel-text,\n\t.settings-panel-textarea {\n\t\tpadding-left: " + (h/4) + "em;\n\t\tborder: none;\n\t\tfont-family: inherit;\n\t\tbackground: " + light + ";\n\t\tcolor: inherit;\n\t\tborder-radius: 0;\n\t}\n\t.settings-panel-text:hover,\n\t.settings-panel-textarea:hover,\n\t.settings-panel-text:focus,\n\t.settings-panel-textarea:focus {\n\t\toutline: none;\n\t\tcolor: " + dark + ";\n\t}\n\n\n\t/** Range */\n\t.settings-panel-range {\n\t\t-webkit-appearance: none;\n\t\t-moz-appearance: none;\n\t\tappearance: none;\n\t\tbackground: " + light + ";\n\t\twidth: 80%;\n\t\tborder-radius: 0;\n\t}\n\t.settings-panel-range:focus {\n\t\toutline: none;\n\t}\n\t.settings-panel-range::-webkit-slider-thumb {\n\t\t-webkit-appearance: none;\n\t\theight: " + h + "em;\n\t\twidth: " + (h/2) + "em;\n\t\tbackground: " + gray + ";\n\t\tborder: 0;\n\t\tmargin-top: 0px;\n\t}\n\t.settings-panel-range:hover::-webkit-slider-thumb {\n\t\tbackground: " + dark + ";\n\t}\n\t.settings-panel-range::-moz-range-track {\n\t\t-moz-appearance: none;\n\t\tbackground: none;\n\t}\n\t.settings-panel-range::-moz-range-thumb {\n\t\t-moz-appearance: none;\n\t\tbackground: " + gray + ";\n\t\tborder: none;\n\t\tborder-radius: 0px;\n\t\theight: " + h + "em;\n\t\twidth: " + (h/2) + "em;\n\t}\n\t.settings-panel-range:hover::-moz-range-thumb {\n\t\tbackground: " + dark + ";\n\t}\n\t.settings-panel-range::-ms-track {\n\t\tbackground: none;\n\t\tborder: none;\n\t\toutline: none;\n\t\tcolor: transparent;\n\t}\n\t.settings-panel-range::-ms-fill-lower {\n\t\tbackground: none;\n\t}\n\t.settings-panel-range::-ms-fill-upper {\n\t\tbackground: none;\n\t}\n\t.settings-panel-range::-ms-thumb {\n\t\tborder-radius: 0px;\n\t\tborder: 0;\n\t\tbackground: " + gray + ";\n\t\twidth: " + (h/2) + "em;\n\t\theight: " + h + "em;\n\t}\n\t.settings-panel-range:hover::-ms-thumb {\n\t\tbackground: " + dark + ";\n\t}\n\t.settings-panel-range:focus::-ms-fill-lower {\n\t\tbackground: none;\n\t\toutline: none;\n\t}\n\t.settings-panel-range:focus::-ms-fill-upper {\n\t\tbackground: none;\n\t\toutline: none;\n\t}\n\n\n\t/** Interval */\n\t.settings-panel-interval-handle {\n\t\tbackground: " + gray + ";\n\t}\n\t.settings-panel-interval {\n\t\tbackground: " + light + ";\n\t\tposition: relative;\n\t\twidth: 60%;\n\t}\n\t.settings-panel-interval:hover .settings-panel-interval-handle {\n\t\tbackground: " + dark + ";\n\t}\n\n\t/** Values */\n\t.settings-panel-value {\n\t\tbackground: " + light + ";\n\t\tmargin-left: " + (h/4) + "em;\n\t\twidth: calc(20% - " + (h/4) + "em);\n\t\tpadding-left: " + (h/4) + "em;\n\t}\n\t.settings-panel-value:first-child {\n\t\tmargin-left: 0;\n\t\tmargin-right: " + (h/4) + "em;\n\t}\n\t.settings-panel-value:hover,\n\t.settings-panel-value:focus {\n\t\tcolor: " + dark + ";\n\t}\n\n\n\t/** Select */\n\t.settings-panel-select {\n\t\tfont-family: inherit;\n\t\tbackground: " + light + ";\n\t\tcolor: inherit;\n\t\tpadding-left: " + (h/4) + "em;\n\t\tborder-radius: 0;\n\t\toutline: none;\n\t\tborder: none;\n\t\t-webkit-appearance: none;\n\t\t-moz-appearance: none;\n\t\t-o-appearance:none;\n\t\tappearance:none;\n\t}\n\t.settings-panel-select:hover,\n\t.settings-panel-select:focus {\n\t\tcolor: " + dark + ";\n\t}\n\t.settings-panel-select::-ms-expand {\n\t\tdisplay: none;\n\t}\n\t.settings-panel-select-triangle {\n\t\tdisplay: block;\n\t}\n\n\n\t/** Checkbox */\n\t.settings-panel-checkbox {\n\t\tdisplay: none;\n\t}\n\t.settings-panel-checkbox-label {\n\t\tposition: relative;\n\t\tdisplay: block;\n\t\tmargin: " + (h*.075) + "em 0;\n\t\twidth: " + (h*.85) + "em;\n\t\theight: " + (h*.85) + "em;\n\t\tline-height: " + (h*.85) + "em;\n\t\tbackground: " + light + ";\n\t}\n\t.settings-panel-checkbox:checked + .settings-panel-checkbox-label {\n\t\tbackground: " + gray + ";\n\t\tbox-shadow: inset 0 0 0 " + (h*.2) + "em " + light + ";\n\t}\n\t.settings-panel-checkbox:checked + .settings-panel-checkbox-label:hover {\n\t\tbackground: " + dark + ";\n\t}\n\n\n\t/** Color */\n\t.settings-panel-color {\n\t\tposition: relative;\n\t\twidth: calc(20% - " + (h/4) + "em);\n\t\tmargin-right: " + (h/4) + "em;\n\t\tdisplay: inline-block;\n\t\tvertical-align: baseline;\n\t}\n\t.settings-panel-color-value {\n\t\tborder: none;\n\t\tpadding-left: " + (h/4) + "em;\n\t\twidth: 80%;\n\t\tfont-family: inherit;\n\t\tbackground: " + light + ";\n\t\tcolor: inherit;\n\t\tborder-radius: 0;\n\t}\n\t.settings-panel-color-value:hover,\n\t.settings-panel-color-value:focus {\n\t\toutline: none;\n\t\tcolor: " + dark + ";\n\t}\n\n\n\t/** Button */\n\t.settings-panel-button {\n\t\tcolor: " + black + ";\n\t\tbackground: " + light + ";\n\t\ttext-align: center;\n\t\tborder: none;\n\t}\n\t.settings-panel-button:focus {\n\t\toutline: none;\n\t}\n\t.settings-panel-button:hover {\n\t\tbackground: " + gray + ";\n\t}\n\t.settings-panel-button:active {\n\t\tbackground: " + dark + ";\n\t}\n\n\n\t/** Switch style */\n\t.settings-panel-switch {\n\t}\n\t.settings-panel-switch-input {\n\t\tdisplay: none;\n\t}\n\t.settings-panel-switch-label {\n\t\tposition: relative;\n\t\tdisplay: inline-block;\n\t\tpadding: 0 " + (h/2) + "em;\n\t\tmargin: 0;\n\t\tz-index: 2;\n\t\ttext-align: center;\n\t}\n\t.settings-panel-switch-input:checked + .settings-panel-switch-label {\n\t\tbackground: " + light + ";\n\t\tcolor: " + gray + ";\n\t}\n\t.settings-panel-switch-input + .settings-panel-switch-label:hover {\n\t\tcolor: " + dark + ";\n\t}\n\n\t/** Decorations */\n\t::-webkit-input-placeholder {\n\t\tcolor: " + gray + ";\n\t}\n\t::-moz-placeholder {\n\t\tcolor: " + gray + ";\n\t}\n\t:-ms-input-placeholder {\n\t\tcolor: " + gray + ";\n\t}\n\t:-moz-placeholder {\n\t\tcolor: " + gray + ";\n\t}\n\t::-moz-selection {\n\t\tcolor: " + white + ";\n\t\tbackground: " + dark + ";\n\t}\n\t::selection {\n\t\tcolor: " + white + ";\n\t\tbackground: " + black + ";\n\t}\n\t:host hr {\n\t\tmargin: " + (h/4) + "em " + (h/8) + "em;\n\t\tcolor: " + light + ";\n\t\topacity: 1;\n\t}\n\t:host a {\n\t\tborder-bottom: 1px solid " + (alpha(gray, .15)) + ";\n\t}\n\t:host a:hover {\n\t\tcolor: " + dark + ";\n\t\tborder-bottom: 1px solid " + gray + ";\n\t}\n"};
+window.addEventListener('resize', function () { return grid.update(); });
 
 
-function alpha (c, value) {
-	return color(c).setAlpha(value).toString();
-}
-},{"./none":87,"add-px-to-style":19,"google-fonts":30,"interpolation-arrays":34,"scope-css":63,"tinycolor2":70}],87:[function(require,module,exports){
-/**
- * @module  settings-panel/theme/none
- */
 
-var px = require('add-px-to-style');
 
-module.exports = none;
+var settings = createSettings({
+	type: {type: 'switch', value: 'Polar', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: function (v) {
+		var lines = grid.lines;
+		if (v === 'Polar') {
+			settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
+			settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
+			settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
 
-none.palette = ['white', 'black'];
-none.fontSize = '13px';
-none.fontFamily = 'sans-serif';
-none.labelWidth = '9em';
-none.inputHeight = 2;
+			lines[0].orientation = 'r';
+			lines[1].orientation = 'a';
+		}
+		else {
+			settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
+			settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
 
-function none (opts) {
-	opts = opts || {};
-	var fs = opts.fontSize || none.fontSize;
-	var font = opts.fontFamily || none.fontFamily;
-	var h = opts.inputHeight || none.inputHeight;
-	var labelWidth = opts.labelWidth || none.labelWidth;
+			lines[0].orientation = 'x';
+			lines[1].orientation = 'y';
+		}
 
-	var palette = opts.palette || none.palette;
-	var white = palette[0];
-	var black = palette[palette.length - 1];
+		grid.update({lines: lines});
+	}},
+	viewport: {
+		type: 'text',
+		value: padding,
+		change: function (v) {
+			padding = v.split(/\s*,\s*/).map(function (v) { return parseInt(v); });
+			grid.update();
+		}
+	},
+	color: {type: 'color', value: getComputedStyle(grid.element).color, change: function (c) {
+		grid.element.style.color = c;
+	}},
+	opacity: {type: 'range', value: .5, min: 0, max: 1, change: function (v) {
+		grid.element.style.setProperty('--opacity', v);
+	}},
 
-	//just size part
-	return ("\n\t\t:host {\n\t\t\tbackground: " + white + ";\n\t\t\tcolor: " + black + ";\n\t\t\tfont-family: " + font + ";\n\t\t\tfont-size: " + (px('font-size', fs)) + ";\n\t\t\tpadding: " + (h*.666) + "em;\n\t\t}\n\n\t\t.settings-panel-title {\n\t\t\tmin-height: " + h + "em;\n\t\t}\n\n\t\t.settings-panel-field {\n\t\t\tpadding: " + (h/8) + "em;\n\t\t}\n\n\t\t:host.settings-panel-orientation-left .settings-panel-label,\n\t\t:host .settings-panel-orientation-left .settings-panel-label,\n\t\t:host.settings-panel-orientation-right .settings-panel-label,\n\t\t:host .settings-panel-orientation-right .settings-panel-label {\n\t\t\twidth: " + (px('width', labelWidth)) + ";\n\t\t}\n\t\t:host.settings-panel-orientation-bottom .settings-panel-label {\n\t\t\tborder-top-width: " + h + "em;\n\t\t}\n\t\t:host.settings-panel-orientation-bottom .settings-panel-label + .settings-panel-input {\n\t\t\ttop: " + (h/8) + "em;\n\t\t}\n\t\t:host.settings-panel-orientation-left .settings-panel-label {\n\t\t\tpadding-right: " + (h/2) + "em;\n\t\t}\n\t\t:host.settings-panel-orientation-right .settings-panel-label {\n\t\t\tpadding-left: " + (h/2) + "em;\n\t\t}\n\t\t:host.settings-panel-orientation-right .settings-panel-label + .settings-panel-input {\n\t\t\twidth: calc(100% - " + labelWidth + ");\n\t\t}\n\n\t\t.settings-panel-text,\n\t\t.settings-panel-textarea,\n\t\t.settings-panel-range,\n\t\t.settings-panel-interval,\n\t\t.settings-panel-select,\n\t\t.settings-panel-color,\n\t\t.settings-panel-color-value,\n\t\t.settings-panel-value {\n\t\t\theight: " + h + "em;\n\t\t}\n\n\t\t.settings-panel-button,\n\t\t.settings-panel-input,\n\t\t.settings-panel-switch,\n\t\t.settings-panel-switch-label {\n\t\t\tmin-height: " + h + "em;\n\t\t}\n\t\t.settings-panel-input,\n\t\t.settings-panel-switch,\n\t\t.settings-panel-switch-label {\n\t\t\tline-height: " + h + "em;\n\t\t}\n\n\t\t.settings-panel-switch-label,\n\t\t.settings-panel-checkbox,\n\t\t.settings-panel-checkbox-label,\n\t\t.settings-panel-button {\n\t\t\tcursor: pointer;\n\t\t}\n\n\t\t.settings-panel-range::-webkit-slider-thumb {\n\t\t\tcursor: ew-resize;\n\t\t}\n\t\t.settings-panel-range::-moz-range-thumb {\n\t\t\tcursor: ew-resize;\n\t\t}\n\t\t.settings-panel-range::-ms-track {\n\t\t\tcursor: ew-resize;\n\t\t}\n\t\t.settings-panel-range::-ms-thumb {\n\t\t\tcursor: ew-resize;\n\t\t}\n\n\t\t/* Default triangle styles are from control theme, just set display: block */\n\t\t.settings-panel-select-triangle {\n\t\t\tdisplay: none;\n\t\t\tposition: absolute;\n\t\t\tborder-right: .3em solid transparent;\n\t\t\tborder-left: .3em solid transparent;\n\t\t\tline-height: " + h + "em;\n\t\t\tright: 2.5%;\n\t\t\theight: 0;\n\t\t\tz-index: 1;\n\t\t\tpointer-events: none;\n\t\t}\n\t\t.settings-panel-select-triangle--up {\n\t\t\ttop: 50%;\n\t\t\tmargin-top: -" + (h/4 + h/16) + "em;\n\t\t\tborder-bottom: " + (h/4) + "em solid;\n\t\t\tborder-top: 0px transparent;\n\t\t}\n\t\t.settings-panel-select-triangle--down {\n\t\t\ttop: 50%;\n\t\t\tmargin-top: " + (h/16) + "em;\n\t\t\tborder-top: " + (h/4) + "em solid;\n\t\t\tborder-bottom: .0 transparent;\n\t\t}\n\n\t\t:host hr {\n\t\t\topacity: .5;\n\t\t\tcolor: " + black + "\n\t\t}\n\t");
-}
-},{"add-px-to-style":19}]},{},[17]);
+	x: {type: 'raw', label: '<br/><strong>X lines</strong>', title: 'Horizontal'},
+	xLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: function (isLog) {
+		var lines = grid.lines;
+		lines[0].logarithmic = isLog;
+		if (isLog) {
+			lines[0].min = 1;
+			lines[0].max = 10000;
+			settings.set('xRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
+		}
+		else {
+			lines[0].min = 0;
+			lines[0].max = 100;
+			settings.set('xRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+		}
+		grid.update({
+			lines: lines
+		});
+	}},
+	// xUnits: { label: 'units', type: 'text', value: '', change: v => {
+	// 	let lines = grid.lines;
+	// 	lines[0].units = v;
+	// 	grid.update({
+	// 		lines:  lines
+	// 	});
+	// }},
+	xAxis: { type: 'checkbox', label: 'axis', value: grid.axes[0], change: function (v) {
+		var axes = grid.axes;
+		axes[0] = v;
+		grid.update({
+			axes:  axes
+		});
+	}},
+	xRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: function (v) {
+		var lines = grid.lines;
+		lines[0].min = v[0];
+		lines[0].max = v[1];
+		grid.update({
+			lines: lines
+		});
+	}},
+
+	y: {type: 'raw', label: '<br/><strong>Y lines</strong>', title: 'Vertical'},
+	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: function (isLog) {
+		var lines = grid.lines;
+		lines[1].logarithmic = isLog;
+		if (isLog) {
+			lines[1].min = 1;
+			lines[1].max = 10000;
+			settings.set('yRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
+		}
+		else {
+			lines[1].min = 0;
+			lines[1].max = 100;
+			if (settings.get('type') === 'Polar') {
+				settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
+			}
+			else {
+				settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+			}
+		}
+		grid.update({
+			lines: lines
+		});
+	}},
+	yAxis: {type: 'checkbox', label: 'axis', value: grid.axes[1], change: function (v) {
+		var axes = grid.axes;
+		axes[1] = v;
+		grid.update({
+			axes:  axes
+		});
+	} },
+	yRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: function (v) {
+		var lines = grid.lines;
+		lines[1].min = v[0];
+		lines[1].max = v[1];
+		grid.update({
+			lines: lines
+		});
+	}}
+}, {
+	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
+	theme: require('settings-panel/theme/control'),
+	fontSize: 11,
+	// palette: ['black', 'white'],
+	fontFamily: 'monospace',
+	style: "position: absolute; top: 0px; right: 0px; padding: 20px; height: 100%; width: 300px; z-index: 1;",
+	css: '.settings-panel-title {text-align: left;}'
+});
+},{"./":6,"insert-styles":21,"is-browser":27,"settings-panel":62,"settings-panel/theme/control":74}]},{},[84]);
