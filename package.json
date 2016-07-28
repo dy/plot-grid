@@ -1,6 +1,6 @@
 {
   "name": "plot-grid",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "HTML plot grid component",
   "main": "index.js",
   "scripts": {
