@@ -200,7 +200,9 @@ Grid.prototype.update = function (options) {
 			var stepSize = (linesMax - linesMin) / Math.floor(intersteps);
 			var order = mag(stepSize);
 
-			stepSize = closestNumber(stepSize, [1, 2, 2.5, 5, 10].map((v) => v * order));
+			let scale = /a/.test(lines.orientation) ? [1.5, 3] : [1, 2, 2.5, 5, 10];
+
+			stepSize = closestNumber(stepSize, scale.map((v) => v * order));
 
 			var start = stepSize * Math.round(linesMin / stepSize);
 

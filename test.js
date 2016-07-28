@@ -1,6 +1,6 @@
 const Grid = require('./');
 const isBrowser = require('is-browser');
-const createSettings = require('../settings-panel');
+const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
 
 // prepare mobile
@@ -62,6 +62,7 @@ var settings = createSettings({
 		if (v === 'Polar') {
 			settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
 			settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
+			settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
 
 			lines[0].orientation = 'r';
 			lines[1].orientation = 'a';
@@ -144,7 +145,12 @@ var settings = createSettings({
 		else {
 			lines[1].min = 0;
 			lines[1].max = 100;
-			settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+			if (settings.get('type') === 'Polar') {
+				settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
+			}
+			else {
+				settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+			}
 		}
 		grid.update({
 			lines: lines
@@ -167,7 +173,7 @@ var settings = createSettings({
 	}}
 }, {
 	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
-	theme: require('../settings-panel/theme/control'),
+	theme: require('settings-panel/theme/control'),
 	fontSize: 11,
 	// palette: ['black', 'white'],
 	fontFamily: 'monospace',

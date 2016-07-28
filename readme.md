@@ -3,7 +3,7 @@
 Grid component for visualizing plots, built with oldschool HTML5 and CSS3. Because it is too wearisome task to paint grid per-component and maintain consistent style across UI. Can be used with visualizers, like [gl-spectrum](https://github.com/dfcreative/gl-spectrum), or sliders, like [slidy](https://github.com/dfcreative/slidy). See
 [demo](https://dfcreative.github.io/plot-grid).
 
-[![linear grid](https://raw.githubusercontent.com/dfcreative/plot-grid/gh-pages/images/linear.png "Linear grid")](http://dfcreative.github.io/plot-grid/linear.html) [![logarithmic grid](https://raw.githubusercontent.com/dfcreative/plot-grid/gh-pages/images/log.png "Logarithmic grid")](http://dfcreative.github.io/plot-grid/log.html)
+[![logarithmic grid](https://raw.githubusercontent.com/dfcreative/plot-grid/gh-pages/images/log.png "Logarithmic grid")](http://dfcreative.github.io/plot-grid/log.html) [![polar grid](https://raw.githubusercontent.com/dfcreative/plot-grid/gh-pages/images/polar.png "Polar grid")](http://dfcreative.github.io/plot-grid/polar.html)
 
 ## Usage
 
