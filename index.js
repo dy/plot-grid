@@ -393,7 +393,7 @@ Grid.prototype.update = function (options) {
 
 				//hide label for special log case to avoid overlapping
 				if (lines.logarithmic) {
-					hideLogLabel(label, value);
+					hideLogLabel(label, value, intersteps);
 				}
 
 				if (lines.orientation === 'x') {
@@ -453,8 +453,8 @@ Grid.prototype.update = function (options) {
 
 				//hide label for special log case to avoid overlapping
 				if (lines.logarithmic) {
-					hideLogLabel(labelTop, value);
-					hideLogLabel(labelBottom, value);
+					hideLogLabel(labelTop, value, intersteps * 1.7);
+					hideLogLabel(labelBottom, value, intersteps * 1.7);
 				}
 			}
 			else if (/a/.test(lines.orientation)) {
@@ -494,10 +494,16 @@ Grid.prototype.update = function (options) {
 
 		//bloody helpers
 
-		function hideLogLabel (label, value) {
+		function hideLogLabel (label, value, intersteps) {
 			let start = parseInt(value.toPrecision(1)[0]);
 
-			if (values.length > intersteps * 2.4) {
+			if (values.length > intersteps * 2.8) {
+				if (start == 2) label.innerHTML = '';
+			}
+			if (values.length > intersteps * 2.6) {
+				if (start == 5) label.innerHTML = '';
+			}
+			if (values.length > intersteps * 2.3) {
 				if (start == 3) label.innerHTML = '';
 			}
 			if (values.length > intersteps * 2) {
