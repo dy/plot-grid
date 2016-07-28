@@ -91,7 +91,7 @@
 	left: 50%;
 	top: 50%;
 	border-radius: 50vw;
-	border: 1px dotted;
+	box-shadow: 0 0 0 1px;
 }
 .grid-line-r.grid-line-min {
 }
@@ -103,7 +103,7 @@
 	left: 50%;
 	transform-origin: left center;
 	width: 50%;
-	border-top: 1px dotted;
+	border-top: 1px solid;
 }
 .grid-line-a:after {
 	content: '';
@@ -113,7 +113,14 @@
 	right: 0;
 	top: -.25rem;
 }
-.grid-line-a.grid-line-min {
+.grid-line-a:before {
+	content: '';
+	position: absolute;
+	width: .4rem;
+	right: 0;
+	top: -1px;
+	height: 0;
+	border-bottom: 2px solid;
 }
 
 
@@ -142,7 +149,7 @@
 	left: 50%;
 	top: 50%;
 	border-radius: 50vw;
-	border: 2px solid;
+	box-shadow: 0 0 0 2px;
 }
 .grid-axis-r {
 	border-left: 2px solid;
@@ -158,6 +165,7 @@
 	top: auto;
 	left: auto;
 	min-height: 1rem;
+	margin-top: -.5rem;
 	font-size: .8rem;
 	font-family: sans-serif;
 	pointer-events: all;
@@ -212,4 +220,11 @@
 	right: -1rem;
 	top: .4rem;
 	margin-right: -1px;
+}
+
+
+.grid-label-a {
+	bottom: auto;
+	width: 2rem;
+	text-align: center;
 }

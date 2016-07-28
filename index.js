@@ -116,9 +116,13 @@ Grid.prototype.update = function (options) {
 	if (options.viewport) this.viewport = options.viewport;
 	var viewport = this.viewport;
 
+	//hide element to avoid live calc
+	element.setAttribute('hidden', true);
+
 	var w = this.container.offsetWidth;
 	var h = this.container === document.body ? window.innerHeight : this.container.offsetHeight;
 
+	//calc viewport
 	if (viewport instanceof Function) {
 		viewport = viewport(w, h);
 	}
@@ -246,7 +250,7 @@ Grid.prototype.update = function (options) {
 		stats.titles = titles;
 
 		//draw lines
-		var offsets = values.map(function (value, i) {
+		var offsets = values.slice().reverse().map(function (value, i) {
 			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
 			var ratio;
 			if (!line) {
@@ -290,7 +294,7 @@ Grid.prototype.update = function (options) {
 					linesContainer.removeChild(line);
 				}
 				line.style.width = minW / 2 + 'px';
-				line.style.transform = `rotate(${ratio * 360 / 100}deg)`;
+				line.style.transform = `rotate(${-ratio * 360 / 100}deg)`;
 			}
 
 			if (lines.style) {
@@ -303,7 +307,7 @@ Grid.prototype.update = function (options) {
 			line.removeAttribute('hidden');
 
 			return ratio;
-		});
+		}).reverse();
 		stats.offsets = offsets;
 
 		//draw axes
@@ -404,9 +408,6 @@ Grid.prototype.update = function (options) {
 				}
 			}
 			else if (/r/.test(lines.orientation)) {
-				//ignore odds due to radius is reflected
-				// if (i % 2) return;
-
 				let labelTop = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`);
 				let labelBottom = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-bottom`);
 
@@ -435,10 +436,10 @@ Grid.prototype.update = function (options) {
 
 				labelBottom.innerHTML = labels[i];
 
-				// labelTop.style.top = (50 - offsets[i]/2) + '%';
-				// labelBottom.style.top = (50 + offsets[i]/2) + '%';
-				labelTop.style.marginTop = -(minW*.5*offsets[i]/100) + 'px';
-				labelBottom.style.marginTop = (minW*.5*offsets[i]/100) + 'px';
+				// labelTop.style.marginTop = -(minW*.5*offsets[i]/100) + 'px';
+				// labelBottom.style.marginTop = (minW*.5*offsets[i]/100) + 'px';
+				labelTop.style.top = viewport[3]/2 - (minW*.5*offsets[i]/100) + 'px';
+				labelBottom.style.top = viewport[3]/2 + (minW*.5*offsets[i]/100) + 'px';
 
 				if (within(value, linesMin, linesMax)) {
 					labelTop.removeAttribute('hidden');
@@ -455,7 +456,36 @@ Grid.prototype.update = function (options) {
 				}
 			}
 			else if (/a/.test(lines.orientation)) {
+				let label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`);
 
+				if (!label) {
+					label = document.createElement('label');
+					label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`;
+					label.classList.add('grid-label');
+					label.classList.add(`grid-label-${lines.orientation}`);
+					label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+					element.appendChild(label);
+				}
+
+				label.innerHTML = labels[i];
+
+				axisTitles && label.setAttribute('title', axisTitles[i]);
+
+				label.setAttribute('data-value', value);
+
+				let angle = offsets[i] * Math.PI / 50;
+				let angleDeg = offsets[i] * 3.6;
+				// label.style.transform = `rotate(${angle}deg)`;
+				label.style.left = viewport[2]/2 + Math.cos(angle) * minW/2 + 'px';
+				label.style.top = viewport[3]/2 -Math.sin(angle) * minW/2 + 'px';
+				label.style.marginTop = (-Math.sin(angle) * .8 - .4) + 'rem';
+				label.style.marginLeft = -1 + (Math.cos(angle)) + 'rem';
+
+				if (within(value, linesMin, linesMax) && angleDeg < 360 ) {
+					label.removeAttribute('hidden');
+				} else {
+					label.setAttribute('hidden', true);
+				}
 			}
 		});
 
@@ -486,6 +516,8 @@ Grid.prototype.update = function (options) {
 		}
 
 	}, this);
+
+	element.removeAttribute('hidden');
 
 	this.emit('update');
 

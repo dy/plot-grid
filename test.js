@@ -3,6 +3,13 @@ const isBrowser = require('is-browser');
 const createSettings = require('../settings-panel');
 const insertCss = require('insert-styles');
 
+// prepare mobile
+// var meta = document.createElement('meta')
+// meta.setAttribute('name', 'viewport')
+// meta.setAttribute('content', 'width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0')
+// document.head.appendChild(meta)
+
+
 insertCss(`
 	body {
 		margin: 0;
