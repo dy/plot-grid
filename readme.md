@@ -25,7 +25,7 @@ This will create basic grid for spectrogram, [see in action](http://requirebin.c
 
 ## API
 
-<details><summary>**`grid = new Grid(options)`**</summary>
+<details><summary>`grid = new Grid(options)`</summary>
 
 Create new grid instance. It can serve both as a class or constructor method (no `new`).
 
@@ -82,7 +82,7 @@ axes: [
 ```
 
 </details>
-<details><summary>**`grid.update(options)`**</summary>
+<details><summary>`grid.update(options)`</summary>
 
 Pass new options to update grid look. Also should be called if resize happened.
 
@@ -96,12 +96,12 @@ grid.update({
 ```
 
 </details>
-<details><summary>**`grid.element.style.color = 'green'`**</summary>
+<details><summary>`grid.element.style.color = 'green'`</summary>
 
 Change grid lines and axes color.
 
 </details>
-<details><summary>**`grid.element.style.setProperty('--opacity', value)`**</summary>
+<details><summary>`grid.element.style.setProperty('--opacity', value)`</summary>
 
 Change grid lines opacity. It will not change axes style.
 

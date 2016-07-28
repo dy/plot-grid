@@ -20,7 +20,11 @@
     "logarithmic",
     "decibels",
     "frequency",
-    "graph"
+    "graph",
+    "polar",
+    "cartesian",
+    "rectangle",
+    "sci"
   ],
   "browserify": {
     "transform": [
