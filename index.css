@@ -9,6 +9,7 @@
 	bottom: 0;
 	right: 0;
 	pointer-events: none;
+	font-family: sans-serif;
 }
 .grid-lines {
 	position: absolute;
@@ -91,7 +92,7 @@
 	left: 50%;
 	top: 50%;
 	border-radius: 50vw;
-	box-shadow: 0 0 0 1px;
+	box-shadow: inset 0 0 0 1px;
 }
 .grid-line-r.grid-line-min {
 }
@@ -167,8 +168,8 @@
 	min-height: 1rem;
 	margin-top: -.5rem;
 	font-size: .8rem;
-	font-family: sans-serif;
 	pointer-events: all;
+	white-space: nowrap;
 }
 .grid-label-x {
 	bottom: auto;

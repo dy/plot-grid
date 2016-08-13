@@ -2,7 +2,7 @@
  * @module  plot-grid
  */
 
-const extend = require('xtend');
+const extend = require('xtend/mutable');
 const isBrowser = require('is-browser');
 const lg = require('mumath/lg');
 const Emitter = require('events').EventEmitter;
@@ -40,6 +40,8 @@ function Grid (options) {
 	this.element = document.createElement('div');
 	this.element.classList.add('grid');
 	this.container.appendChild(this.element);
+
+	if (this.className) this.element.className += ' ' + this.className;
 
 	//create lines container
 	this.linesContainer = document.createElement('div');
@@ -137,8 +139,14 @@ Grid.prototype.update = function (options) {
 
 
 	//ensure lines values are not empty
-	this.lines = (options.lines || this.lines || []).map((lines) => lines && extend(this.defaultLines, lines));
-	this.axes = (options.axes || this.axes || []).map((axis) => axis && extend(this.defaultAxis, axis));
+	this.lines = this.lines || [];
+	if (options.lines) {
+		this.lines = options.lines.map((lines, i) => lines && extend({}, this.defaultLines, this.lines[i], lines));
+	}
+	this.axes = this.axes || [];
+	if (options.axes) {
+		this.axes = options.axes.map((axis, i) => axis && extend({}, this.defaultAxis, this.lines[i], axis));
+	}
 
 	//exceptional case of overflow:hidden
 	// if (this.container === document.body) {
@@ -218,13 +226,12 @@ Grid.prototype.update = function (options) {
 			[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (base) {
 				var order = mag(linesMin);
 				var start = base * order;
-				for (var step = start; step <= linesMax; step *=10) {
-					if (step < linesMin) continue;
+				for (var step = Math.abs(start); step <= Math.abs(linesMax); step *=10) {
+					if (step < Math.abs(linesMin)) continue;
 					values.push(step);
 				}
 			});
 		}
-
 
 
 		values = lines.values instanceof Function ?
@@ -242,7 +249,7 @@ Grid.prototype.update = function (options) {
 				let order = mag(value);
 				let power = Math.floor(Math.log(order) / Math.log(1000));
 				if (lines.format && that.prefixes[power]) {
-					value /= (power*1000);
+					if (power > 1) value /= (power*1000);
 					return value.toLocaleString() + that.prefixes[power] + lines.units;
 				}
 				else {
@@ -253,11 +260,11 @@ Grid.prototype.update = function (options) {
 
 		//draw lines
 		var offsets = values.slice().reverse().map(function (value, i) {
-			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+			var line = linesContainer.querySelector(`#grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`);
 			var ratio;
 			if (!line) {
 				line = document.createElement('span');
-				line.id = `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`;
+				line.id = `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`;
 				line.classList.add('grid-line');
 				line.classList.add(`grid-line-${lines.orientation}`);
 				if (value === linesMin) line.classList.add('grid-line-min');
@@ -267,7 +274,7 @@ Grid.prototype.update = function (options) {
 				linesContainer.appendChild(line);
 			}
 
-			titles && line.setAttribute('title', titles[i]);
+			titles && line.setAttribute('title', titles[values.length - 1 - i]);
 
 			if (!lines.logarithmic) {
 				ratio = (value - linesMin) / (linesMax - linesMin);
@@ -368,20 +375,19 @@ Grid.prototype.update = function (options) {
 
 		axisEl.removeAttribute('hidden');
 
-
 		//draw labels
 		axisValues.forEach(function (value, i) {
 			if (value == null || labels[i] == null) return;
 
 			if (lines.orientation === 'x' || lines.orientation === 'y') {
-				let label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+				let label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`);
 
 				if (!label) {
 					label = document.createElement('label');
-					label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`;
+					label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`;
 					label.classList.add('grid-label');
 					label.classList.add(`grid-label-${lines.orientation}`);
-					label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+					label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`);
 					element.appendChild(label);
 				}
 
@@ -410,15 +416,15 @@ Grid.prototype.update = function (options) {
 				}
 			}
 			else if (/r/.test(lines.orientation)) {
-				let labelTop = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`);
-				let labelBottom = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-bottom`);
+				let labelTop = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}-top`);
+				let labelBottom = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}-bottom`);
 
 				if (!labelTop) {
 					labelTop = document.createElement('label');
-					labelTop.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`;
+					labelTop.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}-top`;
 					labelTop.classList.add('grid-label');
 					labelTop.classList.add(`grid-label-${lines.orientation}`);
-					labelTop.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+					labelTop.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`);
 					element.appendChild(labelTop);
 				}
 
@@ -430,7 +436,7 @@ Grid.prototype.update = function (options) {
 
 				if(!labelBottom) {
 					labelBottom = labelTop.cloneNode();
-					labelBottom.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-bottom`;
+					labelBottom.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}-bottom`;
 					if (offsets[i]) {
 						element.appendChild(labelBottom);
 					}
@@ -458,14 +464,14 @@ Grid.prototype.update = function (options) {
 				}
 			}
 			else if (/a/.test(lines.orientation)) {
-				let label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`);
+				let label = element.querySelector(`#grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}-top`);
 
 				if (!label) {
 					label = document.createElement('label');
-					label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}-top`;
+					label.id = `grid-label-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}-top`;
 					label.classList.add('grid-label');
 					label.classList.add(`grid-label-${lines.orientation}`);
-					label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${value|0}-${idx}-${id}`);
+					label.setAttribute('for', `grid-line-${lines.orientation}${lines.logarithmic?'-log':''}-${formatValue(value)}-${idx}-${id}`);
 					element.appendChild(label);
 				}
 
@@ -495,7 +501,7 @@ Grid.prototype.update = function (options) {
 		//bloody helpers
 
 		function hideLogLabel (label, value, intersteps) {
-			let start = parseInt(value.toPrecision(1)[0]);
+			let start = parseInt(value.toExponential()[0]);
 
 			if (values.length > intersteps * 2.8) {
 				if (start == 2) label.innerHTML = '';
@@ -531,3 +537,8 @@ Grid.prototype.update = function (options) {
 
 	return this;
 };
+
+function formatValue (v) {
+	return v.toExponential().replace('.', '-').replace('+', '-');
+}
+
