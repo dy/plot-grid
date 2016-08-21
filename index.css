@@ -39,7 +39,7 @@
 
 @supports (--css: variables) {
 	.grid {
-		--opacity: .25;
+		--opacity: .15;
 	}
 	.grid-line {
 		opacity: var(--opacity);
@@ -52,7 +52,7 @@
 .grid-line-x {
 	height: 100%;
 	width: 0;
-	border-left: 1px dotted;
+	border-left: 1px solid;
 	margin-left: -1px;
 }
 .grid-line-x:after {
@@ -71,7 +71,7 @@
 	width: 100%;
 	height: 0;
 	margin-top: -1px;
-	border-top: 1px dotted;
+	border-top: 1px solid;
 }
 .grid-line-y:after {
 	content: '';
