@@ -93,8 +93,13 @@ Grid.prototype.createLines = function (i) {
 				}
 				//V angle, quite special
 				else if (lines.orientation === 'a') {
-					intersteps = minDim * 2;
-					sequence = [1.5, 3];
+					//FIXME: normalize angles
+					intersteps = (minDim / minDistance) * 2;
+					if (minDim >= minDistance*2) {
+						sequence = [1.5, 2.25, 4.5, 9];
+					} else {
+						sequence = [9];
+					}
 				}
 				//)) radius
 				else if (lines.orientation === 'r') {

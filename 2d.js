@@ -9,6 +9,7 @@
 const Grid = require('./src/core');
 const alpha = require('color-alpha');
 const TAU = Math.PI*2;
+const clamp = require('mumath/clamp');
 
 
 module.exports = createGrid;
@@ -45,32 +46,41 @@ function drawLines (ctx, vp, lines) {
 
 	let values = lines.values instanceof Function ? lines.values(lines, vp) : lines.values;
 
+	//normalize number
+	function n (v) {
+		return .5 + Math.round(v)
+	};
+
 	//draw lines
 	ctx.beginPath();
 
-	let center = [left + width/2, top + height/2];
-	let maxR = Math.max(center[0], center[1]);
-	let minR = Math.min(center[0], center[1]);
+	//keep things in bounds
+	let w = width-1, h = height-1;
+
+	let center = [left + w/2, top + h/2];
+	let maxR = Math.max(w/2, h/2);
+	let minR = Math.min(w/2, h/2);
 
 	values.forEach(value => {
 		let t = (value - lines.min) / (lines.max - lines.min);
 
 		if (lines.orientation === 'x') {
-			ctx.moveTo(.5+Math.round(left + t*width), .5+Math.round(top));
-			ctx.lineTo(.5+Math.round(left + t*width), .5+Math.round(top + height));
+			ctx.moveTo(n(left + t*w), n(top));
+			ctx.lineTo(n(left + t*w), n(top + h));
 		}
 		else if (lines.orientation === 'y') {
-			ctx.moveTo(.5+Math.round(left), .5+Math.round(top + t*height));
-			ctx.lineTo(.5+Math.round(left + width), .5+Math.round(top + t*height));
+			ctx.moveTo(n(left), n(top + t*h));
+			ctx.lineTo(n(left + w), n(top + t*h));
 		}
 		else if (lines.orientation === 'a') {
+			if (t === 1) return;
 			let a = TAU * t;
 			ctx.moveTo(center[0], center[1]);
-			ctx.lineTo(Math.cos(a) * minR, Math.sin(a) * minR);
+			ctx.lineTo(center[0] + Math.cos(a) * minR, center[1] + Math.sin(a) * minR);
 		}
 		else if (lines.orientation === 'r') {
 			let r = t * minR;
-			ctx.moveTo(center[0], center[1]);
+			ctx.moveTo(center[0] + r, center[1]);
 			ctx.arc(center[0], center[1], r, 0, TAU);
 		}
 	});
@@ -80,6 +90,7 @@ function drawLines (ctx, vp, lines) {
 	ctx.stroke();
 	ctx.closePath();
 }
+
 
 //axis + labels
 function drawAxis () {

@@ -41,6 +41,7 @@ var settings = createSettings({
 		else {
 			settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
 			settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
+			settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
 
 			grid.update([{ orientation: 'x'}, {orientation: 'y'}]);
 		}
@@ -56,7 +57,7 @@ var settings = createSettings({
 	color: {type: 'color', value: 'rgb(0, 0, 0)', change: c => {
 		grid.update([{color: c}, {color: c}]);
 	}},
-	opacity: {type: 'range', value: .5, min: 0, max: 1, change: v => {
+	opacity: {type: 'range', value: .13, min: 0, max: 1, change: v => {
 		grid.update([{opacity: v}, {opacity: v}]);
 	}},
 
