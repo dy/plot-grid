@@ -25,85 +25,90 @@ This will create basic grid for spectrogram, [see in action](http://requirebin.c
 
 ## API
 
-<details><summary>`grid = new Grid(options)`</summary>
+<details><summary>`const Grid = require('plot-grid')`</summary>
+
+Get grid constructor. You can require render-specific version:
+
+```js
+const Canvas2DGrid = require('plot-grid/2d')
+const WebglGrid = require('plot-grid/gl')
+const HTMLGrid = require('plot-grid/html') //default
+```
+
+</details>
+<details><summary>*`let grid = new Grid(lines, options?)`*</summary>
 
 Create new grid instance. It can serve both as a class or constructor method (no `new`).
 
-Possible options are:
+`lines` is a list of grid lines to draw:
+
+```js
+[
+	{
+		name: 'Frequency',
+		units: 'Hz',
+		orientation: 'x', //x, y, r, a
+		log: true,
+		min: 20, //TODO: get rid of it
+		max: 20000, //TODO: get rid of it (replace with zoom)
+		values: [20, 200, 2000, 20000], //calc automatically
+		labels: true, //takes titles values by default
+		color: 'rgb(0,0,0)', //lines automatically have opacity
+		font: '12px sans-serif',
+		opacity: .5,
+		axis: true, //or number for specific offset
+	},
+	{
+		name: 'Magnitude',
+		orientation: 'y',
+		min: -100,
+		max: 0,
+		//undefined values are detected automatically
+		labels: function (value, i, stats) {
+			return value.toLocalString() + 'db';
+		}
+	},
+	...
+]
+```
+
+Possible options object may contain the following properties:
 
 ```js
 //where to place grid, by default - body
 container: el,
 
-//position rectangle within the container or function returning rect
+//for 2d/webgl grid
+context: gl,
+
+//position rectangle within the container/context, or function returning rectangle
 viewport: [0, 0, container.clientWidth, container.clientHeight],
-
-//grid lines - each object will setup own lines group
-lines: [
-	{
-		//possible values: x, y, r, a
-		orientation: 'x',
-		logarithmic: true,
-		min: 20,
-		max: 20000,
-		values: [20, 200, 2000, 20000],
-		units: 'Hz',
-		titles: null // → ['20Hz', '200Hz', '2kHz', '20kHz']
-	},
-	{
-		orientation: 'y',
-		min: -100,
-		max: 0,
-		//undefined values are detected automatically
-		titles: function (value, i, stats) {
-			return value.toLocalString() + 'db';
-		},
-		style: {
-			color: 'black'
-		}
-	}
-],
-
-//grid axes, corresponding to the lines - settings or true/false
-axes: [
-	//
-	{
-		name: 'Frequency',
-		// values: null,
-		//by default labels and titles are copied from lines[n].titles
-		// titles: null,
-		//but can be overridden with custom values
-		labels: [20, 200, '2k', '20k']
-	},
-
-	//detect all parameters from the according lines group
-	true
-]
 ```
 
 </details>
 <details><summary>`grid.update(options)`</summary>
 
-Pass new options to update grid look. Also should be called if resize happened.
+Pass new lines to update grid look. Note that passed lines just extend existing ones.
 
 ```js
-grid.update({
-	viewport: [20, 20, width, height],
-	lines: [{
-		logarithmic: false
-	}]
-});
+grid.update([{
+	logarithmic: false
+}]);
+```
+
+Also `update` should be called whenever resize happened.
+
+</details>
+<details><summary>`grid.draw(options)`</summary>
+
+```js
+grid.draw();
 ```
 
 </details>
-<details><summary>`grid.element.style.color = 'green'`</summary>
+<details><summary>`grid.dispose()`</summary>
 
-Change grid lines and axes color.
-
-</details>
-<details><summary>`grid.element.style.setProperty('--opacity', value)`</summary>
-
-Change grid lines opacity. It will not change axes style.
+Clear any references, events, dispose context etc. Call if you are not planning to use grid instance anymore.
 
 </details>
 
@@ -120,6 +125,7 @@ To [@evanw](https://github.com/evanw) with [thetamath](http://thetamath.com/app/
 
 ## Related
 
+* [grid](https://github.com/bit101/grid) — paint grids in canvas
 * [gl-plot2d](https://www.npmjs.com/package/gl-plot2d) — webgl-based grid.
 * [gl-plot3d](https://www.npmjs.com/package/gl-plot3d) — webgl-based 3d grid.
 * [gl-axes2d](https://www.npmjs.com/package/gl-axes2d) — webgl-based 2d plot axes.

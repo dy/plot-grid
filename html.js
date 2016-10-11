@@ -1,6 +1,9 @@
 /**
+ * HTML plot-grid renderer
+ *
  * @module  plot-grid
  */
+'use strict';
 
 const extend = require('xtend/mutable');
 const isBrowser = require('is-browser');
