@@ -37,10 +37,38 @@ function Grid (opts) {
 
 	//create x/y/r/a defaults
 	if (!this.x) {
-		this.x = extend({}, this.defaults);
+		this.x = extend({}, this.defaults, {
+			lines: (x, [left, top, width, height], grid) => {
+				let maxNumber = width / x.distance;
+
+				//get closest scale
+				let minStep = (x.range[1] - x.range[0]) / maxNumber;
+				let power = Math.floor(Math.log10(minStep));
+
+				//FIXME: not really correct, we gotta find first scale which is more than passed number
+				let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
+
+				// if (x.log) {
+
+				// }
+
+				return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
+			}
+		});
 	}
 	if (!this.y) {
-		this.y = extend({}, this.defaults);
+		this.y = extend({}, this.defaults, {
+			lines: (x, [left, top, width, height], grid) => {
+				let maxNumber = height / x.distance;
+
+				let minStep = (x.range[1] - x.range[0]) / maxNumber;
+				let power = Math.floor(Math.log10(minStep));
+
+				let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
+
+				return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
+			}
+		});
 	}
 	if (!this.r) {
 		this.r = extend({}, this.defaults);
@@ -123,7 +151,7 @@ Grid.prototype.defaults = {
 	scales: [1, 2, 5],
 	log: false,
 	distance: 20,
-	lines: getRangeLines,
+	lines: [],
 
 	//axis params
 	axis: 0,
@@ -134,24 +162,5 @@ Grid.prototype.defaults = {
 	color: 'rgb(0,0,0)',
 	opacity: .13,
 	style: 'lines',
-	disabled: true
+	disable: true
 };
-
-//litty helper returning lines for the range
-function getRangeLines (x, [left, top, width, height], grid) {
-	let maxNumber = width / x.distance;
-
-	//get closest scale
-	let minStep = (x.range[1] - x.range[0]) / maxNumber;
-	let power = Math.floor(Math.log10(minStep));
-
-	//FIXME: not really correct, we gotta find first scale which is more than passed number
-	let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
-
-	// if (x.log) {
-
-	// }
-
-
-	return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
-}

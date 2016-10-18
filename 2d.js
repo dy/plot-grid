@@ -29,14 +29,13 @@ function createGrid (opts) {
 
 //draw grid to the canvas
 function draw (ctx, vp) {
-	drawXLines(ctx, vp, this.x, this);
-	// drawYLines(ctx, vp, this.y, this);
+	this.x && !this.x.disable && drawXLines(ctx, vp, this.x, this);
+	this.y && !this.y.disable && drawYLines(ctx, vp, this.y, this);
 	// drawRLines(ctx, vp, this.r, this);
 	// drawALines(ctx, vp, this.a, this);
 }
 
 
-//draw single grid/lines instance
 function drawXLines (ctx, vp, lines, grid) {
 	let [left, top, width, height] = vp;
 
@@ -50,9 +49,30 @@ function drawXLines (ctx, vp, lines, grid) {
 
 	values.forEach((value, i) => {
 		let t = (value - lines.min) / (lines.max - lines.min);
-
 		ctx.moveTo(n(left + t*w), n(top));
 		ctx.lineTo(n(left + t*w), n(top + h));
+	});
+
+	ctx.strokeStyle = alpha(lines.color, lines.opacity);
+	ctx.stroke();
+	ctx.closePath();
+}
+
+function drawYLines (ctx, vp, lines, grid) {
+	let [left, top, width, height] = vp;
+
+	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+
+	//draw lines
+	ctx.beginPath();
+
+	//keep things in bounds
+	let w = width-1, h = height-1;
+
+	values.forEach((value, i) => {
+		let t = (value - lines.min) / (lines.max - lines.min);
+		ctx.moveTo(n(left), n(top + t*h));
+		ctx.lineTo(n(left + w), n(top + t*h));
 	});
 
 	ctx.strokeStyle = alpha(lines.color, lines.opacity);
