@@ -30,22 +30,23 @@ frame.className = 'frame';
 
 
 var settings = createSettings({
-	type: {type: 'switch', value: 'Cartesian', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: v => {
-		if (v === 'Polar') {
-			settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
-			settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
-			settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
+	// type: {type: 'switch', value: 'Polar', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: v => {
+	// 	if (v === 'Polar') {
+	// 		settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
+	// 		settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
+	// 		settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
 
-			grid.update({x: false, y: false, r: {min: 0, max: 100}, a: {min: 0, max: 360}});
-		}
-		else {
-			settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
-			settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
-			settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+	// 		grid.update({x: false, y: false, r: {min: 0, max: 100}, a: {min: 0, max: 360}});
+	// 	}
+	// 	else {
+	// 		settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
+	// 		settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
+	// 		settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
 
-			grid.update({x: {min: 0, max: 100}, y: {min: 0, max: 100}, r: false, a: false});
-		}
-	}},
+	// 		grid.update({x: {min: 0, max: 100}, y: {min: 0, max: 100}, r: false, a: false});
+	// 	}
+	// }},
+
 	// viewport: {
 	// 	type: 'text',
 	// 	value: [0,0,0,0],
@@ -54,14 +55,19 @@ var settings = createSettings({
 	// 		grid.update();
 	// 	}
 	// },
-	color: {type: 'color', value: 'rgb(0, 0, 0)', change: c => {
-		grid.update({x:{color: c}, y:{color: c}});
-	}},
-	opacity: {type: 'range', value: .13, min: 0, max: 1, change: v => {
-		grid.update({x:{opacity: v}, y:{opacity: v}});
-	}},
 
-	x: {type: 'raw', label: '<br/><strong>X lines</strong>', title: 'Horizontal'},
+
+	// color: {type: 'color', value: 'rgb(0, 0, 0)', change: c => {
+	// 	grid.update({x:{color: c}, y:{color: c}, r:{color: c}, a:{color: c}});
+	// }},
+	// opacity: {type: 'range', value: .13, min: 0, max: 1, change: v => {
+	// 	grid.update({x:{opacity: v}, y:{opacity: v}});
+	// }},
+
+
+	x: {label: '|||', title: 'Horizontal X lines', value: true, change: v => {
+		grid.update({x: {disable: !v}});
+	}},
 	xLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = {x:{}};
 		lines.x.log = isLog;
@@ -97,7 +103,9 @@ var settings = createSettings({
 		});
 	}},
 
-	y: {type: 'raw', label: '<br/><strong>Y lines</strong>', title: 'Vertical'},
+	y: {label: '☰', title: 'Horizontal Y lines', value: true, change: v => {
+		grid.update({y: {disable: !v}});
+	}},
 	yLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = {y:{}};
 		lines.y.log = isLog;
@@ -118,13 +126,84 @@ var settings = createSettings({
 		}
 		grid.update(lines);
 	}},
-	yAxis: {type: 'checkbox', label: 'axis', value: true, change: v => {
+	yAxis: {type: 'checkbox', label: 'axis', value: false, change: v => {
 		grid.update({y:{axis: v}});
 	}},
 	yRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
 		let lines = {y:{}};
 		lines.y.min = v[0];
 		lines.y.max = v[1];
+		grid.update(lines);
+	}},
+
+
+	'': {type: 'raw', content: '<br/>'},
+
+
+	r: {label: '⊚', title: 'Radial R lines', value: false, change: v => {
+		grid.update({r: {disable: !v}});
+	}},
+	rLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		let lines = {r:{}};
+		lines.r.log = isLog;
+		if (isLog) {
+			lines.r.min = 1;
+			lines.r.max = 10000;
+			settings.set('rRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
+		}
+		else {
+			lines.r.min = 0;
+			lines.r.max = 100;
+			if (settings.get('type') === 'Polar') {
+				settings.set('rRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
+			}
+			else {
+				settings.set('rRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+			}
+		}
+		grid.update(lines);
+	}},
+	rAxis: {type: 'checkbox', label: 'axis', value: true, change: v => {
+		grid.update({r:{axis: v}});
+	}},
+	rRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
+		let lines = {r:{}};
+		lines.r.min = v[0];
+		lines.r.max = v[1];
+		grid.update(lines);
+	}},
+
+
+	a: {label: '✳', title: 'Angular α lines', value: false, change: v => {
+		grid.update({a: {disable: !v}});
+	}},
+	aLog: { label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		let lines = {a:{}};
+		lines.a.log = isLog;
+		if (isLog) {
+			lines.a.min = 1;
+			lines.a.max = 10000;
+			settings.set('aRange', {min: 1, max: 10000, step: null, value: [1, 10000], scale: 'log'});
+		}
+		else {
+			lines.a.min = 0;
+			lines.a.max = 100;
+			if (settings.get('type') === 'Polar') {
+				settings.set('aRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
+			}
+			else {
+				settings.set('aRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
+			}
+		}
+		grid.update(lines);
+	}},
+	aAxis: {type: 'checkbox', label: 'axis', value: true, change: v => {
+		grid.update({a:{axis: v}});
+	}},
+	aRange: { type: 'interval', label: 'min..max', value: [0, 100], min: 0, max: 100, change: v => {
+		let lines = {a:{}};
+		lines.a.min = v[0];
+		lines.a.max = v[1];
 		grid.update(lines);
 	}}
 }, {

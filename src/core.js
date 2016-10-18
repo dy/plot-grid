@@ -38,43 +38,38 @@ function Grid (opts) {
 	//create x/y/r/a defaults
 	if (!this.x) {
 		this.x = extend({}, this.defaults, {
-			lines: (x, [left, top, width, height], grid) => {
-				let maxNumber = width / x.distance;
-
-				//get closest scale
-				let minStep = (x.range[1] - x.range[0]) / maxNumber;
-				let power = Math.floor(Math.log10(minStep));
-
-				//FIXME: not really correct, we gotta find first scale which is more than passed number
-				let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
-
-				// if (x.log) {
-
-				// }
-
-				return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
-			}
+			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
 		});
 	}
 	if (!this.y) {
 		this.y = extend({}, this.defaults, {
-			lines: (x, [left, top, width, height], grid) => {
-				let maxNumber = height / x.distance;
-
-				let minStep = (x.range[1] - x.range[0]) / maxNumber;
-				let power = Math.floor(Math.log10(minStep));
-
-				let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
-
-				return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
-			}
+			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
 		});
 	}
 	if (!this.r) {
-		this.r = extend({}, this.defaults);
+		this.r = extend({}, this.defaults, {
+			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
+		});
 	}
 	if (!this.a) {
-		this.a = extend({}, this.defaults);
+		this.a = extend({}, this.defaults, {
+			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
+		});
+	}
+
+	function getRangeLines (x, maxNumber) {
+		//get closest scale
+		let minStep = (x.range[1] - x.range[0]) / maxNumber;
+		let power = Math.floor(Math.log10(minStep));
+
+		//FIXME: not really correct, we gotta find first scale which is more than passed number
+		let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
+
+		// if (x.log) {
+
+		// }
+
+		return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
 	}
 
 	this.update(opts);
@@ -118,10 +113,11 @@ Grid.prototype.update = function (opts) {
 	opts = opts || {};
 
 	//disable lines
-	if (opts.x !== undefined) this.x.disable = !opts.x;
-	if (opts.y !== undefined) this.y.disable = !opts.y;
-	if (opts.r !== undefined) this.r.disable = !opts.r;
-	if (opts.a !== undefined) this.a.disable = !opts.a;
+	if (opts.x === false || opts.x === null || opts.x === true) this.x.disable = !opts.x;
+	if (opts.y === false || opts.y === null || opts.y === true) this.y.disable = !opts.y;
+	if (opts.r === false || opts.r === null || opts.r === true) this.r.disable = !opts.r;
+	if (opts.a === false || opts.a === null || opts.a === true) this.a.disable = !opts.a;
+
 
 	//extend props
 	if (opts.x) extend(this.x, opts.x);
