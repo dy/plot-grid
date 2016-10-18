@@ -78,14 +78,11 @@ Lines options may include:
 
 | Name | Type | Description |
 |---|---|---|
-| name | String, null | Name for the axis |
-| units | String, null | Units to add as a postfix to the labels |
-| lines | Bool, Array, (options, viewport, grid) => Array, null | Array with values for lines or function returning such array. By default lines are calculated based on resolution. Can be disabled by passing false. |
-| log | Bool | Place default lines logarithmically. |
-| distance | Number | The minimum distance between lines. By default - 10. |
-| scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
+| lines | Bool, Array, (options, viewport, grid) => Array, null | Array with values for lines or function returning such array. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
 | axis | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. 0 for zero-line. String can define placement to the edge: `top, left, bottom, right`. By default it is `left/bottom` |
 | labels | Bool, Array, (options, viewport, grid) => Array | Values for labels. |
+| name | String, null | Name for the axis. |
+| units | String, null | Units to add as a postfix to the labels |
 | ticks | Bool, Number, Array, (options, viewport, grid) => Array | Size of the ticks for the labels. Can be disabled by passing false, be a number, an array corresponding to the labels or a function returning size depending on params. |
 | padding | Number, Array(4) | Space for the labels and axis, by default 0. If there is not enough space for the labels, the axis will be rotated so that lables are placed over the grid, not outside of it. |
 | min | Number | Defines minimum range for the grid, by default `-Infinity`. |
@@ -96,6 +93,9 @@ Lines options may include:
 | type | String | The style of lines: `lines`, `dots`, `crosses`. |
 | color | String, Array | The color of axis/lines. |
 | opacity | Number | Fade out lines relative to the axis. |
+| log | Bool | Place default lines logarithmically. |
+| distance | Number | The minimum distance between lines. By default - 10. |
+| scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
 | font | String | Font to use for labels, by default `12pt sans-serif`. |
 | width | Number | Width of axis, by default `2`. |
 

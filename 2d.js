@@ -15,41 +15,32 @@ const clamp = require('mumath/clamp');
 module.exports = createGrid;
 
 /** @constructor */
-function createGrid (lines, opts) {
+function createGrid (opts) {
 	opts = opts || {};
 	opts.autostart = false;
 	opts.context = '2d';
 	opts.draw = draw;
 
-	let grid = new Grid(lines, opts);
-
-	grid.render(grid.lines);
+	let grid = new Grid(opts);
 
 	return grid;
 }
 
 
 //draw grid to the canvas
-function draw (ctx, vp, lines) {
-	let [left, top, width, height] = vp;
-
-	ctx.clearRect(left, top, width, height);
-
-	lines.forEach(lines => {
-		drawLines(ctx, vp, lines);
-	});
+function draw (ctx, vp) {
+	drawXLines(ctx, vp, this.x, this);
+	// drawYLines(ctx, vp, this.y, this);
+	// drawRLines(ctx, vp, this.r, this);
+	// drawALines(ctx, vp, this.a, this);
 }
 
+
 //draw single grid/lines instance
-function drawLines (ctx, vp, lines) {
+function drawXLines (ctx, vp, lines, grid) {
 	let [left, top, width, height] = vp;
 
-	let values = lines.values instanceof Function ? lines.values(lines, vp) : lines.values;
-
-	//normalize number
-	function n (v) {
-		return .5 + Math.round(v)
-	};
+	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
 
 	//draw lines
 	ctx.beginPath();
@@ -57,11 +48,38 @@ function drawLines (ctx, vp, lines) {
 	//keep things in bounds
 	let w = width-1, h = height-1;
 
-	let center = [left + w/2, top + h/2];
-	let maxR = Math.max(w/2, h/2);
-	let minR = Math.min(w/2, h/2);
+	values.forEach((value, i) => {
+		let t = (value - lines.min) / (lines.max - lines.min);
 
-	values.forEach(value => {
+		ctx.moveTo(n(left + t*w), n(top));
+		ctx.lineTo(n(left + t*w), n(top + h));
+	});
+
+	ctx.strokeStyle = alpha(lines.color, lines.opacity);
+	ctx.stroke();
+	ctx.closePath();
+}
+
+
+//draw single grid/lines instance
+function drawRLines (ctx, vp, lines, grid) {
+	let [left, top, width, height] = vp;
+
+	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+
+	//draw lines
+	ctx.beginPath();
+
+	//keep things in bounds
+	let w = width-1, h = height-1;
+
+	let center = [left + w/2 + .5, top + h/2 + .5];
+	let maxR = Math.max(w/2, h/2);
+	let minR = Math.min(w/2, h/2)-1;
+	let t0 = (values[0] - lines.min) / (lines.max - lines.min);
+
+	createXShape(values);
+	values.forEach((value, i) => {
 		let t = (value - lines.min) / (lines.max - lines.min);
 
 		if (lines.orientation === 'x') {
@@ -73,7 +91,7 @@ function drawLines (ctx, vp, lines) {
 			ctx.lineTo(n(left + w), n(top + t*h));
 		}
 		else if (lines.orientation === 'a') {
-			if (t === 1) return;
+			if (t === t0) return;
 			let a = TAU * t;
 			ctx.moveTo(center[0], center[1]);
 			ctx.lineTo(center[0] + Math.cos(a) * minR, center[1] + Math.sin(a) * minR);
@@ -91,6 +109,11 @@ function drawLines (ctx, vp, lines) {
 	ctx.closePath();
 }
 
+
+//normalize number
+function n (v) {
+	return .5 + Math.round(v)
+};
 
 //axis + labels
 function drawAxis () {

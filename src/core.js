@@ -12,6 +12,7 @@ const isBrowser = require('is-browser');
 const extend = require('just-extend');
 const magOrder = require('mumath/order');
 const closestNumber = require('mumath/closest');
+const range = require('just-range');
 
 
 module.exports = Grid;
@@ -21,128 +22,136 @@ inherits(Grid, Component);
 
 
 //constructor
-function Grid (lines, opts) {
-	if (!(this instanceof Grid)) return new Grid(lines, opts);
-
-	Component.call(this, opts);
+function Grid (opts) {
+	if (!(this instanceof Grid)) return new Grid(opts);
 
 	if (!isBrowser) return;
 
-	this.lines = [];
+	Component.call(this, {
+		container: opts.container,
+		viewport: opts.viewport,
+		context: opts.context,
+		autostart: opts.autostart,
+		draw: opts.draw,
+	});
 
-	this.update(lines);
+	//create x/y/r/a defaults
+	if (!this.x) {
+		this.x = extend({}, this.defaults);
+	}
+	if (!this.y) {
+		this.y = extend({}, this.defaults);
+	}
+	if (!this.r) {
+		this.r = extend({}, this.defaults);
+	}
+	if (!this.a) {
+		this.a = extend({}, this.defaults);
+	}
+
+	this.update(opts);
+
+
+	//bind events
+	//FIXME: attach generic panzoom component
+	// if (opts && opts.wheel) {
+	// 	let scrollRatio = 2000;
+	// 	let listener = wheel(this.container, (dx, dy, dz, e) => {
+	// 		let [left, top, width, height] = this.viewport;
+
+	// 		//get the coord of min/max
+	// 		let center = [e.offsetX - left, e.offsetY - top];
+	// 		let ratio = [center[0]/width/scrollRatio, center[1]/height/scrollRatio];
+
+	// 		let scale = 1 + dy / scrollRatio;
+
+	// 		let lines = Array(this.lines.length).fill({});
+	// 		lines = lines.map((_, i) => {
+	// 			let range = (this.lines[i].max - this.lines[i].min);
+	// 			let newRange = range*scale;
+
+	// 			let min = this.lines[i].min + range*(1 - ratio[1]) - newRange*(1 - ratio[1]);
+	// 			let max = this.lines[i].max - range*(ratio[1]) + newRange*(ratio[1]) ;
+
+	// 			return {
+	// 				min: min,
+	// 				max: max
+	// 			}
+	// 		});
+	// 		this.update(lines);
+	// 	}, false);
+	// }
 }
 
 
 
 //re-evaluate lines, calc options for renderer
-Grid.prototype.update = function (lines) {
-	//ensure lines are complete
-	Array.isArray(lines) && lines.forEach((newLines, i) => {
-		//ensure defaults
-		if (!this.lines[i]) this.lines[i] = this.createLines(i);
+Grid.prototype.update = function (opts) {
+	opts = opts || {};
 
-		let srcLines = this.lines[i];
+	//disable lines
+	if (opts.x !== undefined) this.x.disable = !opts.x;
+	if (opts.y !== undefined) this.y.disable = !opts.y;
+	if (opts.r !== undefined) this.r.disable = !opts.r;
+	if (opts.a !== undefined) this.a.disable = !opts.a;
 
-		extend(srcLines, newLines);
+	//extend props
+	if (opts.x) extend(this.x, opts.x);
+	if (opts.y) extend(this.y, opts.y);
+	if (opts.r) extend(this.r, opts.r);
+	if (opts.a) extend(this.a, opts.a);
 
-		//normalize some options
-		if (srcLines.orientation === 'x' || srcLines.orientation === 'horizontal') srcLines.orientation = 'x';
-		else if (srcLines.orientation === 'y' || srcLines.orientation === 'vertical') srcLines.orientation = 'y';
-		else if (/a/.test(srcLines.orientation))  srcLines.orientation = 'a';
-		else if (/r|d/.test(srcLines.orientation)) srcLines.orientation = 'r';
-	});
-
-	this.render(this.lines);
+	this.clear();
+	this.render();
 
 	return this;
 }
 
-//create new lines object
-Grid.prototype.createLines = function (i) {
-	return {
-		name: '',
-		units: '',
-		log: false,
-		orientation: !i ? 'x' : 'y',
-		min: 0,
-		max: 100,
-		axis: 0,
-		values: (lines, [left, top, width, height]) => {
-			let values = [];
 
-			//min dist between lines
-			let minDistance = 50;
 
-			//detect values based off state by default
-			if (!lines.log) {
-				let sequence = [0, 1, 2, 2.5, 5];
+//default values
+Grid.prototype.defaults = {
+	name: '',
+	units: '',
 
-				//max number of stops
-				let intersteps = 0;
+	//visible range params
+	min: 0,
+	max: 100,
+	range: [0, 100],
 
-				let minDim = Math.min(width, height);
+	//lines params
+	scales: [1, 2, 5],
+	log: false,
+	distance: 20,
+	lines: getRangeLines,
 
-				//||| horizontal
-				if (lines.orientation === 'x') {
-					intersteps = width / minDistance;
-				}
-				//≡ vertical
-				else if (lines.orientation === 'y') {
-					intersteps = height / minDistance;
-				}
-				//V angle, quite special
-				else if (lines.orientation === 'a') {
-					//FIXME: normalize angles
-					intersteps = (minDim / minDistance) * 2;
-					if (minDim >= minDistance*2) {
-						sequence = [1.5, 2.25, 4.5, 9];
-					} else {
-						sequence = [9];
-					}
-				}
-				//)) radius
-				else if (lines.orientation === 'r') {
-					intersteps = (minDim / minDistance) / 2;
-				}
-				else {
-					return values;
-				}
+	//axis params
+	axis: 0,
+	ticks: 4,
+	width: 2,
+	labels: (line, x, vp, grid) => line.toLocalString() + x.units,
+	font: '13pt sans-serif',
+	color: 'rgb(0,0,0)',
+	opacity: .13,
+	style: 'lines',
+	disabled: true
+};
 
-				//find seq number closest to the scale
-				let stepSize = (lines.max - lines.min) / Math.floor(intersteps);
-				let order = magOrder(stepSize);
+//litty helper returning lines for the range
+function getRangeLines (x, [left, top, width, height], grid) {
+	let maxNumber = width / x.distance;
 
-				stepSize = closestNumber(stepSize / order, sequence) * order;
+	//get closest scale
+	let minStep = (x.range[1] - x.range[0]) / maxNumber;
+	let power = Math.floor(Math.log10(minStep));
 
-				let start = stepSize * Math.ceil(lines.min / stepSize);
+	//FIXME: not really correct, we gotta find first scale which is more than passed number
+	let scale = closestNumber(minStep/Math.pow(10,power), x.scales)*Math.pow(10, power);
 
-				for (let step = start; step <= lines.max; step += stepSize) {
-					values.push(step);
-				}
-			}
-			else {
-				//FIXME: take into account min step
-				if (lines.min <= 0 && lines.max >= 0) throw Error('Cannot create logarithmic grid spanning over zero, including zero');
+	// if (x.log) {
 
-				let order = magOrder(lines.min);
+	// }
 
-				[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(function (base) {
-					let start = base * order;
-					for (let step = start; step <= Math.abs(lines.max); step *=10) {
-						if (step < Math.abs(lines.min)) continue;
-						values.push(step);
-					}
-				});
 
-				values = values.sort();
-			}
-
-			return values;
-		},
-		labels: (value, lines, vp) => value.toLocalString() + lines.units,
-		color: 'rgb(0,0,0)',
-		opacity: .13,
-		font: '13pt sans-serif',
-	};
+	return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
 }
