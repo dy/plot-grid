@@ -87,7 +87,8 @@ Lines options may include:
 | padding | Number, Array(4) | Space for the labels and axis, by default 0. If there is not enough space for the labels, the axis will be rotated so that lables are placed over the grid, not outside of it. |
 | min | Number | Defines minimum range for the grid, by default `-Infinity`. |
 | max | Number | Defines maximum range for the grid, by default `Infinity`. |
-| range | Array | Defines current visible range, by default `[0, 100]`.  |
+| range | Number | Defines current visible range, by default `100`.  |
+| start | Number | Defines start point for the visible range, by default `0`.  |
 | zoom | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, `pinch`, or array with these strings. |
 | pan | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
 | type | String | The style of lines: `lines`, `dots`, `crosses`. |

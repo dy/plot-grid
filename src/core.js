@@ -59,7 +59,7 @@ function Grid (opts) {
 
 	function getRangeLines (x, maxNumber) {
 		//get closest scale
-		let minStep = (x.range[1] - x.range[0]) / maxNumber;
+		let minStep = (x.range) / maxNumber;
 		let power = Math.floor(Math.log10(minStep));
 
 		//FIXME: not really correct, we gotta find first scale which is more than passed number
@@ -69,7 +69,7 @@ function Grid (opts) {
 
 		// }
 
-		return range( Math.floor(x.range[0]/scale)*scale, Math.floor(x.range[1]/scale)*scale, scale);
+		return range( Math.floor(x.start/scale)*scale, Math.floor((x.start + x.range)/scale)*scale, scale);
 	}
 
 	this.update(opts);
@@ -125,10 +125,26 @@ Grid.prototype.update = function (opts) {
 	if (opts.r) extend(this.r, opts.r);
 	if (opts.a) extend(this.a, opts.a);
 
+	//normalize limits
+	this.normalize(this.x);
+	this.normalize(this.y);
+	this.normalize(this.r);
+	this.normalize(this.a);
+
 	this.clear();
 	this.render();
 
 	return this;
+}
+
+//normalize single set
+Grid.prototype.normalize = function (lines) {
+	if (Array.isArray(lines)) return lines.forEach(this.normalize);
+
+	let range = lines.max - lines.min;
+	lines.range = Math.min(range, lines.range);
+	if (lines.max != null) lines.start = Math.min(lines.max - lines.range, lines.start);
+	if (lines.min != null) lines.start = Math.max(lines.start, lines.min);
 }
 
 
@@ -139,9 +155,10 @@ Grid.prototype.defaults = {
 	units: '',
 
 	//visible range params
-	min: 0,
-	max: 100,
-	range: [0, 100],
+	min: -Infinity,
+	max: Infinity,
+	start: null,
+	range: 100,
 
 	//lines params
 	scales: [1, 2, 5],
