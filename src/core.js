@@ -157,7 +157,7 @@ Grid.prototype.defaults = {
 	//visible range params
 	min: -Infinity,
 	max: Infinity,
-	start: null,
+	start: -50,
 	range: 100,
 
 	//lines params
@@ -168,8 +168,9 @@ Grid.prototype.defaults = {
 
 	//axis params
 	axis: 0,
+	axisWidth: 2,
+	lineWidth: 1,
 	ticks: 4,
-	width: 2,
 	labels: (line, x, vp, grid) => line.toLocalString() + x.units,
 	font: '13pt sans-serif',
 	color: 'rgb(0,0,0)',

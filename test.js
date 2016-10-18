@@ -30,22 +30,16 @@ frame.className = 'frame';
 
 
 var settings = createSettings([
-	// type: {type: 'switch', value: 'Polar', options: {'Cartesian': '⊞', 'Polar': '⊗'}, change: v => {
-	// 	if (v === 'Polar') {
-	// 		settings.set('x', {label: '<br/>⊚', title: 'Radial lines'});
-	// 		settings.set('y', {label: '<br/>✳', title: 'Angular lines'});
-	// 		settings.set('yRange', {min: 0, max: 360, step: 1, value: [0, 360], scale: 'linear'});
-
-	// 		grid.update({x: false, y: false, r: {min: 0, max: 100}, a: {min: 0, max: 360}});
-	// 	}
-	// 	else {
-	// 		settings.set('x', {label: '<br/>|||', title: 'Horizontal lines', style: 'letter-spacing: -.5ex;'});
-	// 		settings.set('y', {label: '<br/>☰', title: 'Vertical lines'});
-	// 		settings.set('yRange', {min: 0, max: 100, step: 1, value: [0, 100], scale: 'linear'});
-
-	// 		grid.update({x: {min: 0, max: 100}, y: {min: 0, max: 100}, r: false, a: false});
-	// 	}
-	// }},
+	{id: 'use-case', type: 'select', value: 'classic', options: {
+			'classic': '⊞ Classic',
+			'dictaphone': '┈ Dictaphone',
+			'thetamath': 'θ Math',
+			'multigrid': '⧉ Multigrid',
+			'polar': '⊕ Polar'
+		}, change: v => {
+		}
+	},
+	{content: '<br/>'},
 
 	// viewport: {
 	// 	type: 'text',
@@ -71,14 +65,6 @@ var settings = createSettings([
 	{id: 'xLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = {x:{}};
 		lines.x.log = isLog;
-		if (isLog) {
-			lines.x.min = 1;
-			lines.x.max = 10000;
-		}
-		else {
-			lines.x.min = 0;
-			lines.x.max = 100;
-		}
 		grid.update(lines);
 	}},
 	// xUnits: { label: 'units', type: 'text', value: '', change: v => {
@@ -88,7 +74,7 @@ var settings = createSettings([
 	// 		lines:  lines
 	// 	});
 	// }},
-	{id: 'xAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+	{id: 'xAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
 		grid.update({x: {
 			axis: v
 		}});
@@ -102,17 +88,9 @@ var settings = createSettings([
 	{id: 'yLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = {y:{}};
 		lines.y.log = isLog;
-		if (isLog) {
-			lines.y.min = 1;
-			lines.y.max = 10000;
-		}
-		else {
-			lines.y.min = 0;
-			lines.y.max = 100;
-		}
 		grid.update(lines);
 	}},
-	{id: 'yAxis', type: 'checkbox', label: 'axis', value: false, change: v => {
+	{id: 'yAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
 		grid.update({y:{axis: v}});
 	}},
 
@@ -124,14 +102,6 @@ var settings = createSettings([
 	{id: 'rLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = {r:{}};
 		lines.r.log = isLog;
-		if (isLog) {
-			lines.r.min = 1;
-			lines.r.max = 10000;
-		}
-		else {
-			lines.r.min = 0;
-			lines.r.max = 100;
-		}
 		grid.update(lines);
 	}},
 	{id: 'rAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
@@ -146,14 +116,6 @@ var settings = createSettings([
 	{id: 'aLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
 		let lines = {a:{}};
 		lines.a.log = isLog;
-		if (isLog) {
-			lines.a.min = 1;
-			lines.a.max = 10000;
-		}
-		else {
-			lines.a.min = 0;
-			lines.a.max = 100;
-		}
 		grid.update(lines);
 	}},
 	{id: 'aAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
@@ -172,14 +134,6 @@ var settings = createSettings([
 
 //create grid
 var grid = Grid({
-	x: {
-		min: 0,
-		max: 100
-	},
-	y: {
-		min: 0,
-		max: 100
-	},
 	container: frame,
 	viewport: function (w, h) {
 		return [10, 10, w - 20, h - 20];

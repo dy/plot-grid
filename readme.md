@@ -95,10 +95,11 @@ Lines options may include:
 | color | String, Array | The color of axis/lines. |
 | opacity | Number | Fade out lines relative to the axis. |
 | log | Bool | Place default lines logarithmically. |
-| distance | Number | The minimum distance between lines. By default - 10. |
-| scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
 | font | String | Font to use for labels, by default `12pt sans-serif`. |
-| width | Number | Width of axis, by default `2`. |
+| distance | Number | The minimum distance between lines. By default `10`. |
+| scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
+| axisWidth | Number | Width of axis, by default `2`. |
+| lineWidth | Number | Width of lines, by default `1`. |
 
 
 ### grid.update(options)

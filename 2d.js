@@ -38,10 +38,17 @@ function draw (ctx, vp) {
 	if (Array.isArray(this.a)) this.a.forEach((lines) => drawALines(ctx, vp, lines, this));
 	else drawALines(ctx, vp, this.a, this);
 
+	//draw axes
+	drawXAxis(ctx, vp, this.x, this);
+	drawYAxis(ctx, vp, this.y, this);
+	drawRAxis(ctx, vp, this.r, this);
+	drawAAxis(ctx, vp, this.a, this);
+
 	return this;
 }
 
 
+//FIXME: make these methods belong to lines objects
 function drawXLines (ctx, vp, lines, grid) {
 	if (!lines || lines.disable) return;
 
@@ -61,6 +68,7 @@ function drawXLines (ctx, vp, lines, grid) {
 	});
 
 	ctx.strokeStyle = alpha(lines.color, lines.opacity);
+	ctx.lineWidth = lines.lineWidth;
 	ctx.stroke();
 	ctx.closePath();
 }
@@ -84,6 +92,7 @@ function drawYLines (ctx, vp, lines, grid) {
 	});
 
 	ctx.strokeStyle = alpha(lines.color, lines.opacity);
+	ctx.lineWidth = lines.lineWidth;
 	ctx.stroke();
 	ctx.closePath();
 }
@@ -115,6 +124,7 @@ function drawALines (ctx, vp, lines, grid) {
 	});
 
 	ctx.strokeStyle = alpha(lines.color, lines.opacity);
+	ctx.lineWidth = lines.lineWidth;
 	ctx.stroke();
 	ctx.closePath();
 }
@@ -143,18 +153,86 @@ function drawRLines (ctx, vp, lines, grid) {
 	});
 
 	ctx.strokeStyle = alpha(lines.color, lines.opacity);
+	ctx.lineWidth = lines.lineWidth;
 	ctx.stroke();
 	ctx.closePath();
 }
+
+
+//axis + labels
+function drawXAxis (ctx, vp, lines, grid) {
+	if (!lines || lines.disable || lines.axis === false) return;
+
+	let [left, top, width, height] = vp;
+
+
+	//keep things in bounds
+	let w = width-1, h = height-1;
+	let axis = lines.axis;
+
+	let axisOffset = top + height;
+
+	let opposite = Array.isArray(grid.y) ? grid.y[0] : grid.y;
+
+	if (typeof axis === 'number' && opposite.range) {
+		let t = (clamp(axis, opposite.start, opposite.start + opposite.range) - opposite.start) / opposite.range;
+		axisOffset = top + t * height;
+	} else if (typeof axis === 'string') {
+		if (axis === 'top') axisOffset = top;
+		else if (axis === 'bottom') axisOffset = top + height;
+	}
+
+	ctx.beginPath();
+	ctx.moveTo(n(left), n(axisOffset));
+	ctx.lineTo(n(left + w), n(axisOffset));
+	ctx.strokeStyle = lines.color;
+	ctx.lineWidth = lines.axisWidth;
+	ctx.stroke();
+	ctx.closePath();
+}
+
+
+function drawYAxis (ctx, vp, lines, grid) {
+	if (!lines || lines.disable || lines.axis === false) return;
+
+	let [left, top, width, height] = vp;
+
+	//keep things in bounds
+	let w = width-1, h = height-1;
+	let axis = lines.axis;
+
+	let axisOffset = left;
+
+	let opposite = Array.isArray(grid.x) ? grid.x[0] : grid.x;
+
+	if (typeof axis === 'number' && opposite.range) {
+		let t = (clamp(axis, opposite.start, opposite.start + opposite.range) - opposite.start) / opposite.range;
+		axisOffset = left + t * width;
+	} else if (typeof axis === 'string') {
+		if (axis === 'left') axisOffset = left;
+		else if (axis === 'bottom') axisOffset = left + width;
+	}
+
+	ctx.beginPath();
+	ctx.moveTo(n(axisOffset), n(top));
+	ctx.lineTo(n(axisOffset), n(top + h));
+	ctx.strokeStyle = lines.color;
+	ctx.lineWidth = lines.axisWidth;
+	ctx.stroke();
+	ctx.closePath();
+}
+
+
+function drawRAxis () {
+
+}
+function drawAAxis () {
+
+}
+
 
 
 //normalize number
 function n (v) {
 	return .5 + Math.round(v)
 };
-
-
-//axis + labels
-function drawAxis () {
-
-}
