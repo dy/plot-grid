@@ -10,9 +10,10 @@ const Component = require('gl-component');
 const inherits = require('inherits');
 const isBrowser = require('is-browser');
 const extend = require('just-extend');
+const range = require('just-range');
+const pick = require('just-pick');
 const magOrder = require('mumath/order');
 const closestNumber = require('mumath/closest');
-const range = require('just-range');
 
 
 module.exports = Grid;
@@ -27,13 +28,9 @@ function Grid (opts) {
 
 	if (!isBrowser) return;
 
-	Component.call(this, {
-		container: opts.container,
-		viewport: opts.viewport,
-		context: opts.context,
-		autostart: opts.autostart,
-		draw: opts.draw,
-	});
+	Component.call(this, extend(pick(this, [
+		'container', 'viewport', 'context', 'autostart'
+	]), opts));
 
 	//create x/y/r/a defaults
 	if (!this.x) {
@@ -146,8 +143,6 @@ Grid.prototype.normalize = function (lines) {
 	if (lines.max != null) lines.start = Math.min(lines.max - lines.range, lines.start);
 	if (lines.min != null) lines.start = Math.max(lines.start, lines.min);
 }
-
-
 
 //default values
 Grid.prototype.defaults = {

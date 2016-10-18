@@ -53,6 +53,7 @@
     "insert-styles": "^1.2.1",
     "is-browser": "^2.0.1",
     "just-extend": "^1.1.21",
+    "just-pick": "^1.0.3",
     "just-range": "^1.0.0",
     "mouse-wheel": "^1.2.0",
     "mumath": "^2.0.0",

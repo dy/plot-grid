@@ -71,7 +71,7 @@ Possible options:
 | container | Element, String, null | Container element to place grid into. By default is `document.body` |
 | context | CanvasContext, String, Object, null | Can be a string `2d` or `webgl`, context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context) or `null` for non-canvas grid |
 | viewport | Array(4) or (w, h) => Array(4) | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
-| x, y, r, a | Object, Bool | Options for the grid lines of cartesian or polar plot.  |
+| x, y, r, a | Object, Bool | Options for the grid lines of cartesian or polar plot, see the table below.  |
 
 
 Lines options may include:
@@ -92,14 +92,14 @@ Lines options may include:
 | zoom | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, `pinch`, or array with these strings. |
 | pan | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
 | type | String | The style of lines: `lines`, `dots`, `crosses`. |
-| color | String, Array | The color of axis/lines. |
-| opacity | Number | Fade out lines relative to the axis. |
 | log | Bool | Place default lines logarithmically. |
-| font | String | Font to use for labels, by default `12pt sans-serif`. |
 | distance | Number | The minimum distance between lines. By default `10`. |
 | scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
 | axisWidth | Number | Width of axis, by default `2`. |
 | lineWidth | Number | Width of lines, by default `1`. |
+| font | String | Font to use for labels, by default `12pt sans-serif`. |
+| color | String, Array | The color of axis/lines. |
+| opacity | Number | Fade out lines relative to the axis. |
 
 
 ### grid.update(options)
