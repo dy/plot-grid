@@ -54,7 +54,7 @@ function drawXLines (ctx, vp, lines, grid) {
 
 	let [left, top, width, height] = vp;
 
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+	let values = lines.getLines(lines, vp, grid);
 
 	//draw lines
 	ctx.beginPath();
@@ -77,7 +77,7 @@ function drawYLines (ctx, vp, lines, grid) {
 	if (!lines || lines.disable) return;
 	let [left, top, width, height] = vp;
 
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+	let values = lines.getLines(lines, vp, grid);
 
 	//draw lines
 	ctx.beginPath();
@@ -101,7 +101,7 @@ function drawALines (ctx, vp, lines, grid) {
 	if (!lines || lines.disable) return;
 	let [left, top, width, height] = vp;
 
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+	let values = lines.getLines(lines, vp, grid);
 
 	//draw lines
 	ctx.beginPath();
@@ -133,7 +133,7 @@ function drawRLines (ctx, vp, lines, grid) {
 	if (!lines || lines.disable) return;
 	let [left, top, width, height] = vp;
 
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+	let values = lines.getLines(lines, vp, grid);
 
 	//draw lines
 	ctx.beginPath();

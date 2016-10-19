@@ -32,27 +32,19 @@ function Grid (opts) {
 		'container', 'viewport', 'context', 'autostart'
 	]), opts));
 
-	//create x/y/r/a defaults
-	if (!this.x) {
-		this.x = extend({}, this.defaults, {
-			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
-		});
-	}
-	if (!this.y) {
-		this.y = extend({}, this.defaults, {
-			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
-		});
-	}
-	if (!this.r) {
-		this.r = extend({}, this.defaults, {
-			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
-		});
-	}
-	if (!this.a) {
-		this.a = extend({}, this.defaults, {
-			lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
-		});
-	}
+	//create x/y/r
+	this.x = extend({}, this.defaults, opts.x, {
+		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
+	});
+	this.y = extend({}, this.defaults, opts.y, {
+		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
+	});
+	this.r = extend({}, this.defaults, opts.r, {
+		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
+	});
+	this.a = extend({}, this.defaults, opts.a, {
+		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
+	});
 
 	function getRangeLines (x, maxNumber) {
 		//get closest scale
@@ -160,6 +152,7 @@ Grid.prototype.defaults = {
 	log: false,
 	distance: 20,
 	lines: [],
+	getLines: (lines, vp, grid) => lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines,
 
 	//axis params
 	axis: 0,

@@ -135,6 +135,9 @@ var settings = createSettings([
 //create grid
 var grid = Grid({
 	container: frame,
+	x: {
+		// color: 'red',
+	},
 	viewport: function (w, h) {
 		return [10, 10, w - 20, h - 20];
 

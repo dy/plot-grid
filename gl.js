@@ -10,6 +10,8 @@ const Grid = require('./src/core');
 const clamp = require('mumath/clamp');
 const TAU = Math.PI*2;
 const inherits = require('inherits');
+const parseColor = require('color-parse');
+const hsl = require('color-space/hsl');
 
 module.exports = GLGrid;
 
@@ -25,6 +27,61 @@ function GLGrid (opts) {
 	opts.autostart = false;
 
 	Grid.call(this, opts);
+
+	//lines-specific points
+	this.x.getPositions = (values, vp, lines) => {
+		let positions = [];
+
+		let half = lines.lineWidth / vp[2];
+
+		for (let i = 0; i < values.length; i++) {
+			let t = (values[i] - lines.start) / lines.range;
+			let coord = t * 2 - 1;
+
+			positions.push(coord-half);
+			positions.push(-1);
+			positions.push(coord+half);
+			positions.push(-1);
+			positions.push(coord-half);
+			positions.push(1);
+
+			positions.push(coord-half);
+			positions.push(1);
+			positions.push(coord+half);
+			positions.push(1);
+			positions.push(coord+half);
+			positions.push(-1);
+		}
+
+		return positions;
+	}
+
+	this.y.getPositions = (values, vp, lines) => {
+		let positions = [];
+
+		let half = lines.lineWidth / vp[3];
+
+		for (let i = 0; i < values.length; i++) {
+			let t = (values[i] - lines.start) / lines.range;
+			let coord = t * 2 - 1;
+
+			positions.push(-1);
+			positions.push(coord-half);
+			positions.push(1);
+			positions.push(coord-half);
+			positions.push(-1);
+			positions.push(coord+half);
+
+			positions.push(-1);
+			positions.push(coord+half);
+			positions.push(1);
+			positions.push(coord+half);
+			positions.push(1);
+			positions.push(coord-half);
+		}
+
+		return positions;
+	}
 
 	let gl = this.context;
 	this.setAttribute({
@@ -43,9 +100,13 @@ GLGrid.prototype.context = {
 	antialias: false
 };
 
+
 GLGrid.prototype.frag = `
+	precision lowp float;
+
+	uniform vec4 color;
 	void main () {
-		gl_FragColor = vec4(0,0,0,1);
+		gl_FragColor = color;
 	}
 `;
 
@@ -54,6 +115,7 @@ GLGrid.prototype.frag = `
 //draw grid to the canvas
 GLGrid.prototype.draw = function (ctx, vp) {
 	drawLines(ctx, vp, this.x, this);
+	drawLines(ctx, vp, this.y, this);
 
 	// if (Array.isArray(this.x)) this.x.forEach((lines) => drawXLines(ctx, vp, lines, this));
 	// else drawXLines(ctx, vp, this.x, this);
@@ -74,150 +136,25 @@ GLGrid.prototype.draw = function (ctx, vp) {
 
 //lines instance draw
 function drawLines (gl, vp, lines, grid) {
+	if (!lines || lines.disable) return;
+
 	let [left, top, width, height] = vp;
 
 	//create lines positions here
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
+	let values = lines.getLines(lines, vp, grid);
 
 	//map lines to triangles
-	let positions = [];
-	let coordLineWidth = 2 * lines.lineWidth / width;
-	for (let i = 0; i < values.length; i++) {
-		let t = (values[i] - lines.start) / lines.range;
-		let coord = t * 2 - 1;
-
-		//FIXME: x-specific filler
-		positions.push(coord);
-		positions.push(1);
-		positions.push(coord+coordLineWidth);
-		positions.push(1);
-		positions.push(coord);
-		positions.push(-1);
-
-		positions.push(coord);
-		positions.push(-1);
-		positions.push(coord+coordLineWidth);
-		positions.push(1);
-		positions.push(coord+coordLineWidth);
-		positions.push(-1);
-	}
-
+	let positions = lines.getPositions(values, vp, lines);
 	grid.setAttribute('position', positions);
+
+	//obtain per-line colors
+	let color = rgb(lines.color);
+	color.push(lines.opacity);
+	grid.setUniform('color', color);
 
 	Grid.prototype.draw.call(grid, gl, vp);
 
 	return this;
-}
-
-
-//FIXME: make these methods belong to lines objects
-function drawXLines (ctx, vp, lines, grid) {
-	if (!lines || lines.disable) return;
-
-	let [left, top, width, height] = vp;
-
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
-
-	//draw lines
-	ctx.beginPath();
-
-	//keep things in bounds
-	let w = width-1, h = height-1;
-	values.forEach((value, i) => {
-		let t = (value - lines.start) / lines.range;
-		ctx.moveTo(n(left + t*w), n(top));
-		ctx.lineTo(n(left + t*w), n(top + h));
-	});
-
-	ctx.strokeStyle = alpha(lines.color, lines.opacity);
-	ctx.lineWidth = lines.lineWidth;
-	ctx.stroke();
-	ctx.closePath();
-}
-
-function drawYLines (ctx, vp, lines, grid) {
-	if (!lines || lines.disable) return;
-	let [left, top, width, height] = vp;
-
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
-
-	//draw lines
-	ctx.beginPath();
-
-	//keep things in bounds
-	let w = width-1, h = height-1;
-
-	values.forEach((value, i) => {
-		let t = (value - lines.start) / lines.range;
-		ctx.moveTo(n(left), n(top + t*h));
-		ctx.lineTo(n(left + w), n(top + t*h));
-	});
-
-	ctx.strokeStyle = alpha(lines.color, lines.opacity);
-	ctx.lineWidth = lines.lineWidth;
-	ctx.stroke();
-	ctx.closePath();
-}
-
-function drawALines (ctx, vp, lines, grid) {
-	if (!lines || lines.disable) return;
-	let [left, top, width, height] = vp;
-
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
-
-	//draw lines
-	ctx.beginPath();
-
-	let w = width-1, h = height-1;
-	let center = [left + w/2 + .5, top + h/2 + .5];
-	let t0 = (values[0] - lines.start) / (lines.range);
-	let maxR = Math.max(w/2, h/2);
-	let minR = Math.min(w/2, h/2)-1;
-
-	values.forEach((value, i) => {
-		let t = (value - lines.start) / (lines.range);
-
-		//360deg line
-		if (t === t0) return;
-
-		let a = TAU * t;
-		ctx.moveTo(center[0], center[1]);
-		ctx.lineTo(center[0] + Math.cos(a) * minR, center[1] + Math.sin(a) * minR);
-	});
-
-	ctx.strokeStyle = alpha(lines.color, lines.opacity);
-	ctx.lineWidth = lines.lineWidth;
-	ctx.stroke();
-	ctx.closePath();
-}
-
-function drawRLines (ctx, vp, lines, grid) {
-	if (!lines || lines.disable) return;
-	let [left, top, width, height] = vp;
-
-	let values = lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines;
-
-	//draw lines
-	ctx.beginPath();
-
-	//keep things in bounds
-	let w = width-1, h = height-1;
-	let center = [left + w/2 + .5, top + h/2 + .5];
-	let maxR = Math.max(w/2, h/2);
-	let minR = Math.min(w/2, h/2)-1;
-	let t0 = (values[0] - lines.start) / lines.range;
-
-	values.forEach((value, i) => {
-		let t = (value - lines.start) / lines.range;
-		let r = t * minR;
-		ctx.moveTo(center[0] + r, center[1]);
-		ctx.arc(center[0], center[1], r, 0, TAU);
-	});
-
-	ctx.strokeStyle = alpha(lines.color, lines.opacity);
-	ctx.lineWidth = lines.lineWidth;
-	ctx.stroke();
-	ctx.closePath();
 }
 
 
@@ -298,3 +235,15 @@ function drawAAxis () {
 function n (v) {
 	return .5 + Math.round(v)
 };
+
+//get rgb from color
+function rgb (v) {
+	let obj = parseColor(v);
+
+	//catch percent
+	if (obj.space[0] === 'h') {
+		return hsl.rgb(obj.values);
+	}
+
+	return obj.values;
+}
