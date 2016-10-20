@@ -33,6 +33,12 @@ function Grid (opts) {
 		'container', 'viewport', 'context', 'autostart'
 	]), opts));
 
+	//set default coords as xy
+	if (opts.r == null && opts.a == null && opts.y == null && opts.x == null) {
+		opts.x = true;
+		opts.y = true;
+	}
+
 	//create x/y/r
 	this.x = extend({}, this.defaults, opts.x, {
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance),
@@ -85,37 +91,6 @@ function Grid (opts) {
 	}
 
 	this.update(opts);
-
-
-	//bind events
-	//FIXME: attach generic panzoom component
-	// if (opts && opts.wheel) {
-	// 	let scrollRatio = 2000;
-	// 	let listener = wheel(this.container, (dx, dy, dz, e) => {
-	// 		let [left, top, width, height] = this.viewport;
-
-	// 		//get the coord of min/max
-	// 		let center = [e.offsetX - left, e.offsetY - top];
-	// 		let ratio = [center[0]/width/scrollRatio, center[1]/height/scrollRatio];
-
-	// 		let scale = 1 + dy / scrollRatio;
-
-	// 		let lines = Array(this.lines.length).fill({});
-	// 		lines = lines.map((_, i) => {
-	// 			let range = (this.lines[i].max - this.lines[i].min);
-	// 			let newRange = range*scale;
-
-	// 			let min = this.lines[i].min + range*(1 - ratio[1]) - newRange*(1 - ratio[1]);
-	// 			let max = this.lines[i].max - range*(ratio[1]) + newRange*(ratio[1]) ;
-
-	// 			return {
-	// 				min: min,
-	// 				max: max
-	// 			}
-	// 		});
-	// 		this.update(lines);
-	// 	}, false);
-	// }
 }
 
 
@@ -125,10 +100,10 @@ Grid.prototype.update = function (opts) {
 	opts = opts || {};
 
 	//disable lines
-	if (opts.x === false || opts.x === null || opts.x === true) this.x.disable = !opts.x;
-	if (opts.y === false || opts.y === null || opts.y === true) this.y.disable = !opts.y;
-	if (opts.r === false || opts.r === null || opts.r === true) this.r.disable = !opts.r;
-	if (opts.a === false || opts.a === null || opts.a === true) this.a.disable = !opts.a;
+	if (opts.x !== undefined) this.x.disable = !opts.x;
+	if (opts.y !== undefined) this.y.disable = !opts.y;
+	if (opts.r !== undefined) this.r.disable = !opts.r;
+	if (opts.a !== undefined) this.a.disable = !opts.a;
 
 
 	//extend props
@@ -143,11 +118,14 @@ Grid.prototype.update = function (opts) {
 	this.normalize(this.r);
 	this.normalize(this.a);
 
+	this.emit('update', opts);
+
 	this.clear();
 	this.render();
 
 	return this;
 }
+
 
 //normalize single set
 Grid.prototype.normalize = function (lines) {

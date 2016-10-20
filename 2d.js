@@ -35,15 +35,6 @@ Canvas2DGrid.prototype.draw = function (ctx, vp) {
 	this.drawLines(ctx, vp, this.x);
 	this.drawLines(ctx, vp, this.y);
 
-	// if (Array.isArray(this.x)) this.x.forEach((lines) => drawXLines(ctx, vp, lines, this));
-	// else drawXLines(ctx, vp, this.x, this);
-	// if (Array.isArray(this.y)) this.y.forEach((lines) => drawYLines(ctx, vp, lines, this));
-	// else drawYLines(ctx, vp, this.y, this);
-	// if (Array.isArray(this.r)) this.r.forEach((lines) => drawRLines(ctx, vp, lines, this));
-	// else drawRLines(ctx, vp, this.r, this);
-	// if (Array.isArray(this.a)) this.a.forEach((lines) => drawALines(ctx, vp, lines, this));
-	// else drawALines(ctx, vp, this.a, this);
-
 	// //draw axes
 	// drawXAxis(ctx, vp, this.x, this);
 	// drawYAxis(ctx, vp, this.y, this);
@@ -81,54 +72,6 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 }
 
 /*
-//FIXME: make these methods belong to lines objects
-function drawXLines (ctx, vp, lines, grid) {
-	if (!lines || lines.disable) return;
-
-	let [left, top, width, height] = vp;
-
-	let values = lines.getLines(lines, vp, grid);
-
-	//draw lines
-	ctx.beginPath();
-
-	//keep things in bounds
-	let w = width-1, h = height-1;
-	values.forEach((value, i) => {
-		let t = (value - lines.start) / lines.range;
-		ctx.moveTo(n(left + t*w), n(top));
-		ctx.lineTo(n(left + t*w), n(top + h));
-	});
-
-	ctx.strokeStyle = alpha(lines.color, lines.opacity);
-	ctx.lineWidth = lines.lineWidth;
-	ctx.stroke();
-	ctx.closePath();
-}
-
-function drawYLines (ctx, vp, lines, grid) {
-	if (!lines || lines.disable) return;
-	let [left, top, width, height] = vp;
-
-	let values = lines.getLines(lines, vp, grid);
-
-	//draw lines
-	ctx.beginPath();
-
-	//keep things in bounds
-	let w = width-1, h = height-1;
-
-	values.forEach((value, i) => {
-		let t = (value - lines.start) / lines.range;
-		ctx.moveTo(n(left), n(top + t*h));
-		ctx.lineTo(n(left + w), n(top + t*h));
-	});
-
-	ctx.strokeStyle = alpha(lines.color, lines.opacity);
-	ctx.lineWidth = lines.lineWidth;
-	ctx.stroke();
-	ctx.closePath();
-}
 
 function drawALines (ctx, vp, lines, grid) {
 	if (!lines || lines.disable) return;
