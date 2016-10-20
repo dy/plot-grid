@@ -94,6 +94,8 @@ function Grid (opts) {
 
 		// }
 
+		//FIXME: this guy kills debugger for small scales
+
 		return range( Math.floor(x.start/scale)*scale, Math.floor((x.start + x.range)/scale)*scale, scale);
 	}
 
@@ -102,10 +104,10 @@ function Grid (opts) {
 
 	//enable events
 	if ((this.pan || this.zoom) && this.container) {
-		panzoom(this.canvas, (dx, dy) => {
-			this.pan(dx, dy);
-		}, (dx, dy) => {
-			this.zoom(dx, dy);
+		panzoom(this.canvas, (dx, dy, x, y) => {
+			this.pan(dx, dy, x, y);
+		}, (dx, dy, x, y) => {
+			this.zoom(dx, dy, x, y);
 		}, {
 		});
 	}
@@ -117,20 +119,30 @@ Grid.prototype.pan = function (dx, dy) {
 	let vp = this.viewport;
 	this.x.start -= this.x.range * dx/vp[2];
 	this.y.start -= this.y.range * dy/vp[3];
-	this.normalize();
 
-	this.emit('pan', dx, dy);
+	this.normalize();
 	this.render();
 
 	return this;
 };
 
-Grid.prototype.zoom = function (dx, dy) {
-	this.x.range -= dy/this.x.range;
-	this.y.range -= dy/this.y.range;
-	this.normalize();
+Grid.prototype.zoom = function (dx, dy, x, y) {
+	let [left, top, width, height] = this.viewport;
 
-	this.emit('zoom', dx, dy);
+	//shift start
+	let cx = x - left, cy = y - top;
+	let tx = cx/width, ty = cy/height;
+
+	let xRange = this.x.range;
+	let yRange = this.y.range;
+
+	this.x.range *= (1 - dy / height);
+	this.y.range *= (1 - dy / height);
+
+	this.x.start -= (this.x.range - xRange) * tx;
+	this.y.start -= (this.y.range - yRange) * ty;
+
+	this.normalize();
 	this.render();
 
 	return this;
@@ -217,7 +229,11 @@ Grid.prototype.defaults = {
 	disable: true,
 
 	//technical methods
-	getLines: (lines, vp, grid) => lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines,
+	getLines: (lines, vp, grid) => {
+		if (lines.lines instanceof Function) return lines.lines(lines, vp, grid);
+
+		return lines.lines;
+	},
 	getColors: (values, lines, vp, grid) => {
 		if (lines.lineColor instanceof Function) {
 			return lines.lineColor(values, lines, vp, grid);

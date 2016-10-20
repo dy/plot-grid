@@ -52,13 +52,13 @@ function GLGrid (opts) {
 	});
 }
 
-GLGrid.prototype.pan = function (dx, dy) {
-	this.grid.pan(dx, dy);
+GLGrid.prototype.pan = function (dx, dy, x, y) {
+	this.grid.pan(dx, dy, x, y);
 	this._draw();
 	return this;
 }
-GLGrid.prototype.zoom = function (dx, dy) {
-	this.grid.zoom(dx, dy);
+GLGrid.prototype.zoom = function (dx, dy, x, y) {
+	this.grid.zoom(dx, dy, x, y);
 	this._draw();
 	return this;
 }
