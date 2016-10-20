@@ -25,13 +25,54 @@ frame.className = 'frame';
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'classic', options: {
+	{id: 'use-case', type: 'select', value: 'thetamath', options: {
 			'classic': '⊞ Classic',
+			'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
 			'thetamath': 'θ Math',
 			'multigrid': '⧉ Multigrid',
 			'polar': '⊕ Polar'
 		}, change: v => {
+			if (v === 'classic') {
+
+			}
+			else if (v === 'spectrum') {
+
+			}
+			else if (v === 'dictaphone') {
+
+			}
+			else if (v === 'thetamath') {
+				settings.set({
+					x: true,
+					y: true,
+					xAxis: 0,
+					yAxis: 0,
+					r: false,
+					a: false
+				});
+				let lines = {
+					axis: 0,
+					distance: 40,
+					lineColor: (values, lines, vp, grid) => {
+						let light = 'rgba(0,0,0,.15)';
+						let heavy = 'rgba(0,0,0,.4)';
+						let power = Math.floor(Math.log10(lines.range));
+						let order = Math.pow(10, power);
+						return values.map(v => {
+							if (v % order) return light;
+							return heavy;
+						});
+					}
+				};
+				grid.update({x: lines, y: lines});
+			}
+			else if (v === 'multigrid') {
+
+			}
+			else if (v === 'polar') {
+
+			}
 		}
 	},
 	{content: '<br/>'},
@@ -89,31 +130,31 @@ var settings = createSettings([
 
 	{content: '<br/>'},
 
-	// {id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
-	// 	grid.update({r: {disable: !v}});
-	// }},
-	// {id: 'rLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-	// 	let lines = {r:{}};
-	// 	lines.r.log = isLog;
-	// 	grid.update(lines);
-	// }},
-	// {id: 'rAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-	// 	grid.update({r:{axis: v}});
-	// }},
+	{id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
+		grid.update({r: {disable: !v}});
+	}},
+	{id: 'rLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		let lines = {r:{}};
+		lines.r.log = isLog;
+		grid.update(lines);
+	}},
+	{id: 'rAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+		grid.update({r:{axis: v}});
+	}},
 
 	{content: '<br/>'},
 
-	// {id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
-	// 	grid.update({a: {disable: !v}});
-	// }},
-	// {id: 'aLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-	// 	let lines = {a:{}};
-	// 	lines.a.log = isLog;
-	// 	grid.update(lines);
-	// }},
-	// {id: 'aAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-	// 	grid.update({a:{axis: v}});
-	// }},
+	{id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
+		grid.update({a: {disable: !v}});
+	}},
+	{id: 'aLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		let lines = {a:{}};
+		lines.a.log = isLog;
+		grid.update(lines);
+	}},
+	{id: 'aAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+		grid.update({a:{axis: v}});
+	}},
 ], {
 	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
 	theme: require('settings-panel/theme/control'),

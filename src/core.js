@@ -167,8 +167,8 @@ Grid.prototype.defaults = {
 	axisColor: null,
 
 	ticks: 4,
-	labels: (line, x, vp, grid) => line.toLocalString() + x.units,
-	font: '13pt sans-serif',
+	labels: (values, lines, vp, grid) => values.map(v => v.toLocaleString() + lines.units),
+	font: '10pt sans-serif',
 	color: 'rgb(0,0,0)',
 	style: 'lines',
 	disable: true,
@@ -194,6 +194,17 @@ Grid.prototype.defaults = {
 		if (Array.isArray(lines.ticks)) return lines.ticks;
 
 		return Array(values.length).fill(lines.ticks);
+	},
+	getLabels:  (values, lines, vp, grid) => {
+		if (!lines.labels) return [];
+
+		if (lines.labels instanceof Function) {
+			return lines.labels(values, lines, vp, grid);
+		}
+
+		if (Array.isArray(lines.labels)) return lines.labels;
+
+		return Array(values.length).fill(lines.labels);
 	},
 	getCoords: (values, lines, vp, grid) => [0,0,0,0]
 };

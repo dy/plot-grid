@@ -50,6 +50,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 	let coords = lines.getCoords(values, lines, vp, this);
 	let colors = lines.getColors(values, lines, vp, this);
 	let ticks = lines.getTicks(values, lines, vp, this);
+	let labels = lines.getLabels(values, lines, vp, this);
 
 	//build normals
 	let normals = [];
@@ -137,6 +138,14 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		ctx.strokeStyle = lines.axisColor || lines.color;
 		ctx.stroke();
 		ctx.closePath();
+
+
+		//draw labels
+		ctx.font = lines.font;
+		ctx.fillStyle = lines.color;
+		for (let i = 0; i < labels.length; i++) {
+			ctx.fillText(labels[i], tickCoords[i*4] * width + left, tickCoords[i*4+1] * height + top);
+		}
 	}
 }
 
