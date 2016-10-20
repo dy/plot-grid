@@ -1,4 +1,4 @@
-const Grid = require('./gl');
+const Grid = require('./2d');
 const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
@@ -136,7 +136,7 @@ var settings = createSettings([
 var grid = Grid({
 	container: frame,
 	x: {
-		// color: 'red',
+		lineColor: 'rgba(0,0,0,.15)',
 	},
 	viewport: function (w, h) {
 		return [10, 10, w - 20, h - 20];

@@ -29,221 +29,215 @@ function GLGrid (opts) {
 	Grid.call(this, opts);
 
 	//lines-specific points
-	this.x.getPositions = (values, vp, lines) => {
-		let positions = [];
+	// this.x.getVertices = (values, vp, lines) => {
+	// 	let vertices = [];
 
-		let half = lines.lineWidth / vp[2];
+	// 	let w = vp[2];
+	// 	let lineWidth = 2 / vp[2];
 
-		for (let i = 0; i < values.length; i++) {
-			let t = (values[i] - lines.start) / lines.range;
-			let coord = t * 2 - 1;
+	// 	for (let i = 0; i < values.length; i++) {
+	// 		let t = (values[i] - lines.start) / lines.range;
+	// 		let coord = t * 2 - 1;
+	// 		let left = coord - lineWidth;
+	// 		let right = coord + lineWidth;
 
-			positions.push(coord-half);
-			positions.push(-1);
-			positions.push(coord+half);
-			positions.push(-1);
-			positions.push(coord-half);
-			positions.push(1);
+	// 		vertices.push(left);
+	// 		vertices.push(-1);
+	// 		vertices.push(right);
+	// 		vertices.push(-1);
+	// 		vertices.push(left);
+	// 		vertices.push(1);
 
-			positions.push(coord-half);
-			positions.push(1);
-			positions.push(coord+half);
-			positions.push(1);
-			positions.push(coord+half);
-			positions.push(-1);
-		}
+	// 		vertices.push(left);
+	// 		vertices.push(1);
+	// 		vertices.push(right);
+	// 		vertices.push(1);
+	// 		vertices.push(right);
+	// 		vertices.push(-1);
+	// 	}
 
-		return positions;
-	}
+	// 	return vertices;
+	// }
 
-	this.y.getPositions = (values, vp, lines) => {
-		let positions = [];
+	// this.y.getVertices = (values, vp, lines) => {
+	// 	let vertices = [];
 
-		let half = lines.lineWidth / vp[3];
+	// 	let half = lines.lineWidth / vp[3];
 
-		for (let i = 0; i < values.length; i++) {
-			let t = (values[i] - lines.start) / lines.range;
-			let coord = t * 2 - 1;
+	// 	for (let i = 0; i < values.length; i++) {
+	// 		let t = (values[i] - lines.start) / lines.range;
+	// 		let coord = t * 2 - 1;
 
-			positions.push(-1);
-			positions.push(coord-half);
-			positions.push(1);
-			positions.push(coord-half);
-			positions.push(-1);
-			positions.push(coord+half);
+	// 		vertices.push(-1);
+	// 		vertices.push(coord-half);
+	// 		vertices.push(1);
+	// 		vertices.push(coord-half);
+	// 		vertices.push(-1);
+	// 		vertices.push(coord+half);
 
-			positions.push(-1);
-			positions.push(coord+half);
-			positions.push(1);
-			positions.push(coord+half);
-			positions.push(1);
-			positions.push(coord-half);
-		}
+	// 		vertices.push(-1);
+	// 		vertices.push(coord+half);
+	// 		vertices.push(1);
+	// 		vertices.push(coord+half);
+	// 		vertices.push(1);
+	// 		vertices.push(coord-half);
+	// 	}
 
-		return positions;
-	}
+	// 	return vertices;
+	// }
 
-	let gl = this.context;
-	this.setAttribute({
-		position: {
-			usage: gl.STREAM_DRAW
-		},
-		// color: {
-		// 	usage: gl.STREAM_DRAW,
-		// 	size: 4
-		// }
+
+	//2d canvas for labels
+	this.labelsCanvas = document.createElement('canvas');
+	this.labelsCanvas.width = this.canvas.width;
+	this.labelsCanvas.height = this.canvas.height;
+	this.labelsContext = this.labelsCanvas.getContext('2d');
+	this.on('resize', (ctx, vp) => {
+		this.labelsCanvas.width = this.canvas.width;
+		this.labelsCanvas.height = this.canvas.height;
 	});
+	this.setTexture({
+		labels: this.labelsCanvas
+	});
+
+
+	//init set of positions
+	// let positions = [];
+	// let num = 100, width = .5/num;
+	// for (let i = 0; i < num; i++) {
+	// 	let t = i/num;
+	// 	positions.push(t);
+	// 	positions.push(0);
+	// 	positions.push(t);
+	// 	positions.push(1);
+	// 	positions.push(t+width);
+	// 	positions.push(0);
+
+	// 	positions.push(t+width);
+	// 	positions.push(0);
+	// 	positions.push(t+width);
+	// 	positions.push(1);
+	// 	positions.push(t);
+	// 	positions.push(1);
+	// }
+	// this.setAttribute('position', positions);
 }
 
 GLGrid.prototype.context = {
 	type: 'webgl',
-	antialias: false
+	antialias: true
 };
 
 
-GLGrid.prototype.frag = `
-	precision lowp float;
+GLGrid.prototype.vert = `
+	precision highp float;
 
-	uniform vec4 color;
+	attribute vec2 position;
+	uniform vec4 viewport;
+	float num = 100.;
+
 	void main () {
-		gl_FragColor = color;
+		float isRight = step(.5/num, mod(position.x + .25/num, 1./num));
+		float left = position.x - isRight * .5/num;
+
+		float px = 1.001/viewport.z;
+		float x = left + isRight * px;
+
+		gl_Position = vec4(vec2(x * 2. - 1., position.y * 2. - 1.), 0, 1);
 	}
 `;
 
 
+GLGrid.prototype.frag = `
+	precision highp float;
+
+	void main () {
+		gl_FragColor = vec4(0,0,0,1);
+	}
+`;
+
 
 //draw grid to the canvas
-GLGrid.prototype.draw = function (ctx, vp) {
-	drawLines(ctx, vp, this.x, this);
-	drawLines(ctx, vp, this.y, this);
-
-	// if (Array.isArray(this.x)) this.x.forEach((lines) => drawXLines(ctx, vp, lines, this));
-	// else drawXLines(ctx, vp, this.x, this);
-	// if (Array.isArray(this.y)) this.y.forEach((lines) => drawYLines(ctx, vp, lines, this));
-	// else drawYLines(ctx, vp, this.y, this);
-	// if (Array.isArray(this.r)) this.r.forEach((lines) => drawRLines(ctx, vp, lines, this));
-	// else drawRLines(ctx, vp, this.r, this);
-	// if (Array.isArray(this.a)) this.a.forEach((lines) => drawALines(ctx, vp, lines, this));
-	// else drawALines(ctx, vp, this.a, this);
-
-	// //draw axes
-	// drawXAxis(ctx, vp, this.x, this);
-	// drawYAxis(ctx, vp, this.y, this);
-	// drawRAxis(ctx, vp, this.r, this);
-	// drawAAxis(ctx, vp, this.a, this);
+GLGrid.prototype.draw = function (gl, vp) {
+	this.drawLines(gl, vp, this.x);
+	// this.drawAxis(gl, vp, this.y);
 
 }
 
+
 //lines instance draw
-function drawLines (gl, vp, lines, grid) {
+GLGrid.prototype.drawLines = function (gl, vp, lines) {
 	if (!lines || lines.disable) return;
 
 	let [left, top, width, height] = vp;
 
 	//create lines positions here
-	let values = lines.getLines(lines, vp, grid);
+	let values = lines.getLines(lines, vp, this);
+	let coords = lines.getCoords(values, lines, vp, this);
+
+	// this.setTexture('coords', coords);
 
 	//map lines to triangles
-	let positions = lines.getPositions(values, vp, lines);
-	grid.setAttribute('position', positions);
+	// let vertices = getVertices(coords);
+	// this.setAttribute('position', vertices);
 
-	//obtain per-line colors
-	let color = rgb(lines.color);
-	color.push(lines.opacity);
-	grid.setUniform('color', color);
+	// //obtain per-line colors
+	// let verticesPerLine = 6;
+	// let colors = lines.getColors(values, vp, lines, this);
 
-	Grid.prototype.draw.call(grid, gl, vp);
+	// if (colors.length*verticesPerLine < vertices.length/2) throw 'Not enough colors for lines';
+
+	// let colorBuffer = Array(colors.length*4*verticesPerLine);
+	// for (let i = 0; i < colors.length; i++) {
+	// 	let [r,g,b,a] = rgba(colors[i]);
+	// 	for (let j = 0; j < verticesPerLine; j++) {
+	// 		colorBuffer[i*4*verticesPerLine + j*4 + 0] = r;
+	// 		colorBuffer[i*4*verticesPerLine + j*4 + 1] = g;
+	// 		colorBuffer[i*4*verticesPerLine + j*4 + 2] = b;
+	// 		colorBuffer[i*4*verticesPerLine + j*4 + 3] = a;
+	// 	}
+	// }
+	// this.setAttribute('color', colorBuffer);
+
+	Grid.prototype.draw.call(this, gl, vp);
 
 	return this;
 }
 
 
 //axis + labels
-function drawXAxis (ctx, vp, lines, grid) {
+GLGrid.prototype.drawAxis = function (ctx, vp, lines) {
 	if (!lines || lines.disable || lines.axis === false) return;
 
 	let [left, top, width, height] = vp;
 
+	//create lines positions here
+	let values = lines.getLines(lines, vp, this);
 
-	//keep things in bounds
-	let w = width-1, h = height-1;
-	let axis = lines.axis;
+	//map lines to triangles
+	let vertices = lines.getVertices(values, vp, lines);
+	this.setAttribute('position', vertices);
 
-	let axisOffset = top + height;
+	//obtain per-line colors
+	let color = rgb(lines.axisColor || lines.color);
+	color.push(1);
+	this.setUniform('color', color);
 
-	let opposite = Array.isArray(grid.y) ? grid.y[0] : grid.y;
+	Grid.prototype.draw.call(this, gl, vp);
 
-	if (typeof axis === 'number' && opposite.range) {
-		let t = (clamp(axis, opposite.start, opposite.start + opposite.range) - opposite.start) / opposite.range;
-		axisOffset = top + t * height;
-	} else if (typeof axis === 'string') {
-		if (axis === 'top') axisOffset = top;
-		else if (axis === 'bottom') axisOffset = top + height;
-	}
-
-	ctx.beginPath();
-	ctx.moveTo(n(left), n(axisOffset));
-	ctx.lineTo(n(left + w), n(axisOffset));
-	ctx.strokeStyle = lines.color;
-	ctx.lineWidth = lines.axisWidth;
-	ctx.stroke();
-	ctx.closePath();
+	return this;
 }
 
-
-function drawYAxis (ctx, vp, lines, grid) {
-	if (!lines || lines.disable || lines.axis === false) return;
-
-	let [left, top, width, height] = vp;
-
-	//keep things in bounds
-	let w = width-1, h = height-1;
-	let axis = lines.axis;
-
-	let axisOffset = left;
-
-	let opposite = Array.isArray(grid.x) ? grid.x[0] : grid.x;
-
-	if (typeof axis === 'number' && opposite.range) {
-		let t = (clamp(axis, opposite.start, opposite.start + opposite.range) - opposite.start) / opposite.range;
-		axisOffset = left + t * width;
-	} else if (typeof axis === 'string') {
-		if (axis === 'left') axisOffset = left;
-		else if (axis === 'bottom') axisOffset = left + width;
-	}
-
-	ctx.beginPath();
-	ctx.moveTo(n(axisOffset), n(top));
-	ctx.lineTo(n(axisOffset), n(top + h));
-	ctx.strokeStyle = lines.color;
-	ctx.lineWidth = lines.axisWidth;
-	ctx.stroke();
-	ctx.closePath();
-}
-
-
-function drawRAxis () {
-
-}
-function drawAAxis () {
-
-}
-
-
-
-//normalize number
-function n (v) {
-	return .5 + Math.round(v)
-};
 
 //get rgb from color
-function rgb (v) {
+function rgba (v) {
 	let obj = parseColor(v);
 
-	//catch percent
 	if (obj.space[0] === 'h') {
-		return hsl.rgb(obj.values);
+		obj.values = hsl.rgb(obj.values);
 	}
+
+	obj.values.push(obj.alpha);
 
 	return obj.values;
 }

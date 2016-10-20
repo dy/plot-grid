@@ -60,7 +60,7 @@ let dictaphone = createGrid({
 
 //3. θmath
 let thetaMath = createGrid({
-	x: [{
+	x: {
 		name: 'Gentle lines'
 		//defaults
 		min: -Infinity,
@@ -71,30 +71,21 @@ let thetaMath = createGrid({
 		range: 10,
 		origin: 0,
 
-		color: 'rgba(0,0,0,.15)'
-
 		lines: (opts, vp, grid) => {
-			//generate array based on resolution
+			//generate array of dense lines based on resolution
 		},
 
-		labels: false
-	}, {
-		name: 'Bold lines',
-		axis: false,
-		color: 'rgba(0,0,0,.5)',
+		//generate line color based on grid
+		color: () => 'rgba(0,0,0,.5)',
 		lines: (opts, vp, grid) => {
 			//generate array of more sparse but bolder lines
 		},
-		labels: false
-	}, {
-		name: 'X-axis',
-		color: 'rgba(0,0,0,1)',
-		lines: false,
-		axis: 0,
 		labels: (opts, vp, grid) => {
 			//generate object based on current resolution
-		}
-	}],
+		},
+		axis: 0,
+		axisColor: 'black'
+	},
 	y: //same as x
 });
 

@@ -7,47 +7,80 @@
 
 
 const Grid = require('./src/core');
-const alpha = require('color-alpha');
 const TAU = Math.PI*2;
 const clamp = require('mumath/clamp');
+const inherit = require('inherits');
 
 
-module.exports = createGrid;
+module.exports = Canvas2DGrid;
+
+
+inherit(Canvas2DGrid, Grid);
+
 
 /** @constructor */
-function createGrid (opts) {
+function Canvas2DGrid (opts) {
+	if (!(this instanceof Canvas2DGrid)) return new Canvas2DGrid(opts);
+
 	opts = opts || {};
 	opts.autostart = false;
 	opts.context = '2d';
-	opts.draw = draw;
 
-	let grid = new Grid(opts);
-
-	return grid;
+	Grid.call(this, opts);
 }
 
 
 //draw grid to the canvas
-function draw (ctx, vp) {
-	if (Array.isArray(this.x)) this.x.forEach((lines) => drawXLines(ctx, vp, lines, this));
-	else drawXLines(ctx, vp, this.x, this);
-	if (Array.isArray(this.y)) this.y.forEach((lines) => drawYLines(ctx, vp, lines, this));
-	else drawYLines(ctx, vp, this.y, this);
-	if (Array.isArray(this.r)) this.r.forEach((lines) => drawRLines(ctx, vp, lines, this));
-	else drawRLines(ctx, vp, this.r, this);
-	if (Array.isArray(this.a)) this.a.forEach((lines) => drawALines(ctx, vp, lines, this));
-	else drawALines(ctx, vp, this.a, this);
+Canvas2DGrid.prototype.draw = function (ctx, vp) {
+	this.drawLines(ctx, vp, this.x);
+	this.drawLines(ctx, vp, this.y);
 
-	//draw axes
-	drawXAxis(ctx, vp, this.x, this);
-	drawYAxis(ctx, vp, this.y, this);
-	drawRAxis(ctx, vp, this.r, this);
-	drawAAxis(ctx, vp, this.a, this);
+	// if (Array.isArray(this.x)) this.x.forEach((lines) => drawXLines(ctx, vp, lines, this));
+	// else drawXLines(ctx, vp, this.x, this);
+	// if (Array.isArray(this.y)) this.y.forEach((lines) => drawYLines(ctx, vp, lines, this));
+	// else drawYLines(ctx, vp, this.y, this);
+	// if (Array.isArray(this.r)) this.r.forEach((lines) => drawRLines(ctx, vp, lines, this));
+	// else drawRLines(ctx, vp, this.r, this);
+	// if (Array.isArray(this.a)) this.a.forEach((lines) => drawALines(ctx, vp, lines, this));
+	// else drawALines(ctx, vp, this.a, this);
+
+	// //draw axes
+	// drawXAxis(ctx, vp, this.x, this);
+	// drawYAxis(ctx, vp, this.y, this);
+	// drawRAxis(ctx, vp, this.r, this);
+	// drawAAxis(ctx, vp, this.a, this);
 
 	return this;
 }
 
+//lines instance draw
+Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
+	if (!lines || lines.disable) return;
 
+	let [left, top, width, height] = vp;
+
+	//create lines positions here
+	let values = lines.getLines(lines, vp, this);
+	let coords = lines.getCoords(values, lines, vp, this);
+	let colors = lines.getColors(values, lines, vp, this);
+
+	//build lines shape
+	ctx.lineWidth = lines.lineWidth;
+
+	for (let i=0, j=0; i < coords.length; i+=4, j++) {
+		ctx.beginPath();
+		let x1 = left + coords[i]*width, y1 = top + coords[i+1]*height;
+		let x2 = left + coords[i+2]*width, y2 = top + coords[i+3]*height;
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+
+		ctx.strokeStyle = colors[j];
+		ctx.stroke();
+		ctx.closePath();
+	}
+}
+
+/*
 //FIXME: make these methods belong to lines objects
 function drawXLines (ctx, vp, lines, grid) {
 	if (!lines || lines.disable) return;
@@ -157,7 +190,7 @@ function drawRLines (ctx, vp, lines, grid) {
 	ctx.stroke();
 	ctx.closePath();
 }
-
+*/
 
 //axis + labels
 function drawXAxis (ctx, vp, lines, grid) {
@@ -222,13 +255,6 @@ function drawYAxis (ctx, vp, lines, grid) {
 	ctx.closePath();
 }
 
-
-function drawRAxis () {
-
-}
-function drawAAxis () {
-
-}
 
 
 

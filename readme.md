@@ -93,13 +93,13 @@ Lines options may include:
 | pan | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
 | type | String | The style of lines: `lines`, `dots`, `crosses`. |
 | log | Bool | Place default lines logarithmically. |
+| font | String | Font to use for labels, by default `12pt sans-serif`. |
+| color | String, Array | Default color for the lines, axis and labels. |
 | distance | Number | The minimum distance between lines. By default `10`. |
 | scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
 | axisWidth | Number | Width of axis, by default `2`. |
+| lineColor | String, Array, (values, lines, viewport, grid) => Array | Color(s) for lines, can be a function returning specific color per-line. By default `color`. |
 | lineWidth | Number | Width of lines, by default `1`. |
-| font | String | Font to use for labels, by default `12pt sans-serif`. |
-| color | String, Array | The color of axis/lines. |
-| opacity | Number | Fade out lines relative to the axis. |
 
 
 ### grid.update(options)

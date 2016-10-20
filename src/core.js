@@ -14,6 +14,7 @@ const range = require('just-range');
 const pick = require('just-pick');
 const magOrder = require('mumath/order');
 const closestNumber = require('mumath/closest');
+const alpha = require('color-alpha');
 
 
 module.exports = Grid;
@@ -34,10 +35,32 @@ function Grid (opts) {
 
 	//create x/y/r
 	this.x = extend({}, this.defaults, opts.x, {
-		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
+		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance),
+		getCoords: (values, lines, [l, t, w, h], grid) => {
+			let coords = [];
+			for (let i = 0; i < values.length; i++) {
+				let t = (values[i] - lines.start) / lines.range;
+				coords.push(t);
+				coords.push(0);
+				coords.push(t);
+				coords.push(1);
+			}
+			return coords;
+		}
 	});
 	this.y = extend({}, this.defaults, opts.y, {
-		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
+		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance),
+		getCoords: (values, lines, [l, t, w, h], grid) => {
+			let coords = [];
+			for (let i = 0; i < values.length; i++) {
+				let t = (values[i] - lines.start) / lines.range;
+				coords.push(0);
+				coords.push(t);
+				coords.push(1);
+				coords.push(t);
+			}
+			return coords;
+		}
 	});
 	this.r = extend({}, this.defaults, opts.r, {
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
@@ -152,17 +175,30 @@ Grid.prototype.defaults = {
 	log: false,
 	distance: 20,
 	lines: [],
-	getLines: (lines, vp, grid) => lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines,
+	lineWidth: 1,
+	lineColor: null,
 
 	//axis params
 	axis: 0,
 	axisWidth: 2,
-	lineWidth: 1,
+	axisColor: null,
 	ticks: 4,
 	labels: (line, x, vp, grid) => line.toLocalString() + x.units,
 	font: '13pt sans-serif',
 	color: 'rgb(0,0,0)',
-	opacity: .13,
 	style: 'lines',
-	disable: true
+	disable: true,
+
+	//technical methods
+	getLines: (lines, vp, grid) => lines.lines instanceof Function ? lines.lines(lines, vp, grid) : lines.lines,
+	getColors: (values, lines, vp, grid) => {
+		if (lines.lineColor instanceof Function) {
+			return lines.lineColor(values, lines, vp, grid);
+		}
+
+		if (Array.isArray(lines.lineColor)) return lines.lineColor;
+
+		return Array(values.length).fill(lines.lineColor || alpha(lines.color, .13));
+	},
+	getCoords: (values, lines, vp, grid) => [0,0,0,0]
 };
