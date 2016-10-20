@@ -16,7 +16,7 @@ const magOrder = require('mumath/order');
 const closestNumber = require('mumath/closest');
 const clamp = require('mumath/clamp');
 const alpha = require('color-alpha');
-const panzoom = require('../../pan-zoom');
+const panzoom = require('pan-zoom');
 
 
 module.exports = Grid;
@@ -117,8 +117,9 @@ function Grid (opts) {
 //default pan/zoom handlers
 Grid.prototype.pan = function (dx, dy) {
 	let vp = this.viewport;
-	this.x.start -= this.x.range * dx/vp[2];
-	this.y.start -= this.y.range * dy/vp[3];
+
+	if (!this.x.disable) this.x.start -= this.x.range * dx/vp[2];
+	if (!this.y.disable) this.y.start -= this.y.range * dy/vp[3];
 
 	this.normalize();
 	this.render();
@@ -136,11 +137,15 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 	let xRange = this.x.range;
 	let yRange = this.y.range;
 
-	this.x.range *= (1 - dy / height);
-	this.y.range *= (1 - dy / height);
+	if (!this.x.disable) {
+		this.x.range *= (1 - dy / height);
+		this.x.start -= (this.x.range - xRange) * tx;
+	}
 
-	this.x.start -= (this.x.range - xRange) * tx;
-	this.y.start -= (this.y.range - yRange) * ty;
+	if (!this.y.disable) {
+		this.y.range *= (1 - dy / height);
+		this.y.start -= (this.y.range - yRange) * ty;
+	}
 
 	this.normalize();
 	this.render();

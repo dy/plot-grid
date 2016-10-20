@@ -128,17 +128,20 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 
 		//draw ticks
 		let tickCoords = [];
+		let labelCoords = [];
 		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
 			let tick = [normals[i] * ticks[k]/width, normals[i+1] * ticks[k]/height];
 			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
 			let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
+			labelCoords.push(normals[i]*(xDif) + x1)
+			labelCoords.push(normals[i+1]*(yDif) + y1)
 			tickCoords.push(normals[i]*(xDif + tick[0]) + x1);
 			tickCoords.push(normals[i+1]*(yDif + tick[1]) + y1);
 			tickCoords.push(normals[i]*(xDif - tick[0]) + x1);
 			tickCoords.push(normals[i+1]*(yDif - tick[1]) + y1);
 		}
 
-		ctx.lineWidth = lines.tickWidth || lines.axisWidth/2;
+		ctx.lineWidth = lines.axisWidth;
 		ctx.beginPath();
 		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
 			let x1 = left + tickCoords[i]*width,
@@ -157,7 +160,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		ctx.font = lines.font;
 		ctx.fillStyle = lines.color;
 		for (let i = 0; i < labels.length; i++) {
-			ctx.fillText(labels[i], tickCoords[i*4] * width + left, tickCoords[i*4+1] * height + top);
+			ctx.fillText(labels[i], labelCoords[i*2] * width + left, labelCoords[i*2+1] * height + top);
 		}
 	}
 }
