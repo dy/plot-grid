@@ -1,13 +1,8 @@
+require('enable-mobile');
 const Grid = require('./gl');
 const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
-
-// prepare mobile
-// var meta = document.createElement('meta')
-// meta.setAttribute('name', 'viewport')
-// meta.setAttribute('content', 'width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0')
-// document.head.appendChild(meta)
 
 
 insertCss(`
@@ -54,27 +49,19 @@ var settings = createSettings([
 	// color: {type: 'color', value: 'rgb(0, 0, 0)', change: c => {
 	// 	grid.update({x:{color: c}, y:{color: c}, r:{color: c}, a:{color: c}});
 	// }},
-	// opacity: {type: 'range', value: .13, min: 0, max: 1, change: v => {
-	// 	grid.update({x:{opacity: v}, y:{opacity: v}});
-	// }},
 
 
 	{id: 'x', label: '|||', title: 'Horizontal X lines', value: true, change: v => {
 		grid.update({x: {disable: !v}});
 	}},
 	{id: 'xLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		if (!settings.get('x')) return;
 		let lines = {x:{}};
 		lines.x.log = isLog;
 		grid.update(lines);
 	}},
-	// xUnits: { label: 'units', type: 'text', value: '', change: v => {
-	// 	let lines = grid.lines;
-	// 	lines[0].units = v;
-	// 	grid.update({
-	// 		lines:  lines
-	// 	});
-	// }},
 	{id: 'xAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
+		if (!settings.get('x')) return;
 		grid.update({x: {
 			axis: v
 		}});
@@ -86,41 +73,47 @@ var settings = createSettings([
 		grid.update({y: {disable: !v}});
 	}},
 	{id: 'yLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+		if (!settings.get('y')) return;
 		let lines = {y:{}};
 		lines.y.log = isLog;
 		grid.update(lines);
 	}},
-	{id: 'yAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+	// {id: 'yAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+	// 	if (!settings.get('y')) return;
+	// 	grid.update({y:{axis: v}});
+	// }},
+	{id: 'yAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
+		if (!settings.get('y')) return;
 		grid.update({y:{axis: v}});
 	}},
 
 	{content: '<br/>'},
 
-	{id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
-		grid.update({r: {disable: !v}});
-	}},
-	{id: 'rLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-		let lines = {r:{}};
-		lines.r.log = isLog;
-		grid.update(lines);
-	}},
-	{id: 'rAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-		grid.update({r:{axis: v}});
-	}},
+	// {id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
+	// 	grid.update({r: {disable: !v}});
+	// }},
+	// {id: 'rLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+	// 	let lines = {r:{}};
+	// 	lines.r.log = isLog;
+	// 	grid.update(lines);
+	// }},
+	// {id: 'rAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+	// 	grid.update({r:{axis: v}});
+	// }},
 
 	{content: '<br/>'},
 
-	{id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
-		grid.update({a: {disable: !v}});
-	}},
-	{id: 'aLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-		let lines = {a:{}};
-		lines.a.log = isLog;
-		grid.update(lines);
-	}},
-	{id: 'aAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-		grid.update({a:{axis: v}});
-	}},
+	// {id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
+	// 	grid.update({a: {disable: !v}});
+	// }},
+	// {id: 'aLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
+	// 	let lines = {a:{}};
+	// 	lines.a.log = isLog;
+	// 	grid.update(lines);
+	// }},
+	// {id: 'aAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
+	// 	grid.update({a:{axis: v}});
+	// }},
 ], {
 	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
 	theme: require('settings-panel/theme/control'),
@@ -135,9 +128,7 @@ var settings = createSettings([
 //create grid
 var grid = Grid({
 	container: frame,
-	// x: {
-	// 	lineColor: 'rgba(0,0,0,.15)',
-	// },
+	x: {},
 	viewport: function (w, h) {
 		return [10, 10, w - 20, h - 20];
 

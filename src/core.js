@@ -75,6 +75,11 @@ function Grid (opts) {
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
 	});
 
+	this.x.opposite = this.y;
+	this.y.opposite = this.x;
+	this.r.opposite = this.a;
+	this.a.opposite = this.r;
+
 	function getRangeLines (x, maxNumber) {
 		//get closest scale
 		let minStep = (x.range) / maxNumber;
@@ -160,6 +165,7 @@ Grid.prototype.defaults = {
 	axis: 0,
 	axisWidth: 2,
 	axisColor: null,
+
 	ticks: 4,
 	labels: (line, x, vp, grid) => line.toLocalString() + x.units,
 	font: '13pt sans-serif',
@@ -177,6 +183,17 @@ Grid.prototype.defaults = {
 		if (Array.isArray(lines.lineColor)) return lines.lineColor;
 
 		return Array(values.length).fill(lines.lineColor || alpha(lines.color, .13));
+	},
+	getTicks: (values, lines, vp, grid) => {
+		if (!lines.ticks) return [];
+
+		if (lines.ticks instanceof Function) {
+			return lines.ticks(values, lines, vp, grid);
+		}
+
+		if (Array.isArray(lines.ticks)) return lines.ticks;
+
+		return Array(values.length).fill(lines.ticks);
 	},
 	getCoords: (values, lines, vp, grid) => [0,0,0,0]
 };

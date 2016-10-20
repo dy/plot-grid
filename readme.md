@@ -83,7 +83,7 @@ Lines options may include:
 | labels | Bool, Array, (options, viewport, grid) => Array | Values for labels. |
 | name | String, null | Name for the axis. |
 | units | String, null | Units to add as a postfix to the labels |
-| ticks | Bool, Number, Array, (options, viewport, grid) => Array | Size of the ticks for the labels. Can be disabled by passing false, be a number, an array corresponding to the labels or a function returning size depending on params. |
+| ticks | Bool, Number, Array, (options, viewport, grid) => Array | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size. |
 | padding | Number, Array(4) | Space for the labels and axis, by default 0. If there is not enough space for the labels, the axis will be rotated so that lables are placed over the grid, not outside of it. |
 | min | Number | Defines minimum range for the grid, by default `-Infinity`. |
 | max | Number | Defines maximum range for the grid, by default `Infinity`. |
@@ -98,6 +98,7 @@ Lines options may include:
 | distance | Number | The minimum distance between lines. By default `10`. |
 | scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
 | axisWidth | Number | Width of axis, by default `2`. |
+| axisColor | String, Array | Axis color, if differs from default `color`. |
 | lineColor | String, Array, (values, lines, viewport, grid) => Array | Color(s) for lines, can be a function returning specific color per-line. By default `color`. |
 | lineWidth | Number | Width of lines, by default `1`. |
 
