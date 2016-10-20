@@ -32,9 +32,10 @@ function Canvas2DGrid (opts) {
 
 //draw grid to the canvas
 Canvas2DGrid.prototype.draw = function (ctx, vp) {
+	this.clear();
+
 	this.drawLines(ctx, vp, this.x);
 	this.drawLines(ctx, vp, this.y);
-
 
 	return this;
 }

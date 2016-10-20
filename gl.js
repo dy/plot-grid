@@ -52,6 +52,17 @@ function GLGrid (opts) {
 	});
 }
 
+GLGrid.prototype.pan = function (dx, dy) {
+	this.grid.pan(dx, dy);
+	this._draw();
+	return this;
+}
+GLGrid.prototype.zoom = function (dx, dy) {
+	this.grid.zoom(dx, dy);
+	this._draw();
+	return this;
+}
+
 GLGrid.prototype.context = {
 	type: 'webgl',
 	antialias: false

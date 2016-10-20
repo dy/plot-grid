@@ -14,7 +14,9 @@ const range = require('just-range');
 const pick = require('just-pick');
 const magOrder = require('mumath/order');
 const closestNumber = require('mumath/closest');
+const clamp = require('mumath/clamp');
 const alpha = require('color-alpha');
+const panzoom = require('../../pan-zoom');
 
 
 module.exports = Grid;
@@ -96,9 +98,43 @@ function Grid (opts) {
 	}
 
 	this.update(opts);
+
+
+	//enable events
+	if ((this.pan || this.zoom) && this.container) {
+		panzoom(this.canvas, (dx, dy) => {
+			this.pan(dx, dy);
+		}, (dx, dy) => {
+			this.zoom(dx, dy);
+		}, {
+		});
+	}
 }
 
 
+//default pan/zoom handlers
+Grid.prototype.pan = function (dx, dy) {
+	let vp = this.viewport;
+	this.x.start -= this.x.range * dx/vp[2];
+	this.y.start -= this.y.range * dy/vp[3];
+	this.normalize();
+
+	this.emit('pan', dx, dy);
+	this.render();
+
+	return this;
+};
+
+Grid.prototype.zoom = function (dx, dy) {
+	this.x.range -= dy/this.x.range;
+	this.y.range -= dy/this.y.range;
+	this.normalize();
+
+	this.emit('zoom', dx, dy);
+	this.render();
+
+	return this;
+};
 
 //re-evaluate lines, calc options for renderer
 Grid.prototype.update = function (opts) {
@@ -118,10 +154,7 @@ Grid.prototype.update = function (opts) {
 	if (opts.a) extend(this.a, opts.a);
 
 	//normalize limits
-	this.normalize(this.x);
-	this.normalize(this.y);
-	this.normalize(this.r);
-	this.normalize(this.a);
+	this.normalize();
 
 	this.emit('update', opts);
 
@@ -134,12 +167,20 @@ Grid.prototype.update = function (opts) {
 
 //normalize single set
 Grid.prototype.normalize = function (lines) {
-	if (Array.isArray(lines)) return lines.forEach(this.normalize);
+	if (!lines) {
+		this.normalize(this.x);
+		this.normalize(this.y);
+		this.normalize(this.r);
+		this.normalize(this.a);
+		return this;
+	}
 
 	let range = lines.max - lines.min;
-	lines.range = Math.min(range, lines.range);
+	lines.range = Math.abs(clamp(lines.range, range, 0));
 	if (lines.max != null) lines.start = Math.min(lines.max - lines.range, lines.start);
 	if (lines.min != null) lines.start = Math.max(lines.start, lines.min);
+
+	return this;
 }
 
 //default values
@@ -152,6 +193,8 @@ Grid.prototype.defaults = {
 	max: Infinity,
 	start: -50,
 	range: 100,
+	zoom: true,
+	pan: true,
 
 	//lines params
 	scales: [1, 2, 5],

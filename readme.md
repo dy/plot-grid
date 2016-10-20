@@ -68,35 +68,37 @@ Possible options:
 
 | Name | Type | Description |
 |---|---|---|
-| container | Element, String, null | Container element to place grid into. By default is `document.body` |
+| container | Element, String, null | Container element to place grid into. By default `document.body`. |
 | context | CanvasContext, String, Object, null | Can be a string `2d` or `webgl`, context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context) or `null` for non-canvas grid |
 | viewport | Array(4) or (w, h) => Array(4) | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
 | x, y, r, a | Object, Bool | Options for the grid lines of cartesian or polar plot, see the table below.  |
 
 
-Lines options may include:
+Lines may define:
 
 | Name | Type | Description |
 |---|---|---|
 | lines | Bool, Array, (options, viewport, grid) => Array, null | Array with values for lines or function returning such array. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
 | axis | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. 0 for zero-line. String can define placement to the edge: `top, left, bottom, right`. By default it is `left/bottom` |
+| ticks | Bool, Number, Array, (options, viewport, grid) => Array | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size. |
 | labels | Bool, Array, (options, viewport, grid) => Array | Values for labels. |
 | name | String, null | Name for the axis. |
 | units | String, null | Units to add as a postfix to the labels |
-| ticks | Bool, Number, Array, (options, viewport, grid) => Array | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size. |
-| padding | Number, Array(4) | Space for the labels and axis, by default 0. If there is not enough space for the labels, the axis will be rotated so that lables are placed over the grid, not outside of it. |
+| padding | Number, Array(4) | Space for the labels and axis, by default 0. |
+| | |
 | min | Number | Defines minimum range for the grid, by default `-Infinity`. |
 | max | Number | Defines maximum range for the grid, by default `Infinity`. |
 | range | Number | Defines current visible range, by default `100`.  |
 | start | Number | Defines start point for the visible range, by default `0`.  |
 | zoom | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, `pinch`, or array with these strings. |
 | pan | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
-| type | String | The style of lines: `lines`, `dots`, `crosses`. |
+| | |
+| type | String | Style of lines: `lines`, `dots`, `crosses`. |
 | log | Bool | Place default lines logarithmically. |
 | font | String | Font to use for labels, by default `12pt sans-serif`. |
 | color | String, Array | Default color for the lines, axis and labels. |
-| distance | Number | The minimum distance between lines. By default `10`. |
-| scales | Array | The steps to use for lines, by default `[1, 2, 5]`. |
+| distance | Number | Minimum distance between lines. By default `10`. |
+| scales | Array | Steps to use for lines, by default `[1, 2, 5]`. |
 | axisWidth | Number | Width of axis, by default `2`. |
 | axisColor | String, Array | Axis color, if differs from default `color`. |
 | lineColor | String, Array, (values, lines, viewport, grid) => Array | Color(s) for lines, can be a function returning specific color per-line. By default `color`. |
@@ -119,7 +121,15 @@ It is good idea to call `update` whenever resize happened.
 
 ### grid.render()
 
-Paint grid in the next animation frame. If you need to draw instantly, do `grid.draw()`.
+Redraw grid.
+
+### grid.pan(dx, dy)
+
+Shift grid by the amount of pixels, they will be converted to grid values. This method is used by zoom/pan interactions.
+
+### grid.zoom(dx, dy)
+
+Scale grid by the amount of pixels, they will be converted to grid values. This method is used by zoom/pan interactions.
 
 ### grid.dispose()
 
