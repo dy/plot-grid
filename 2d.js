@@ -62,6 +62,18 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		normals.push(yDif/dist);
 	}
 
+	//create clipping path (useful to avoid really bad viewport)
+	if (ctx.clip) {
+		ctx.beginPath();
+		ctx.moveTo(left, top);
+		ctx.lineTo(left+width, top);
+		ctx.lineTo(left+width, top+height);
+		ctx.lineTo(left, top+height);
+		ctx.lineTo(left, top);
+		ctx.closePath();
+		ctx.clip();
+	}
+
 	//build lines shape
 	ctx.lineWidth = lines.lineWidth;
 
