@@ -10,14 +10,13 @@ const Component = require('gl-component');
 const inherits = require('inherits');
 const isBrowser = require('is-browser');
 const extend = require('just-extend');
-const range = require('just-range');
+// const range = require('just-range');
 const pick = require('just-pick');
 const magOrder = require('mumath/order');
 const closestNumber = require('mumath/closest');
 const clamp = require('mumath/clamp');
 const alpha = require('color-alpha');
 const panzoom = require('pan-zoom');
-
 
 module.exports = Grid;
 
@@ -275,3 +274,23 @@ Grid.prototype.defaults = {
 	},
 	getCoords: (values, lines, vp, grid) => [0,0,0,0]
 };
+
+
+
+//lil helper
+//FIXME: replace with just-range
+function range(start, stop, step) {
+  if (stop == null) {
+    stop = start || 0;
+    start = 0;
+  }
+  if (step == null) {
+    step = stop > start ? 1 : -1;
+  }
+  var toReturn = [];
+  var right = start < stop;
+  for (; right ? start < stop : start > stop; start += step) {
+    toReturn.push(start);
+  }
+  return toReturn;
+}
