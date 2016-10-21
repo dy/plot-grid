@@ -84,7 +84,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `name` | String, null | Name for the axis. |
 | `units` | String, null | Units to add as a suffix to the labels. |
 | `padding` | Number, Array(4) | Space for the labels and axis, by default `0`. |
-| **Zooming** | & | **Panning** |
+| **Zoom/pan** |
 | `min` | Number | Defines minimum value for the grid, by default `-Infinity`. |
 | `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
 | `start` | Number | Defines start point for the visible range, by default `-50`.  |
@@ -92,7 +92,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
 | `ratio` | Bool, Number, null | Keep scale ratio between x/y or r/a axes. By default `null`. |
-| **Style** | & | **Advanced settings** |
+| **Advanced** |
 | `type` | String | Style of lines: `lines`, `dots`, `crosses`. |
 | `font` | String | Font to use for labels, by default `12pt sans-serif`. |
 | `color` | String, Array | Default color for the lines, axes, ticks and labels. |
