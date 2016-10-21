@@ -42,6 +42,7 @@ function Grid (opts) {
 
 	//create x/y/r
 	this.x = extend({}, this.defaults, opts.x, {
+		orientation: 'x',
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance),
 		getCoords: (values, lines, [l, t, w, h], grid) => {
 			let coords = [];
@@ -56,6 +57,7 @@ function Grid (opts) {
 		}
 	});
 	this.y = extend({}, this.defaults, opts.y, {
+		orientation: 'y',
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance),
 		getCoords: (values, lines, [l, t, w, h], grid) => {
 			let coords = [];
@@ -70,9 +72,11 @@ function Grid (opts) {
 		}
 	});
 	this.r = extend({}, this.defaults, opts.r, {
+		orientation: 'r',
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
 	});
 	this.a = extend({}, this.defaults, opts.a, {
+		orientation: 'a',
 		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
 	});
 
@@ -93,9 +97,7 @@ function Grid (opts) {
 
 		// }
 
-		//FIXME: this guy kills debugger for small scales
-
-		return range( Math.floor(x.start/scale)*scale, Math.floor((x.start + x.range)/scale)*scale, scale);
+		return range( Math.floor(x.start/scale)*scale, Math.ceil((x.start + x.range)/scale)*scale, scale);
 	}
 
 	this.update(opts);
@@ -112,6 +114,8 @@ function Grid (opts) {
 	}
 }
 
+
+Grid.prototype.minRange = Number.EPSILON*1000;
 
 //default pan/zoom handlers
 Grid.prototype.pan = function (dx, dy) {
@@ -141,12 +145,24 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 
 	if (!this.x.disable) {
 		this.x.range *= (1 - dy / height);
-		this.x.start -= (this.x.range - xRange) * tx;
+		if (Math.abs(this.x.range) <= this.minRange) {
+			console.warn('Too small range, aborting zoom');
+			this.x.range = this.minRange;
+		}
+		else {
+			this.x.start -= (this.x.range - xRange) * tx;
+		}
 	}
 
 	if (!this.y.disable) {
 		this.y.range *= (1 - dy / height);
-		this.y.start -= (this.y.range - yRange) * ty;
+		if (Math.abs(this.y.range) <= this.minRange) {
+			console.warn('Too small range, aborting zoom');
+			this.y.range = this.minRange;
+		}
+		else {
+			this.y.start -= (this.y.range - yRange) * ty;
+		}
 	}
 
 	this.normalize();
@@ -229,7 +245,7 @@ Grid.prototype.defaults = {
 	axisColor: null,
 
 	ticks: 4,
-	labels: (values, lines, vp, grid) => values.map(v => v.toLocaleString() + lines.units),
+	labels: (values, lines, vp, grid) => values.map(v => v.toString() + lines.units),
 	font: '10pt sans-serif',
 	color: 'rgb(0,0,0)',
 	style: 'lines',

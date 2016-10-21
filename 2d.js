@@ -159,8 +159,11 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		//draw labels
 		ctx.font = lines.font;
 		ctx.fillStyle = lines.color;
+		let textHeight = 16, indent = 3;
+		let isOpp = lines.orientation === 'y' && typeof lines.opposite.axis === 'number';
 		for (let i = 0; i < labels.length; i++) {
-			ctx.fillText(labels[i], labelCoords[i*2] * width + left, labelCoords[i*2+1] * height + top);
+			if (isOpp && (values[i] === lines.opposite.axis)) continue;
+			ctx.fillText(labels[i], labelCoords[i*2] * width + left + indent, labelCoords[i*2+1] * height + top + textHeight);
 		}
 	}
 }
