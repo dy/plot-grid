@@ -130,6 +130,9 @@ Grid.prototype.pan = function (dx, dy) {
 Grid.prototype.zoom = function (dx, dy, x, y) {
 	let [left, top, width, height] = this.viewport;
 
+	if (x==null) x = left + w/2;
+	if (y==null) y = top + h/2;
+
 	//shift start
 	let cx = x - left, cy = y - top;
 	let tx = cx/width, ty = cy/height;
