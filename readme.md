@@ -87,11 +87,10 @@ Create new grid instance. It can serve both as a class or constructor function (
 | **Zoom/pan** |
 | `min` | Number | Defines minimum value for the grid, by default `-Infinity`. |
 | `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
-| `start` | Number | Defines start point for the visible range, by default `-50`.  |
-| `range` | Number | Sets current visible range, by default `100`.  |
+| `offset` | Number | Defines start point for the visible range, by default `0`.  |
+| `scale` | Number | Sets scale for the current range, numver of values per pixel. By default is `1`. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
-| `ratio` | Bool, Number, null | Keep scale ratio between x/y or r/a axes. By default `null`. |
 | **Advanced** |
 | `type` | String | Style of lines: `lines`, `dots`, `crosses`. |
 | `font` | String | Font to use for labels, by default `12pt sans-serif`. |
@@ -102,7 +101,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `lineWidth` | Number | Width of lines, by default `1`. |
 | `log` | Bool | Place lines logarithmically. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
-| `scales` | Array | Steps to use for lines, by default `[1, 2, 5]`. |
+| `steps` | Array | Steps to use for lines, by default `[1, 2, 5]`. |
 
 
 ### grid.update(options)

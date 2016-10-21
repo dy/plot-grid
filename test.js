@@ -25,22 +25,60 @@ frame.className = 'frame';
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'thetamath', options: {
-			'classic': '⊞ Classic',
+	{id: 'use-case', type: 'select', value: 'default', options: {
+			'default': '⊞ Default',
 			'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
 			'thetamath': 'θ Math',
 			'multigrid': '⧉ Multigrid',
 			'polar': '⊕ Polar'
 		}, change: v => {
-			if (v === 'classic') {
+			if (v === 'default') {
+				settings.set({
+					x: true,
+					xAxis: 0,
+					xLines: true,
+					y: true,
+					yAxis: 0,
+					yLines: true,
 
+					r: false,
+					a: false
+				});
+				grid.update({
+					x: {
+						offset: 0,
+						scale: 1
+					},
+					y: {
+						offset: 0,
+						scale: 1
+					}
+				});
 			}
 			else if (v === 'spectrum') {
 
 			}
 			else if (v === 'dictaphone') {
+				settings.set({
+					x: true,
+					xAxis: 0,
+					xLines: false,
+					y: true,
+					yAxis: 0,
+					yLines: false,
 
+					r: false,
+					a: false
+				});
+				grid.update({
+					x: {
+
+					},
+					y: {
+
+					}
+				});
 			}
 			else if (v === 'thetamath') {
 				settings.set({
@@ -63,6 +101,17 @@ var settings = createSettings([
 							if (v % order) return light;
 							return heavy;
 						});
+					},
+					font: '10pt serif',
+					labels: (values, lines, vp, grid) => {
+						let w = Math.min(vp[2], vp[3]);
+						let maxValues = 10;
+						// if (w/values.length < lines.range/maxValues) {
+							return values.map(v => v.toString());
+						// }
+						// return values.map((v, i) => {
+						// 	return i % 2 ? v.toString() : ''
+						// });
 					}
 				};
 				grid.update({x: lines, y: lines});
@@ -101,10 +150,16 @@ var settings = createSettings([
 		lines.x.log = isLog;
 		grid.update(lines);
 	}},
-	{id: 'xAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
+	// {id: 'xAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
+	// 	if (!settings.get('x')) return;
+	// 	grid.update({x: {
+	// 		axis: v
+	// 	}});
+	// }},
+	{id: 'xAxis', type: 'switch', label: 'axis', value: 0, options: ['none', 'top', 'bottom', 0], change: v => {
 		if (!settings.get('x')) return;
 		grid.update({x: {
-			axis: v
+			axis: v === 'none' ? false : v
 		}});
 	}},
 
@@ -123,9 +178,13 @@ var settings = createSettings([
 	// 	if (!settings.get('y')) return;
 	// 	grid.update({y:{axis: v}});
 	// }},
-	{id: 'yAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
+	// {id: 'yAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
+	// 	if (!settings.get('y')) return;
+	// 	grid.update({y:{axis: v}});
+	// }},
+	{id: 'yAxis', type: 'switch', label: 'axis', value: 0, options: ['none', 'left', 'right', 0], change: v => {
 		if (!settings.get('y')) return;
-		grid.update({y:{axis: v}});
+		grid.update({y:{axis: v === 'none' ? false : v}});
 	}},
 
 	{content: '<br/>'},

@@ -96,19 +96,21 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		//draw axis
 		let axisOrigin = lines.axis || 0;
 
+		let oppRange = lines.opposite.getRange(lines.opposite, vp, this);
+
 		if (typeof axisOrigin === 'string') {
 			switch (axisOrigin) {
 				case 'bottom':
 				case 'left':
-					axisOrigin = lines.opposite.start;
+					axisOrigin = lines.opposite.offset;
 					break;
 				default:
-					axisOrigin = lines.opposite.start + lines.opposite.range;
+					axisOrigin = lines.opposite.offset + oppRange;
 			}
 		}
 		else if (axisOrigin === true) axisOrigin = 0;
 
-		let axisRatio = (axisOrigin - lines.opposite.start) / lines.opposite.range;
+		let axisRatio = (axisOrigin - lines.opposite.offset) / oppRange;
 
 		let axisCoords = lines.opposite.getCoords([axisOrigin], lines.opposite, vp, this);
 
@@ -159,7 +161,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		//draw labels
 		ctx.font = lines.font;
 		ctx.fillStyle = lines.color;
-		let textHeight = 16, indent = 3;
+		let textHeight = 14, indent = 3;
 		let isOpp = lines.orientation === 'y' && typeof lines.opposite.axis === 'number';
 		for (let i = 0; i < labels.length; i++) {
 			if (isOpp && (values[i] === lines.opposite.axis)) continue;
@@ -181,12 +183,12 @@ function drawALines (ctx, vp, lines, grid) {
 
 	let w = width-1, h = height-1;
 	let center = [left + w/2 + .5, top + h/2 + .5];
-	let t0 = (values[0] - lines.start) / (lines.range);
+	let t0 = (values[0] - lines.offset) / (lines.range);
 	let maxR = Math.max(w/2, h/2);
 	let minR = Math.min(w/2, h/2)-1;
 
 	values.forEach((value, i) => {
-		let t = (value - lines.start) / (lines.range);
+		let t = (value - lines.offset) / (lines.range);
 
 		//360deg line
 		if (t === t0) return;
@@ -216,10 +218,10 @@ function drawRLines (ctx, vp, lines, grid) {
 	let center = [left + w/2 + .5, top + h/2 + .5];
 	let maxR = Math.max(w/2, h/2);
 	let minR = Math.min(w/2, h/2)-1;
-	let t0 = (values[0] - lines.start) / lines.range;
+	let t0 = (values[0] - lines.offset) / lines.range;
 
 	values.forEach((value, i) => {
-		let t = (value - lines.start) / lines.range;
+		let t = (value - lines.offset) / lines.range;
 		let r = t * minR;
 		ctx.moveTo(center[0] + r, center[1]);
 		ctx.arc(center[0], center[1], r, 0, TAU);
