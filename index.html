@@ -10455,10 +10455,11 @@ var settings = createSettings([
 					r: false,
 					a: false
 				});
-				var lines = {
-					axis: 0
-				};
-				grid.update({x: lines, y: lines});
+				grid.update({x: {
+					// offset:
+				}, y: {
+
+				}});
 			}
 			else if (v === 'spectrum') {
 
@@ -10596,7 +10597,7 @@ var settings = createSettings([
 
 //create grid
 var grid = Grid({
-	//container: frame,
+	container: frame,
 	//x: {},
 	// viewport: function (w, h) {
 	// 	return [10, 10, w - 20, h - 20];
