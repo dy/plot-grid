@@ -37,7 +37,6 @@ Canvas2DGrid.prototype.draw = function (ctx, vp) {
 	//first we need calc lines values
 	let xLines = this.x.getLines(this.x, vp, this);
 	let yLines = this.y.getLines(this.y, vp, this);
-
 	//then we draw
 	this.drawLines(xLines, this.x, vp, ctx);
 	this.drawLines(yLines, this.y, vp, ctx);
@@ -67,18 +66,6 @@ Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
 		normals.push(yDif/dist);
 	}
 
-	// create clipping path (useful to avoid really bad viewport)
-	if (ctx.clip) {
-		ctx.beginPath();
-		ctx.moveTo(left, top);
-		ctx.lineTo(left+width, top);
-		ctx.lineTo(left+width, top+height);
-		ctx.lineTo(left, top+height);
-		ctx.lineTo(left, top);
-		ctx.closePath();
-		ctx.clip();
-	}
-
 	//build lines shape
 	ctx.lineWidth = lines.lineWidth;
 
@@ -96,7 +83,6 @@ Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
 		ctx.stroke();
 		ctx.closePath();
 	}
-
 
 
 	if (lines.axis !== false) {
@@ -160,7 +146,10 @@ Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
 			let label = labels[i];
 			if (!label) continue;
 			if (isOpp && almost(values[i], lines.opposite.axis)) continue;
-			ctx.fillText(label, labelCoords[i*2] * width + left + indent, labelCoords[i*2+1] * height + top + textHeight);
+			let textWidth = ctx.measureText(label).width;
+			let textLeft = Math.min(labelCoords[i*2] * width + left + indent, left + width - textWidth - 1 - lines.axisWidth);
+			let textTop = Math.min(labelCoords[i*2+1] * height + top + textHeight, top + height - textHeight/2);
+			ctx.fillText(label, textLeft, textTop);
 		}
 	}
 }

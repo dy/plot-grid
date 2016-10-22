@@ -1,5 +1,5 @@
 require('enable-mobile');
-const Grid = require('./gl');
+const Grid = require('./2d');
 const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
@@ -20,6 +20,7 @@ insertCss(`
 	.fps {
 		z-index: 2;
 		right: 300px;
+		font-size: 10px;
 	}
 `);
 
@@ -36,7 +37,7 @@ fps.element.style.top = '10px';
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'default', options: {
+	{id: 'use-case', type: 'select', value: 'default', hidden: true, options: {
 			'default': '⊞ Default',
 			'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
@@ -53,59 +54,7 @@ var settings = createSettings([
 					a: false
 				});
 				let lines = {
-					axis: 0,
-					// distance: 15,
-					// steps: [1],
-					// labels: (values, lines, vp, grid) => {
-					// 	let step = lines.step;
-					// 	let stepSize = step/lines.scale;
-					// 	let w = Math.max(vp[3], vp[2]);
-
-					// 	//usually ~50 steps per screen
-					// 	let stepNumber = w/stepSize;
-
-					// 	let nextStep;
-
-					// 	if (stepNumber < 15) {
-					// 		nextStep = 2*step;
-					// 	}
-					// 	else if (stepNumber < 30) {
-					// 		nextStep = 5*step;
-					// 	}
-					// 	else {
-					// 		nextStep = 10*step;
-					// 	}
-
-					// 	return values.map(v => {
-					// 		if (v % nextStep) return '';
-					// 		return v.toString();
-					// 	});
-					// },
-					// ticks: (values, lines, vp, grid) => {
-					// 	let step = lines.step;
-					// 	let stepSize = step/lines.scale;
-					// 	let w = Math.max(vp[3], vp[2]);
-
-					// 	//usually ~50 steps per screen
-					// 	let stepNumber = w/stepSize;
-
-					// 	let nextStep;
-
-					// 	if (stepNumber < 15) {
-					// 		nextStep = 2*step;
-					// 	}
-					// 	else if (stepNumber < 30) {
-					// 		nextStep = 5*step;
-					// 	}
-					// 	else {
-					// 		nextStep = 10*step;
-					// 	}
-
-					// 	return values.map(v => {
-					// 		if (v % nextStep) return 0;
-					// 		return 5;
-					// 	});
-					// },
+					axis: 0
 				};
 				grid.update({x: lines, y: lines});
 			}
@@ -242,19 +191,14 @@ var settings = createSettings([
 });
 
 
+
 //create grid
 var grid = Grid({
-	container: frame,
-	x: {},
-	viewport: function (w, h) {
-		return [10, 10, w - 20, h - 20];
-
-		// let padding = settings.get('viewport');
-		// if (typeof padding === 'string') {
-		// 	padding = padding.split(/\s*,\s*/).map(v => parseInt(v));
-		// }
-		// return [padding[0], padding[1], w - padding[2] - padding[0], h - padding[3] - padding[1]];
-	}
+	//container: frame,
+	//x: {},
+	// viewport: function (w, h) {
+	// 	return [10, 10, w - 20, h - 20];
+	// }
 });
 
 

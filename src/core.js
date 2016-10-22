@@ -87,7 +87,7 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 
 	//shift start
 	let tx = (x-left)/width, ty = 1-(y-top)/height;
-	let amt = clamp(dy, -height*.75, height*.75)/height;
+	let amt = clamp(-dy, -height*.75, height*.75)/height;
 
 	if (!this.x.disable) {
 		let prevScale = this.x.scale;

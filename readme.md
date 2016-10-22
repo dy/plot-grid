@@ -2,7 +2,6 @@
 
 Grid component for webgl/canvas2d with zooming, panning, polar mode etc. See [demo](https://dfcreative.github.io/plot-grid).
 
-[![logarithmic grid](https://raw.githubusercontent.com/dfcreative/plot-grid/gh-pages/images/log.png "Logarithmic grid")](http://dfcreative.github.io/plot-grid/log.html) [![polar grid](https://raw.githubusercontent.com/dfcreative/plot-grid/gh-pages/images/polar.png "Polar grid")](http://dfcreative.github.io/plot-grid/)
 
 ## Usage
 
@@ -46,7 +45,8 @@ let polar = createGrid({
 });
 ```
 
-This will create frequency response and directional diagram, [see in action](http://requirebin.com/?gist=e6371d3310dff351c027edf0bf2a9492).
+This will create frequency response and directional diagram.
+<!--[see in action](http://requirebin.com/?gist=e6371d3310dff351c027edf0bf2a9492).-->
 
 ## API
 
