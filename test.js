@@ -12,15 +12,29 @@ insertCss(`
 		padding: 0;
 	}
 
-	.frame {
-		width: calc(100% - 300px);
-		min-height: 100vh;
+	@media (min-width:960px) {
+		.frame {
+			display: block;
+			width: calc(100% - 300px);
+			min-height: 100vh;
+		}
+		.fps {
+			right: 310px!important;
+		}
+	}
+	@media (max-width:960px) {
+		.settings-panel {
+			display: none!important;
+		}
+		.fps {
+			right: 10px!important;
+		}
 	}
 
 	.fps {
 		z-index: 2;
-		right: 300px;
 		font-size: 10px;
+		top: 10px!important;
 	}
 `);
 
@@ -32,8 +46,6 @@ frame.className = 'frame';
 let fps = createFps({
 	container: frame
 });
-fps.element.style.right = '310px';
-fps.element.style.top = '10px';
 
 
 var settings = createSettings([
