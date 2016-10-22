@@ -10,7 +10,7 @@ const Grid = require('./src/core');
 const TAU = Math.PI*2;
 const clamp = require('mumath/clamp');
 const inherit = require('inherits');
-
+const almost = require('almost-equal');
 
 module.exports = Canvas2DGrid;
 
@@ -79,13 +79,16 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 	ctx.lineWidth = lines.lineWidth;
 
 	for (let i=0, j=0; i < coords.length; i+=4, j++) {
+		let color = colors[j];
+		if (!color) continue;
+
 		ctx.beginPath();
 		let x1 = left + coords[i]*width, y1 = top + coords[i+1]*height;
 		let x2 = left + coords[i+2]*width, y2 = top + coords[i+3]*height;
 		ctx.moveTo(x1, y1);
 		ctx.lineTo(x2, y2);
 
-		ctx.strokeStyle = colors[j];
+		ctx.strokeStyle = color;
 		ctx.stroke();
 		ctx.closePath();
 	}
@@ -146,7 +149,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		ctx.lineWidth = lines.axisWidth;
 		ctx.beginPath();
 		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
-			if (values[j] === lines.opposite.axis) continue;
+			if (almost(values[j], lines.opposite.axis)) continue;
 			let x1 = left + tickCoords[i]*width,
 				y1 = top + tickCoords[i+1]*height;
 			let x2 = left + tickCoords[i+2]*width,
@@ -162,11 +165,13 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		//draw labels
 		ctx.font = lines.font;
 		ctx.fillStyle = lines.color;
-		let textHeight = 16, indent = lines.axisWidth + 2;
+		let textHeight = 16, indent = lines.axisWidth + 1;
 		let isOpp = lines.orientation === 'y' && typeof lines.opposite.axis === 'number';
 		for (let i = 0; i < labels.length; i++) {
-			if (isOpp && (values[i] === lines.opposite.axis)) continue;
-			ctx.fillText(labels[i], labelCoords[i*2] * width + left + indent, labelCoords[i*2+1] * height + top + textHeight);
+			let label = labels[i];
+			if (!label) continue;
+			if (isOpp && almost(values[i], lines.opposite.axis)) continue;
+			ctx.fillText(label, labelCoords[i*2] * width + left + indent, labelCoords[i*2+1] * height + top + textHeight);
 		}
 	}
 }

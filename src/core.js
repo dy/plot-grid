@@ -13,11 +13,11 @@ const extend = require('just-extend');
 // const range = require('just-range');
 const pick = require('just-pick');
 const magOrder = require('mumath/order');
-const closestNumber = require('mumath/closest');
 const clamp = require('mumath/clamp');
-const alpha = require('color-alpha');
 const panzoom = require('pan-zoom');
 const precision = require('mumath/precision');
+const alpha = require('color-alpha');
+const almost = require('almost-equal');
 
 module.exports = Grid;
 
@@ -154,45 +154,63 @@ Grid.prototype.defaults = {
 	pan: true,
 
 	//lines params
+	font: '10pt sans-serif',
+	color: 'rgb(0,0,0)',
+	style: 'lines',
+	disable: true,
 	steps: [1, 2, 5],
 	log: false,
-	distance: 40,
+	distance: 15,
 	lines: function (lines, vp, grid) {
-		let step = lines.getStep(lines, vp, grid);
+		let step = getStep(lines.distance * lines.scale, lines.steps);
+		lines.step = step;
+
 		let width = lines.getRange(lines, vp, grid);
 
 		return range( Math.floor(lines.offset/step)*step, Math.ceil((lines.offset + width)/step)*step, step)//.map(v => Math.floor(v/step)*step);
 	},
 	lineWidth: 1,
-	lineColor: null,
+	lineColor: (values, lines, vp, grid) => {
+		let light = alpha(lines.color, .1);
+		let heavy = alpha(lines.color, .4);
+
+		let step = lines.step;
+		let power = Math.ceil(Math.log10(step));
+		let tenStep = Math.pow(10,power);
+		let nextStep = Math.pow(10,power+1);
+		let eps = step/100;
+		return values.map(v => {
+			if (isMultiple(v, nextStep)) return heavy;
+			if (isMultiple(v, tenStep)) return light;
+			return null;
+		});
+	},
 
 	//axis params
 	axis: 0,
 	axisWidth: 2,
 	axisColor: null,
 
-	ticks: 4,
-	labels: (values, lines, vp, grid) => {
-		let step = lines.getStep(lines, vp, grid);
-		let numnum = precision(step);
-		return values.map(v => v.toFixed(Math.min(numnum, 20)) + lines.units)
+	ticks: (values, lines, vp, grid) => {
+		let step = getStep(getStep(lines.step, lines.steps), lines.steps);
+
+		return values.map(v => {
+			if (!isMultiple(v, step)) return null;
+			return lines.axisWidth * 2;
+		});
 	},
-	font: '10pt sans-serif',
-	color: 'rgb(0,0,0)',
-	style: 'lines',
-	disable: true,
+	labels: (values, lines, vp, grid) => {
+		let step = getStep(getStep(lines.step, lines.steps), lines.steps);
+		let numnum = precision(step);
+
+		return values.map(v => {
+			if (!isMultiple(v, step)) return null;
+			if (almost(v, 0)) return lines.orientation === 'y' ? null : '0';
+			return v.toFixed(Math.min(numnum, 20)) + lines.units
+		});
+	},
 
 	//technical methods
-	//get closest appropriate step
-	getStep: (lines, vp, grid) => {
-		let minStep = lines.distance * lines.scale;
-		let power = Math.ceil(Math.log10(minStep));
-		let order = Math.pow(10, power);
-		let step = closestNumber(minStep/order, lines.steps)*order;
-		lines.step = step;
-
-		return step;
-	},
 	//return visible range in values terms
 	getRange: (lines, vp, grid) => {
 		return Math.max(vp[2], vp[3]) * lines.scale;
@@ -212,7 +230,7 @@ Grid.prototype.defaults = {
 
 		if (Array.isArray(lines.lineColor)) return lines.lineColor;
 
-		return Array(values.length).fill(lines.lineColor || alpha(lines.color, .13));
+		return Array(values.length).fill(lines.lineColor || lines.color);
 	},
 	//get tick sizes for the lines
 	getTicks: (values, lines, vp, grid) => {
@@ -322,4 +340,35 @@ function range(start, stop, step) {
     toReturn.push(start);
   }
   return toReturn;
+}
+
+
+//get closest appropriate step from the list
+function getStep (minStep, srcSteps) {
+	let power = Math.floor(Math.log10(minStep));
+
+	let order = Math.pow(10, power);
+	let steps = srcSteps.map(v => v*order);
+	order = Math.pow(10, power+1);
+	steps = steps.concat(srcSteps.map(v => v*order));
+
+	//find closest scale
+	let step = 0;
+	for (let i = 0; i < steps.length; i++) {
+		step = steps[i];
+		if (step > minStep) break;
+	}
+
+	return step;
+}
+
+//chekc if one number is multiple of other
+function isMultiple (a, b) {
+	let remainder = a % b;
+	let eps = b/100;
+
+	if (!remainder) return true;
+	if (almost(0, remainder, eps, 0) || almost(Math.abs(b), Math.abs(remainder), eps, 0)) return true;
+
+	return false;
 }
