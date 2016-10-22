@@ -14,6 +14,9 @@ const extend = require('just-extend');
 const pick = require('just-pick');
 const magOrder = require('mumath/order');
 const clamp = require('mumath/clamp');
+const lg = require('mumath/log10');
+const isMultiple = require('mumath/is-multiple');
+const pretty = require('mumath/pretty');
 const panzoom = require('pan-zoom');
 const alpha = require('color-alpha');
 const almost = require('almost-equal');
@@ -92,14 +95,14 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 	if (!this.x.disable) {
 		let prevScale = this.x.scale;
 		this.x.scale *= (1 - amt);
-		this.x.scale = Math.max(this.x.scale, Number.EPSILON);
+		this.x.scale = Math.max(this.x.scale, this.x.minScale);
 		this.x.offset -= width*(this.x.scale - prevScale) * tx;
 	}
 
 	if (!this.y.disable) {
 		let prevScale = this.y.scale;
 		this.y.scale *= (1 - amt);
-		this.y.scale = Math.max(this.y.scale, Number.EPSILON);
+		this.y.scale = Math.max(this.y.scale, this.x.minScale);
 		this.y.offset -= height*(this.y.scale - prevScale) * ty;
 	}
 
@@ -149,6 +152,7 @@ Grid.prototype.defaults = {
 	max: Infinity,
 	offset: 0,
 	scale: 1,
+	minScale: Number.EPSILON || 1.19209290e-7,
 	zoom: true,
 	pan: true,
 
@@ -171,13 +175,13 @@ Grid.prototype.defaults = {
 		let heavy = alpha(lines.color, .4);
 
 		let step = lines.step;
-		let power = Math.ceil(Math.log10(step));
+		let power = Math.ceil(lg(step));
 		let tenStep = Math.pow(10,power);
 		let nextStep = Math.pow(10,power+1);
-		let eps = step/100;
+		let eps = step/10;
 		return lines.values.map(v => {
-			if (isMultiple(v, nextStep)) return heavy;
-			if (isMultiple(v, tenStep)) return light;
+			if (isMultiple(v, nextStep, eps)) return heavy;
+			if (isMultiple(v, tenStep, eps)) return light;
 			return null;
 		});
 	},
@@ -189,19 +193,22 @@ Grid.prototype.defaults = {
 
 	ticks: (lines, vp, grid) => {
 		let step = getStep(getStep(lines.step, lines.steps), lines.steps);
-
+		let eps = step/10;
+		let tickWidth = lines.axisWidth*2;
 		return lines.values.map(v => {
-			if (!isMultiple(v, step)) return null;
-			return lines.axisWidth * 2;
+			if (!isMultiple(v, step, eps)) return null;
+			if (almost(v, 0, eps)) return null;
+			return tickWidth;
 		});
 	},
 	labels: (lines, vp, grid) => {
 		let step = getStep(getStep(lines.step, lines.steps), lines.steps);
-		let precision = clamp(-Math.floor(Math.log10(step)), 20, 0);
+		let precision = clamp(-Math.floor(lg(step)), 20, 0);
 		let eps = step/10;
 		return lines.values.map(v => {
-			if (!isMultiple(v, step)) return null;
+			if (!isMultiple(v, step, eps)) return null;
 			if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
+			// console.log(v, pretty(v))
 			return v.toFixed(precision) + lines.units
 		});
 	},
@@ -347,7 +354,7 @@ function range(start, stop, step) {
 
 //get closest appropriate step from the list
 function getStep (minStep, srcSteps) {
-	let power = Math.floor(Math.log10(minStep));
+	let power = Math.floor(lg(minStep));
 
 	let order = Math.pow(10, power);
 	let steps = srcSteps.map(v => v*order);
@@ -364,13 +371,3 @@ function getStep (minStep, srcSteps) {
 	return step;
 }
 
-//chekc if one number is multiple of other
-function isMultiple (a, b) {
-	let remainder = a % b;
-	let eps = b/100;
-
-	if (!remainder) return true;
-	if (almost(0, remainder, eps, 0) || almost(Math.abs(b), Math.abs(remainder), eps, 0)) return true;
-
-	return false;
-}
