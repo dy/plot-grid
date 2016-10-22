@@ -42,71 +42,16 @@ function Grid (opts) {
 	}
 
 	//create x/y/r
-	this.x = extend({}, this.defaults, opts.x, {
-		orientation: 'x',
-		lines: getRangeLines,
-		getCoords: (values, lines, vp, grid) => {
-			let coords = [];
-			let range = lines.getRange(lines, vp, grid);
-			for (let i = 0; i < values.length; i++) {
-				let t = lines.getRatio(values[i], lines.offset, range);
-				coords.push(t);
-				coords.push(0);
-				coords.push(t);
-				coords.push(1);
-			}
-			return coords;
-		},
-		getRange: (lines, vp, grid) => {
-			return vp[2] * lines.scale;
-		},
-		getRatio: (value, offset, range) => {
-			return (value - offset) / range
-		}
-	});
-	this.y = extend({}, this.defaults, opts.y, {
-		orientation: 'y',
-		lines: getRangeLines,
-		getCoords: (values, lines, vp, grid) => {
-			let coords = [];
-			let range = lines.getRange(lines, vp, grid);
-			for (let i = 0; i < values.length; i++) {
-				let t = lines.getRatio(values[i], lines.offset, range);
-				coords.push(0);
-				coords.push(t);
-				coords.push(1);
-				coords.push(t);
-			}
-			return coords;
-		},
-		getRange: (lines, vp, grid) => {
-			return vp[3] * lines.scale;
-		},
-		getRatio: (value, offset, range) => {
-			return 1 - (value - offset) / range
-		}
-	});
-	this.r = extend({}, this.defaults, opts.r, {
-		orientation: 'r',
-		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
-	});
-	this.a = extend({}, this.defaults, opts.a, {
-		orientation: 'a',
-		lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
-	});
+	this.x = extend({}, Grid.prototype.x, opts.x);
+	this.y = extend({}, Grid.prototype.y, opts.y);
+	this.r = extend({}, Grid.prototype.r, opts.r);
+	this.a = extend({}, Grid.prototype.a, opts.a);
 
 	this.x.opposite = this.y;
 	this.y.opposite = this.x;
 	this.r.opposite = this.a;
 	this.a.opposite = this.r;
 
-
-	function getRangeLines (lines, vp, grid) {
-		let step = lines.getStep(lines, vp, grid);
-		let width = lines.getRange(lines, vp, grid);
-
-		return range( Math.floor(lines.offset/step)*step, Math.ceil((lines.offset + width)/step)*step, step)//.map(v => Math.floor(v/step)*step);
-	}
 
 	this.update(opts);
 
@@ -211,8 +156,13 @@ Grid.prototype.defaults = {
 	//lines params
 	steps: [1, 2, 5],
 	log: false,
-	distance: 20,
-	lines: [],
+	distance: 40,
+	lines: function (lines, vp, grid) {
+		let step = lines.getStep(lines, vp, grid);
+		let width = lines.getRange(lines, vp, grid);
+
+		return range( Math.floor(lines.offset/step)*step, Math.ceil((lines.offset + width)/step)*step, step)//.map(v => Math.floor(v/step)*step);
+	},
 	lineWidth: 1,
 	lineColor: null,
 
@@ -238,7 +188,6 @@ Grid.prototype.defaults = {
 		let minStep = lines.distance * lines.scale;
 		let power = Math.ceil(Math.log10(minStep));
 		let order = Math.pow(10, power);
-
 		let step = closestNumber(minStep/order, lines.steps)*order;
 		lines.step = step;
 
@@ -296,6 +245,65 @@ Grid.prototype.defaults = {
 		return (value - offset) / range
 	}
 };
+
+
+
+Grid.prototype.x = extend({}, Grid.prototype.defaults, {
+	orientation: 'x',
+	getCoords: (values, lines, vp, grid) => {
+		let coords = [];
+		let range = lines.getRange(lines, vp, grid);
+		for (let i = 0; i < values.length; i++) {
+			let t = lines.getRatio(values[i], lines.offset, range);
+			coords.push(t);
+			coords.push(0);
+			coords.push(t);
+			coords.push(1);
+		}
+		return coords;
+	},
+	getRange: (lines, vp, grid) => {
+		return vp[2] * lines.scale;
+	},
+	getRatio: (value, offset, range) => {
+		return (value - offset) / range
+	}
+});
+Grid.prototype.y = extend({}, Grid.prototype.defaults, {
+	orientation: 'y',
+	getCoords: (values, lines, vp, grid) => {
+		let coords = [];
+		let range = lines.getRange(lines, vp, grid);
+		for (let i = 0; i < values.length; i++) {
+			let t = lines.getRatio(values[i], lines.offset, range);
+			coords.push(0);
+			coords.push(t);
+			coords.push(1);
+			coords.push(t);
+		}
+		return coords;
+	},
+	getRange: (lines, vp, grid) => {
+		return vp[3] * lines.scale;
+	},
+	getRatio: (value, offset, range) => {
+		return 1 - (value - offset) / range
+	}
+});
+Grid.prototype.r = extend({}, Grid.prototype.defaults, {
+	orientation: 'r',
+	lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, w / dim.distance)
+});
+Grid.prototype.a = extend({}, Grid.prototype.defaults, {
+	orientation: 'a',
+	lines: (dim, [l, t, w, h], grid) => getRangeLines(dim, h / dim.distance)
+});
+
+Grid.prototype.x.opposite = Grid.prototype.y;
+Grid.prototype.y.opposite = Grid.prototype.x;
+Grid.prototype.r.opposite = Grid.prototype.a;
+Grid.prototype.a.opposite = Grid.prototype.r;
+
 
 
 //lil helper

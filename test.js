@@ -25,7 +25,7 @@ frame.className = 'frame';
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'default', options: {
+	{id: 'use-case', type: 'select', value: 'thetamath', options: {
 			'default': '⊞ Default',
 			'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
@@ -91,28 +91,74 @@ var settings = createSettings([
 				});
 				let lines = {
 					axis: 0,
-					distance: 40,
+					distance: 15,
+					steps: [1],
 					lineColor: (values, lines, vp, grid) => {
-						let light = 'rgba(0,0,0,.15)';
+						let light = 'rgba(0,0,0,.1)';
 						let heavy = 'rgba(0,0,0,.4)';
-						let power = Math.floor(Math.log10(lines.range));
-						let order = Math.pow(10, power);
+
+						let step = lines.step;
+						let power = Math.log10(step);
+						let normStep = step/Math.pow(10, power);
+
+						let stepPower = normStep === 5 ? Math.ceil(power) : Math.floor(power);
+						let nextStep = Math.pow(10, stepPower+1);
+
 						return values.map(v => {
-							if (v % order) return light;
+							if (v % nextStep) return light;
 							return heavy;
 						});
 					},
-					font: '10pt serif',
 					labels: (values, lines, vp, grid) => {
-						let w = Math.min(vp[2], vp[3]);
-						let maxValues = 10;
-						// if (w/values.length < lines.range/maxValues) {
-							return values.map(v => v.toString());
-						// }
-						// return values.map((v, i) => {
-						// 	return i % 2 ? v.toString() : ''
-						// });
-					}
+						let step = lines.step;
+						let stepSize = step/lines.scale;
+						let w = Math.max(vp[3], vp[2]);
+
+						//usually ~50 steps per screen
+						let stepNumber = w/stepSize;
+
+						let nextStep;
+
+						if (stepNumber < 15) {
+							nextStep = 2*step;
+						}
+						else if (stepNumber < 30) {
+							nextStep = 5*step;
+						}
+						else {
+							nextStep = 10*step;
+						}
+
+						return values.map(v => {
+							if (v % nextStep) return '';
+							return v.toString();
+						});
+					},
+					ticks: (values, lines, vp, grid) => {
+						let step = lines.step;
+						let stepSize = step/lines.scale;
+						let w = Math.max(vp[3], vp[2]);
+
+						//usually ~50 steps per screen
+						let stepNumber = w/stepSize;
+
+						let nextStep;
+
+						if (stepNumber < 15) {
+							nextStep = 2*step;
+						}
+						else if (stepNumber < 30) {
+							nextStep = 5*step;
+						}
+						else {
+							nextStep = 10*step;
+						}
+
+						return values.map(v => {
+							if (v % nextStep) return 0;
+							return 5;
+						});
+					},
 				};
 				grid.update({x: lines, y: lines});
 			}

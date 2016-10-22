@@ -146,6 +146,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		ctx.lineWidth = lines.axisWidth;
 		ctx.beginPath();
 		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
+			if (values[j] === lines.opposite.axis) continue;
 			let x1 = left + tickCoords[i]*width,
 				y1 = top + tickCoords[i+1]*height;
 			let x2 = left + tickCoords[i+2]*width,
@@ -161,7 +162,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		//draw labels
 		ctx.font = lines.font;
 		ctx.fillStyle = lines.color;
-		let textHeight = 16, indent = 3;
+		let textHeight = 16, indent = lines.axisWidth + 2;
 		let isOpp = lines.orientation === 'y' && typeof lines.opposite.axis === 'number';
 		for (let i = 0; i < labels.length; i++) {
 			if (isOpp && (values[i] === lines.opposite.axis)) continue;
@@ -233,9 +234,3 @@ function drawRLines (ctx, vp, lines, grid) {
 	ctx.closePath();
 }
 */
-
-
-//normalize number
-function n (v) {
-	return .5 + Math.round(v)
-};

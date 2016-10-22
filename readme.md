@@ -101,7 +101,8 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `lineWidth` | Number | Width of lines, by default `1`. |
 | `log` | Bool | Place lines logarithmically. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
-| `steps` | Array | Steps to use for lines, by default `[1, 2, 5]`. |
+| `steps` | Array | Base steps to use for lines, by default `[1, 2, 5]`. |
+| `step` | Number | Current step value, read-only. |
 
 
 ### grid.update(options)
