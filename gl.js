@@ -54,12 +54,13 @@ function GLGrid (opts) {
 
 GLGrid.prototype.pan = function (dx, dy, x, y) {
 	this.grid.pan(dx, dy, x, y);
-	this._draw();
+	this.render();
 	return this;
 };
+
 GLGrid.prototype.zoom = function (dx, dy, x, y) {
 	this.grid.zoom(dx, dy, x, y);
-	this._draw();
+	this.render();
 	return this;
 };
 

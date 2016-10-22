@@ -1,5 +1,5 @@
 require('enable-mobile');
-const Grid = require('./2d');
+const Grid = require('./gl');
 const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
@@ -11,12 +11,14 @@ insertCss(`
 		margin: 0;
 		padding: 0;
 	}
+	.frame {
+		display: block;
+		min-height: 100vh;
+	}
 
 	@media (min-width:960px) {
 		.frame {
-			display: block;
 			width: calc(100% - 300px);
-			min-height: 100vh;
 		}
 		.fps {
 			right: 310px!important;
@@ -65,10 +67,11 @@ var settings = createSettings([
 					r: false,
 					a: false
 				});
-				let lines = {
-					axis: 0
-				};
-				grid.update({x: lines, y: lines});
+				grid.update({x: {
+					// offset:
+				}, y: {
+
+				}});
 			}
 			else if (v === 'spectrum') {
 
@@ -206,7 +209,7 @@ var settings = createSettings([
 
 //create grid
 var grid = Grid({
-	//container: frame,
+	container: frame,
 	//x: {},
 	// viewport: function (w, h) {
 	// 	return [10, 10, w - 20, h - 20];
