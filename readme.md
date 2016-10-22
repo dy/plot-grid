@@ -87,7 +87,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | **Zoom/pan** |
 | `min` | Number | Defines minimum value for the grid, by default `-Infinity`. |
 | `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
-| `offset` | Number | Defines start point for the visible range, by default `0`.  |
+| `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`.  |
 | `scale` | Number | Sets scale for the current range, numver of values per pixel. By default is `1`. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |

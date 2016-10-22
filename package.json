@@ -58,7 +58,7 @@
     "just-extend": "^1.1.21",
     "just-pick": "^1.0.3",
     "just-range": "^1.0.0",
-    "mumath": "^2.0.0",
+    "mumath": "^3.0.1",
     "pan-zoom": "^1.0.0",
     "xtend": "^4.0.1"
   }

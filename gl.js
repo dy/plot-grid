@@ -50,29 +50,18 @@ function GLGrid (opts) {
 		this.grid._draw();
 		this.setTexture('grid', this.grid.canvas);
 	});
-	this.on('pan', updatePanZoom);
-	this.on('zoom', updatePanZoom);
-
-	function updatePanZoom () {
-		if (!this.x.disable && this.x.zoom) {
-			this.grid.x.offset = this.x.offset;
-			this.grid.x.scale = this.x.scale;
-		}
-		if (!this.y.disable && this.y.zoom) {
-			this.grid.y.offset = this.y.offset;
-			this.grid.y.scale = this.y.scale;
-		}
-		if (!this.r.disable && this.r.zoom) {
-			this.grid.r.offset = this.r.offset;
-			this.grid.r.scale = this.r.scale;
-		}
-		if (!this.a.disable && this.a.zoom) {
-			this.grid.a.offset = this.a.offset;
-			this.grid.a.scale = this.a.scale;
-		}
-		this._draw();
-	}
 }
+
+GLGrid.prototype.pan = function (dx, dy, x, y) {
+	this.grid.pan(dx, dy, x, y);
+	this._draw();
+	return this;
+};
+GLGrid.prototype.zoom = function (dx, dy, x, y) {
+	this.grid.zoom(dx, dy, x, y);
+	this._draw();
+	return this;
+};
 
 GLGrid.prototype.context = {
 	type: 'webgl',

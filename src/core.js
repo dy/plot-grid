@@ -17,6 +17,7 @@ const closestNumber = require('mumath/closest');
 const clamp = require('mumath/clamp');
 const alpha = require('color-alpha');
 const panzoom = require('pan-zoom');
+const precision = require('mumath/precision');
 
 module.exports = Grid;
 
@@ -48,13 +49,19 @@ function Grid (opts) {
 			let coords = [];
 			let range = lines.getRange(lines, vp, grid);
 			for (let i = 0; i < values.length; i++) {
-				let t = (values[i] - lines.offset) / range;
+				let t = lines.getRatio(values[i], lines.offset, range);
 				coords.push(t);
 				coords.push(0);
 				coords.push(t);
 				coords.push(1);
 			}
 			return coords;
+		},
+		getRange: (lines, vp, grid) => {
+			return vp[2] * lines.scale;
+		},
+		getRatio: (value, offset, range) => {
+			return (value - offset) / range
 		}
 	});
 	this.y = extend({}, this.defaults, opts.y, {
@@ -64,13 +71,19 @@ function Grid (opts) {
 			let coords = [];
 			let range = lines.getRange(lines, vp, grid);
 			for (let i = 0; i < values.length; i++) {
-				let t = (values[i] - lines.offset) / range;
+				let t = lines.getRatio(values[i], lines.offset, range);
 				coords.push(0);
 				coords.push(t);
 				coords.push(1);
 				coords.push(t);
 			}
 			return coords;
+		},
+		getRange: (lines, vp, grid) => {
+			return vp[3] * lines.scale;
+		},
+		getRatio: (value, offset, range) => {
+			return 1 - (value - offset) / range
 		}
 	});
 	this.r = extend({}, this.defaults, opts.r, {
@@ -92,7 +105,7 @@ function Grid (opts) {
 		let step = lines.getStep(lines, vp, grid);
 		let width = lines.getRange(lines, vp, grid);
 
-		return range( Math.floor(lines.offset/step)*step, Math.ceil((lines.offset + width)/step)*step, step);
+		return range( Math.floor(lines.offset/step)*step, Math.ceil((lines.offset + width)/step)*step, step)//.map(v => Math.floor(v/step)*step);
 	}
 
 	this.update(opts);
@@ -101,73 +114,55 @@ function Grid (opts) {
 	//enable interactions
 	if ((this.pan || this.zoom) && this.container && this.canvas) {
 		panzoom(this.canvas, (dx, dy, x, y) => {
-			pan.call(this, dx, dy, x, y);
-			this.emit('pan', dx, dy, x, y);
+			this.pan && this.pan(dx, dy, x, y);
 		}, (dx, dy, x, y) => {
-			zoom.call(this, dx, dy, x, y);
-			this.emit('zoom', dx, dy, x, y);
+			this.zoom && this.zoom(dx, dy, x, y);
 		}, {
 		});
 	}
-
-
-	//default pan/zoom handlers
-	function pan (dx, dy, x, y) {
-		let vp = this.viewport;
-
-		if (!this.x.disable && this.x.pan) this.x.offset -= this.x.range * dx/vp[2];
-		if (!this.y.disable && this.y.pan) this.y.offset -= this.y.range * dy/vp[3];
-
-		// this.normalize();
-		this.render();
-
-		return this;
-	};
-
-	function zoom (dx, dy, x, y) {
-		let [left, top, width, height] = this.viewport;
-
-		if (x==null) x = left + width/2;
-		if (y==null) y = top + height/2;
-
-		//shift start
-		let cx = x - left, cy = y - top;
-		let tx = cx/width, ty = cy/height;
-
-		let xRange = this.x.range;
-		let yRange = this.y.range;
-
-		if (!this.x.disable) {
-			this.x.range *= (1 - dy / height);
-			if (Math.abs(this.x.range) <= this.minRange) {
-				console.warn('Too small range, aborting zoom');
-				this.x.range = this.minRange;
-			}
-			else {
-				this.x.offset -= (this.x.range - xRange) * tx;
-			}
-		}
-
-		if (!this.y.disable) {
-			this.y.range *= (1 - dy / height);
-			if (Math.abs(this.y.range) <= this.minRange) {
-				console.warn('Too small range, aborting zoom');
-				this.y.range = this.minRange;
-			}
-			else {
-				this.y.offset -= (this.y.range - yRange) * ty;
-			}
-		}
-
-		// this.normalize();
-		this.render();
-
-		return this;
-	};
 }
 
-//FIXME: replace with scale
-Grid.prototype.minRange = Number.EPSILON*1000;
+
+//default pan/zoom handlers
+//TODO: check if interaction happens within actual zoom
+Grid.prototype.pan = function (dx, dy, x, y) {
+	let vp = this.viewport;
+
+	if (!this.x.disable && this.x.pan) this.x.offset -= this.x.scale * dx;
+	if (!this.y.disable && this.y.pan) this.y.offset += this.y.scale * dy;
+
+	this.render();
+
+	return this;
+};
+Grid.prototype.zoom = function (dx, dy, x, y) {
+	let [left, top, width, height] = this.viewport;
+
+	if (x==null) x = left + width/2;
+	if (y==null) y = top + height/2;
+
+	//shift start
+	let tx = (x-left)/width, ty = 1-(y-top)/height;
+	let amt = clamp(dy, -height*.75, height*.75)/height;
+
+	if (!this.x.disable) {
+		let prevScale = this.x.scale;
+		this.x.scale *= (1 - amt);
+		this.x.scale = Math.max(this.x.scale, Number.EPSILON);
+		this.x.offset -= width*(this.x.scale - prevScale) * tx;
+	}
+
+	if (!this.y.disable) {
+		let prevScale = this.y.scale;
+		this.y.scale *= (1 - amt);
+		this.y.scale = Math.max(this.y.scale, Number.EPSILON);
+		this.y.offset -= height*(this.y.scale - prevScale) * ty;
+	}
+
+	this.render();
+
+	return this;
+};
 
 
 //re-evaluate lines, calc options for renderer
@@ -199,24 +194,6 @@ Grid.prototype.update = function (opts) {
 }
 
 
-//normalize single set
-//FIXME: get rid of this, there is nothing to normalize
-Grid.prototype.normalize = function (lines) {
-	if (!lines) {
-		this.normalize(this.x);
-		this.normalize(this.y);
-		this.normalize(this.r);
-		this.normalize(this.a);
-		return this;
-	}
-
-	let range = lines.max - lines.min;
-	lines.range = Math.abs(clamp(lines.range, range, 0));
-	if (lines.max != null) lines.offset = Math.min(lines.max - lines.range, lines.offset);
-	if (lines.min != null) lines.offset = Math.max(lines.offset, lines.min);
-
-	return this;
-}
 
 //default values
 Grid.prototype.defaults = {
@@ -245,7 +222,11 @@ Grid.prototype.defaults = {
 	axisColor: null,
 
 	ticks: 4,
-	labels: (values, lines, vp, grid) => values.map(v => v.toString() + lines.units),
+	labels: (values, lines, vp, grid) => {
+		let step = lines.getStep(lines, vp, grid);
+		let numnum = precision(step);
+		return values.map(v => v.toFixed(Math.min(numnum, 20)) + lines.units)
+	},
 	font: '10pt sans-serif',
 	color: 'rgb(0,0,0)',
 	style: 'lines',
@@ -258,7 +239,8 @@ Grid.prototype.defaults = {
 		let power = Math.ceil(Math.log10(minStep));
 		let order = Math.pow(10, power);
 
-		let step = Math.floor(closestNumber(minStep/order, lines.steps)*order);
+		let step = closestNumber(minStep/order, lines.steps)*order;
+		lines.step = step;
 
 		return step;
 	},
@@ -307,10 +289,13 @@ Grid.prototype.defaults = {
 
 		return Array(values.length).fill(lines.labels);
 	},
-	//redefined by axes
-	getCoords: (values, lines, vp, grid) => [0,0,0,0]
+	//return coords for the values, redefined by axes
+	getCoords: (values, lines, vp, grid) => [0,0,0,0],
+	//return 0..1 ratio based on value/offset/range, redefined by axes
+	getRatio: (value, offset, range) => {
+		return (value - offset) / range
+	}
 };
-
 
 
 //lil helper

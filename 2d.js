@@ -63,7 +63,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		normals.push(yDif/dist);
 	}
 
-	//create clipping path (useful to avoid really bad viewport)
+	// create clipping path (useful to avoid really bad viewport)
 	if (ctx.clip) {
 		ctx.beginPath();
 		ctx.moveTo(left, top);
@@ -110,8 +110,8 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		}
 		else if (axisOrigin === true) axisOrigin = 0;
 
-		let axisRatio = (axisOrigin - lines.opposite.offset) / oppRange;
 
+		let axisRatio = lines.opposite.getRatio(axisOrigin, lines.opposite.offset, oppRange);
 		let axisCoords = lines.opposite.getCoords([axisOrigin], lines.opposite, vp, this);
 
 		ctx.lineWidth = lines.axisWidth;
@@ -161,7 +161,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		//draw labels
 		ctx.font = lines.font;
 		ctx.fillStyle = lines.color;
-		let textHeight = 14, indent = 3;
+		let textHeight = 16, indent = 3;
 		let isOpp = lines.orientation === 'y' && typeof lines.opposite.axis === 'number';
 		for (let i = 0; i < labels.length; i++) {
 			if (isOpp && (values[i] === lines.opposite.axis)) continue;
