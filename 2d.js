@@ -34,24 +34,28 @@ function Canvas2DGrid (opts) {
 Canvas2DGrid.prototype.draw = function (ctx, vp) {
 	this.clear();
 
-	this.drawLines(ctx, vp, this.x);
-	this.drawLines(ctx, vp, this.y);
+	//first we need calc lines values
+	let xLines = this.x.getLines(this.x, vp, this);
+	let yLines = this.y.getLines(this.y, vp, this);
+
+	//then we draw
+	this.drawLines(xLines, this.x, vp, ctx);
+	this.drawLines(yLines, this.y, vp, ctx);
 
 	return this;
 }
 
 //lines instance draw
-Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
+Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
 	if (!lines || lines.disable) return;
 
 	let [left, top, width, height] = vp;
 
 	//create lines positions here
-	let values = lines.getLines(lines, vp, this);
-	let coords = lines.getCoords(values, lines, vp, this);
-	let colors = lines.getColors(values, lines, vp, this);
-	let ticks = lines.getTicks(values, lines, vp, this);
-	let labels = lines.getLabels(values, lines, vp, this);
+	let coords = lines.getCoords(values, lines);
+	let colors = lines.getColors(lines, vp, this);
+	let ticks = lines.getTicks(lines, vp, this);
+	let labels = lines.getLabels(lines, vp, this);
 
 	//build normals
 	let normals = [];
@@ -97,25 +101,10 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 
 	if (lines.axis !== false) {
 		//draw axis
-		let axisOrigin = lines.axis || 0;
+		let axisOrigin = lines.axisOrigin;
 
-		let oppRange = lines.opposite.getRange(lines.opposite, vp, this);
-
-		if (typeof axisOrigin === 'string') {
-			switch (axisOrigin) {
-				case 'bottom':
-				case 'left':
-					axisOrigin = lines.opposite.offset;
-					break;
-				default:
-					axisOrigin = lines.opposite.offset + oppRange;
-			}
-		}
-		else if (axisOrigin === true) axisOrigin = 0;
-
-
-		let axisRatio = lines.opposite.getRatio(axisOrigin, lines.opposite.offset, oppRange);
-		let axisCoords = lines.opposite.getCoords([axisOrigin], lines.opposite, vp, this);
+		let axisRatio = lines.opposite.getRatio(axisOrigin, lines.opposite);
+		let axisCoords = lines.opposite.getCoords([axisOrigin], lines.opposite);
 
 		ctx.lineWidth = lines.axisWidth;
 
@@ -149,7 +138,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, vp, lines) {
 		ctx.lineWidth = lines.axisWidth;
 		ctx.beginPath();
 		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
-			if (almost(values[j], lines.opposite.axis)) continue;
+			if (almost(values[j], lines.opposite.axisOrigin)) continue;
 			let x1 = left + tickCoords[i]*width,
 				y1 = top + tickCoords[i+1]*height;
 			let x2 = left + tickCoords[i+2]*width,

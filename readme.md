@@ -78,9 +78,9 @@ Create new grid instance. It can serve both as a class or constructor function (
 | Name | Type | Description |
 |---|---|---|
 | `lines` | Bool, Array, Function, null | Array with values for lines or function returning such array, `(lines, viewport, grid) => [values...]`. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
-| `axis` | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. `0` for zero-line. String can define placement to the edge: `top, left, bottom, right`. By default it is `0`. |
-| `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `(values, lines, viewport, grid) => [labels...]`. |
-| `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `(values, lines, viewport, grid) => [ticks...]`. |
+| `axis` | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. `0` for zero-line. Note that if origin is outside of the viewport, axis will be placed to the edge. |
+| `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `(lines, viewport, grid) => [labels...]`. |
+| `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `(lines, viewport, grid) => [ticks...]`. |
 | `name` | String, null | Name for the axis. |
 | `units` | String, null | Units to add as a suffix to the labels. |
 | `padding` | Number, Array(4) | Space for the labels and axis, by default `0`. |
@@ -97,7 +97,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `color` | String, Array | Default color for the lines, axes, ticks and labels. |
 | `axisWidth` | Number | Width of axis, by default `2`. |
 | `axisColor` | String, Array | Axis color, redefines default `color`. |
-| `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `(values, lines, viewport, grid) => [colors...]`. By default `color`. |
+| `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `(lines, viewport, grid) => [colors...]`. By default `color`. |
 | `lineWidth` | Number | Width of lines, by default `1`. |
 | `log` | Bool | Place lines logarithmically. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
