@@ -9,6 +9,7 @@
 const Grid = require('./src/core');
 const TAU = Math.PI*2;
 const clamp = require('mumath/clamp');
+const len = require('mumath/len');
 const inherit = require('inherits');
 const almost = require('almost-equal');
 
@@ -35,64 +36,75 @@ Canvas2DGrid.prototype.draw = function (ctx, vp) {
 	this.clear();
 
 	//first we need calc lines values
-	let xLines = this.x.getLines(this.x, vp, this);
-	let yLines = this.y.getLines(this.y, vp, this);
+	let xLines = this.calcLines(this.x, vp, this);
+	let yLines = this.calcLines(this.y, vp, this);
+
+	if (xLines && yLines) {
+		xLines.opposite = yLines;
+		yLines.opposite = xLines;
+	}
+
 	//then we draw
-	this.drawLines(xLines, this.x, vp, ctx);
-	this.drawLines(yLines, this.y, vp, ctx);
+	this.drawLines(ctx, xLines);
+	this.drawLines(ctx, yLines);
 
 	return this;
 }
 
 //lines instance draw
-Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
-	if (!lines || lines.disable) return;
+Canvas2DGrid.prototype.drawLines = function (ctx, state) {
+	if (!state || !state.lines || state.lines.disable) return;
 
-	let [left, top, width, height] = vp;
+	let [left, top, width, height] = state.viewport;
 
 	//create lines positions here
-	let coords = lines.getCoords(values, lines);
-	let colors = lines.getColors(lines, vp, this);
-	let ticks = lines.getTicks(lines, vp, this);
-	let labels = lines.getLabels(lines, vp, this);
+	let values = state.values;
+	let lineColors = state.colors;
+	let lineColor = Array.isArray(lineColors) ? null : lineColors;
+	let ticks = state.ticks;
+	let labels = state.labels;
 
-	//build normals
+
+	//get coordinates of lines
+	let coords = state.lines.getCoords(values, state);
+
+	//build normals, mb someone will need that
 	let normals = [];
 	for (let i = 0; i < coords.length; i+= 4) {
 		let x1 = coords[i], y1 = coords[i+1], x2 = coords[i+2], y2 = coords[i+3];
 		let xDif = x2 - x1, yDif = y2 - y1;
-		let dist = Math.sqrt(xDif*xDif + yDif*yDif);
+		let dist = len(xDif, yDif);
 		normals.push(xDif/dist);
 		normals.push(yDif/dist);
 	}
 
-	//build lines shape
-	ctx.lineWidth = lines.lineWidth;
 
-	for (let i=0, j=0; i < coords.length; i+=4, j++) {
-		let color = colors[j];
-		if (!color) continue;
+	//draw lines
+	if (state.lines.lines !== false) {
+		ctx.lineWidth = state.lineWidth;
 
-		ctx.beginPath();
-		let x1 = left + coords[i]*width, y1 = top + coords[i+1]*height;
-		let x2 = left + coords[i+2]*width, y2 = top + coords[i+3]*height;
-		ctx.moveTo(x1, y1);
-		ctx.lineTo(x2, y2);
+		for (let i=0, j=0; i < coords.length; i+=4, j++) {
+			let color = lineColor || lineColors[j];
+			if (!color) continue;
 
-		ctx.strokeStyle = color;
-		ctx.stroke();
-		ctx.closePath();
+			ctx.beginPath();
+			let x1 = left + coords[i]*width, y1 = top + coords[i+1]*height;
+			let x2 = left + coords[i+2]*width, y2 = top + coords[i+3]*height;
+			ctx.moveTo(x1, y1);
+			ctx.lineTo(x2, y2);
+
+			ctx.strokeStyle = color;
+			ctx.stroke();
+			ctx.closePath();
+		}
 	}
 
+	//draw axis
+	if (state.lines.axis !== false) {
+		let axisRatio = state.opposite.lines.getRatio(state.axisOrigin, state.opposite);
+		let axisCoords = state.opposite.lines.getCoords([state.axisOrigin], state.opposite);
 
-	if (lines.axis !== false) {
-		//draw axis
-		let axisOrigin = lines.axisOrigin;
-
-		let axisRatio = lines.opposite.getRatio(axisOrigin, lines.opposite);
-		let axisCoords = lines.opposite.getCoords([axisOrigin], lines.opposite);
-
-		ctx.lineWidth = lines.axisWidth;
+		ctx.lineWidth = state.axisWidth;
 
 		let x1 = left + axisCoords[0]*width, y1 = top + axisCoords[1]*height;
 		let x2 = left + axisCoords[2]*width, y2 = top + axisCoords[3]*height;
@@ -101,12 +113,11 @@ Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
 		ctx.moveTo(x1, y1);
 		ctx.lineTo(x2, y2);
 
-		ctx.strokeStyle = lines.axisColor || lines.color;
+		ctx.strokeStyle = state.axisColor;
 		ctx.stroke();
 		ctx.closePath();
 
-
-		//draw ticks
+		//calc labels/tick coords
 		let tickCoords = [];
 		let labelCoords = [];
 		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
@@ -121,35 +132,39 @@ Canvas2DGrid.prototype.drawLines = function (values, lines, vp, ctx) {
 			tickCoords.push(normals[i+1]*(yDif - tick[1]) + y1);
 		}
 
-		ctx.lineWidth = lines.axisWidth;
-		ctx.beginPath();
-		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
-			if (almost(values[j], lines.opposite.axisOrigin)) continue;
-			let x1 = left + tickCoords[i]*width,
-				y1 = top + tickCoords[i+1]*height;
-			let x2 = left + tickCoords[i+2]*width,
-				y2 = top + tickCoords[i+3]*height;
-			ctx.moveTo(x1, y1);
-			ctx.lineTo(x2, y2);
+		//draw ticks
+		if (ticks) {
+			ctx.lineWidth = state.axisWidth;
+			ctx.beginPath();
+			for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
+				if (almost(values[j], state.opposite.axisOrigin)) continue;
+				let x1 = left + tickCoords[i]*width,
+					y1 = top + tickCoords[i+1]*height;
+				let x2 = left + tickCoords[i+2]*width,
+					y2 = top + tickCoords[i+3]*height;
+				ctx.moveTo(x1, y1);
+				ctx.lineTo(x2, y2);
+			}
+			ctx.strokeStyle = state.axisColor;
+			ctx.stroke();
+			ctx.closePath();
 		}
-		ctx.strokeStyle = lines.axisColor || lines.color;
-		ctx.stroke();
-		ctx.closePath();
-
 
 		//draw labels
-		ctx.font = lines.font;
-		ctx.fillStyle = lines.color;
-		let textHeight = 16, indent = lines.axisWidth + 1;
-		let isOpp = lines.orientation === 'y' && typeof lines.opposite.axis === 'number';
-		for (let i = 0; i < labels.length; i++) {
-			let label = labels[i];
-			if (!label) continue;
-			if (isOpp && almost(values[i], lines.opposite.axis)) continue;
-			let textWidth = ctx.measureText(label).width;
-			let textLeft = Math.min(labelCoords[i*2] * width + left + indent, left + width - textWidth - 1 - lines.axisWidth);
-			let textTop = Math.min(labelCoords[i*2+1] * height + top + textHeight, top + height - textHeight/2);
-			ctx.fillText(label, textLeft, textTop);
+		if (labels) {
+			ctx.font = state.font;
+			ctx.fillStyle = state.labelColor;
+			let textHeight = 16, indent = state.axisWidth + 1;
+			let isOpp = state.lines.opposite === 'y';
+			for (let i = 0; i < labels.length; i++) {
+				let label = labels[i];
+				if (!label) continue;
+				if (isOpp && almost(values[i], state.opposite.axisOrigin)) continue;
+				let textWidth = ctx.measureText(label).width;
+				let textLeft = clamp(labelCoords[i*2] * width + left + indent, left + indent, left + width - textWidth - 1 - state.axisWidth);
+				let textTop = clamp(labelCoords[i*2+1] * height + top + textHeight, top + textHeight, top + height - textHeight/2);
+				ctx.fillText(label, textLeft, textTop);
+			}
 		}
 	}
 }

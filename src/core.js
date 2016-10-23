@@ -49,12 +49,6 @@ function Grid (opts) {
 	this.r = extend({}, Grid.prototype.r, opts.r);
 	this.a = extend({}, Grid.prototype.a, opts.a);
 
-	this.x.opposite = this.y;
-	this.y.opposite = this.x;
-	this.r.opposite = this.a;
-	this.a.opposite = this.r;
-
-
 	this.update(opts);
 
 
@@ -71,7 +65,7 @@ function Grid (opts) {
 
 
 //default pan/zoom handlers
-//TODO: check if interaction happens within actual zoom
+//TODO: check if interaction happens within actual viewport
 Grid.prototype.pan = function (dx, dy, x, y) {
 	let vp = this.viewport;
 
@@ -88,8 +82,11 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 	if (x==null) x = left + width/2;
 	if (y==null) y = top + height/2;
 
+	let oX = this.x && this.x.origin || 0;
+	let oY = this.y && this.y.origin || 0;
+
 	//shift start
-	let tx = (x-left)/width, ty = 1-(y-top)/height;
+	let tx = (x-left)/width - oX, ty = oY-(y-top)/height;
 	let amt = clamp(-dy, -height*.75, height*.75)/height;
 
 	if (!this.x.disable) {
@@ -141,6 +138,76 @@ Grid.prototype.update = function (opts) {
 }
 
 
+//get state object with calculated params, ready for rendering
+Grid.prototype.calcLines = function (lines, vp) {
+	let state = {
+		lines: lines,
+		viewport: vp,
+		grid: this,
+		step: getStep(lines.distance * lines.scale, lines.steps),
+	};
+
+	//calculate real offset/range
+	state.range = lines.getRange(state);
+	state.offset = lines.offset - state.range * clamp(lines.origin, 0, 1);
+
+	//calc axis/style
+	state.axisOrigin = typeof lines.axis === 'number' ? lines.axis : 0;
+
+	state.axisColor = lines.axisColor || lines.color;
+	state.axisWidth = lines.axisWidth || lines.lineWidth;
+	state.lineWidth = lines.lineWidth;
+	state.labelColor = state.axisColor;
+	state.font = lines.font;
+
+
+	//get lines stops
+	let values;
+	if (lines.lines instanceof Function) {
+		values = lines.lines(state);
+	}
+	else if (Array.isArray(lines.lines)) {
+		values = lines.lines;
+	}
+	else if (!lines.lines) {
+		//TODO: collect values from labels/ticks/coords mb?
+	}
+	state.values = values;
+
+	//calc colors
+	let colors;
+	if (lines.lineColor instanceof Function) {
+		colors = lines.lineColor(state);
+	}
+	else {
+		colors = state.lines.lineColor || state.lines.color;
+	}
+	state.colors = colors;
+
+	//calc ticks
+	let ticks;
+	if (lines.ticks instanceof Function) {
+		ticks = lines.ticks(state);
+	}
+	else {
+		ticks = lines.ticks;
+	}
+	state.ticks = ticks;
+
+	//calc labels
+	let labels;
+	if (lines.labels instanceof Function) {
+		labels = lines.labels(state);
+	}
+	else {
+		labels = lines.labels;
+	}
+	state.labels = labels;
+
+	return state;
+};
+
+
 
 //default values
 Grid.prototype.defaults = {
@@ -151,6 +218,7 @@ Grid.prototype.defaults = {
 	min: -Infinity,
 	max: Infinity,
 	offset: 0,
+	origin: .5,
 	scale: 1,
 	minScale: Number.EPSILON || 1.19209290e-7,
 	zoom: true,
@@ -164,22 +232,25 @@ Grid.prototype.defaults = {
 	steps: [1, 2, 5],
 	log: false,
 	distance: 15,
-	lines: function (lines, vp, grid) {
-		let step = lines.step;
+	lines: state => {
+		let step = state.step;
 
-		return range( Math.floor(lines.offset/step)*step, Math.ceil((lines.offset + lines.range)/step)*step, step);//.map(v => Math.floor(v/step)*step);
+		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step)*step, step);
 	},
 	lineWidth: 1,
-	lineColor: (lines, vp, grid) => {
+	lineColor: state => {
+		if (!state.values) return;
+		let {lines} = state;
+
 		let light = alpha(lines.color, .1);
 		let heavy = alpha(lines.color, .4);
 
-		let step = lines.step;
+		let step = state.step;
 		let power = Math.ceil(lg(step));
 		let tenStep = Math.pow(10,power);
 		let nextStep = Math.pow(10,power+1);
 		let eps = step/10;
-		return lines.values.map(v => {
+		return state.values.map(v => {
 			if (isMultiple(v, nextStep, eps)) return heavy;
 			if (isMultiple(v, tenStep, eps)) return light;
 			return null;
@@ -191,21 +262,27 @@ Grid.prototype.defaults = {
 	axisWidth: 2,
 	axisColor: null,
 
-	ticks: (lines, vp, grid) => {
-		let step = getStep(getStep(lines.step, lines.steps), lines.steps);
+	ticks: state => {
+		if (!state.values) return;
+		let {lines} = state;
+
+		let step = getStep(getStep(state.step, lines.steps), lines.steps);
 		let eps = step/10;
-		let tickWidth = lines.axisWidth*2;
-		return lines.values.map(v => {
+		let tickWidth = state.axisWidth*2;
+		return state.values.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
 			if (almost(v, 0, eps)) return null;
 			return tickWidth;
 		});
 	},
-	labels: (lines, vp, grid) => {
-		let step = getStep(getStep(lines.step, lines.steps), lines.steps);
+	labels: state => {
+		if (!state.values) return;
+		let {lines} = state;
+
+		let step = getStep(getStep(state.step, lines.steps), lines.steps);
 		let precision = clamp(-Math.floor(lg(step)), 20, 0);
 		let eps = step/10;
-		return lines.values.map(v => {
+		return state.values.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
 			if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
 			// console.log(v, pretty(v))
@@ -213,78 +290,22 @@ Grid.prototype.defaults = {
 		});
 	},
 
-	//technical methods
-	//return visible range in values terms
-	getRange: (lines, vp, grid) => {
-		return Math.max(vp[2], vp[3]) * lines.scale;
-	},
-
-	//get list of stops for lines
-	getLines: (lines, vp, grid) => {
-		//precalc render-pass params
-		lines.step = getStep(lines.distance * lines.scale, lines.steps);
-		lines.range = lines.getRange(lines, vp, grid);
-
-		let oppRange = lines.opposite.getRange(lines.opposite, vp);
-
-		lines.axisOrigin = typeof lines.axis === 'number' ? lines.axis : 0;
-		lines.axisOrigin = clamp(lines.axisOrigin, lines.opposite.offset, lines.opposite.offset + oppRange);
-
-		if (lines.lines instanceof Function) lines.values = lines.lines(lines, vp, grid);
-		else lines.values = lines.lines;
-
-		return lines.values;
-	},
-	//get colors for the lines
-	getColors: (lines, vp, grid) => {
-		if (lines.lineColor instanceof Function) {
-			return lines.lineColor(lines, vp, grid);
-		}
-
-		if (Array.isArray(lines.lineColor)) return lines.lineColor;
-
-		return Array(lines.values.length).fill(lines.lineColor || lines.color);
-	},
-	//get tick sizes for the lines
-	getTicks: (lines, vp, grid) => {
-		if (!lines.ticks) return [];
-
-		if (lines.ticks instanceof Function) {
-			return lines.ticks(lines, vp, grid);
-		}
-
-		if (Array.isArray(lines.ticks)) return lines.ticks;
-
-		return Array(lines.values.length).fill(lines.ticks);
-	},
-	//get labels for the lines
-	getLabels:  (lines, vp, grid) => {
-		if (!lines.labels) return [];
-
-		if (lines.labels instanceof Function) {
-			return lines.labels(lines, vp, grid);
-		}
-
-		if (Array.isArray(lines.labels)) return lines.labels;
-
-		return Array(lines.values.length).fill(lines.labels);
-	},
+	//stub methods
 	//return coords for the values, redefined by axes
-	getCoords: (values, lines) => [0,0,0,0],
+	getCoords: (values, state) => [0,0,0,0],
+
 	//return 0..1 ratio based on value/offset/range, redefined by axes
-	getRatio: (value, lines) => {
-		return (value - lines.offset) / lines.range
-	}
+	getRatio: (value, state) => 0
 };
 
 
 
 Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 	orientation: 'x',
-	getCoords: (values, lines) => {
+	getCoords: (values, state) => {
 		let coords = [];
 		for (let i = 0; i < values.length; i++) {
-			let t = lines.getRatio(values[i], lines);
+			let t = state.lines.getRatio(values[i], state);
 			coords.push(t);
 			coords.push(0);
 			coords.push(t);
@@ -292,19 +313,19 @@ Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 		}
 		return coords;
 	},
-	getRange: (lines, vp, grid) => {
-		return vp[2] * lines.scale;
+	getRange: state => {
+		return state.viewport[2] * state.lines.scale;
 	},
-	getRatio: (value, lines) => {
-		return (value - lines.offset) / lines.range
+	getRatio: (value, state) => {
+		return (value - state.offset) / state.range
 	}
 });
 Grid.prototype.y = extend({}, Grid.prototype.defaults, {
 	orientation: 'y',
-	getCoords: (values, lines) => {
+	getCoords: (values, state) => {
 		let coords = [];
 		for (let i = 0; i < values.length; i++) {
-			let t = lines.getRatio(values[i], lines);
+			let t = state.lines.getRatio(values[i], state);
 			coords.push(0);
 			coords.push(t);
 			coords.push(1);
@@ -312,11 +333,11 @@ Grid.prototype.y = extend({}, Grid.prototype.defaults, {
 		}
 		return coords;
 	},
-	getRange: (lines, vp, grid) => {
-		return vp[3] * lines.scale;
+	getRange: state => {
+		return state.viewport[3] * state.lines.scale;
 	},
-	getRatio: (value, lines) => {
-		return 1 - (value - lines.offset) / lines.range
+	getRatio: (value, state) => {
+		return 1 - (value - state.offset) / state.range
 	}
 });
 Grid.prototype.r = extend({}, Grid.prototype.defaults, {
@@ -325,11 +346,6 @@ Grid.prototype.r = extend({}, Grid.prototype.defaults, {
 Grid.prototype.a = extend({}, Grid.prototype.defaults, {
 	orientation: 'a'
 });
-
-Grid.prototype.x.opposite = Grid.prototype.y;
-Grid.prototype.y.opposite = Grid.prototype.x;
-Grid.prototype.r.opposite = Grid.prototype.a;
-Grid.prototype.a.opposite = Grid.prototype.r;
 
 
 
@@ -353,6 +369,7 @@ function range(start, stop, step) {
 
 
 //get closest appropriate step from the list
+//FIXME: move to mumath, but implement log first maybe?
 function getStep (minStep, srcSteps) {
 	let power = Math.floor(lg(minStep));
 

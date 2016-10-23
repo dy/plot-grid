@@ -79,10 +79,10 @@ var settings = createSettings([
 			else if (v === 'dictaphone') {
 				settings.set({
 					x: true,
-					xAxis: 0,
+					xAxis: Infinity,
 					xLines: false,
 					y: true,
-					yAxis: 0,
+					yAxis: Infinity,
 					yLines: false,
 
 					r: false,
@@ -90,10 +90,33 @@ var settings = createSettings([
 				});
 				grid.update({
 					x: {
+						lines: false,
+						axis: Infinity,
+						font: '12pt sans-serif',
+						offset: 0,
+						scale: 2,
+						axisWidth: 1,
+						ticks: (lines, vp, grid) => {
+							let step = lines.step;
+							let range = lines.range;
+							let start = lines.offset;
 
+							let result = {};
+
+							for (let i = 0; i < range; i+= 250) {
+								if (i % 1000) result[i] = 4;
+								else result[i] = 10;
+							}
+
+							return result;
+						},
+						// labels: () => {
+
+						// }
 					},
 					y: {
-
+						axis: Infinity
+						// lines: false
 					}
 				});
 			}

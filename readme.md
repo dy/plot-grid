@@ -77,17 +77,18 @@ Create new grid instance. It can serve both as a class or constructor function (
 
 | Name | Type | Description |
 |---|---|---|
-| `lines` | Bool, Array, Function, null | Array with values for lines or function returning such array, `(lines, viewport, grid) => [values...]`. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
+| `lines` | Bool, Array, Function, null | Array with values for lines or function returning such array, `state => [values...]`. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
 | `axis` | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. `0` for zero-line. Note that if origin is outside of the viewport, axis will be placed to the edge. |
-| `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `(lines, viewport, grid) => [labels...]`. |
-| `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `(lines, viewport, grid) => [ticks...]`. |
+| `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `state => [labels...]`. |
+| `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `state => [ticks...]`. |
 | `name` | String, null | Name for the axis. |
 | `units` | String, null | Units to add as a suffix to the labels. |
 | `padding` | Number, Array(4) | Space for the labels and axis, by default `0`. |
 | **Zoom/pan** |
 | `min` | Number | Defines minimum value for the grid, by default `-Infinity`. |
 | `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
-| `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`.  |
+| `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`. |
+| `origin` | Number | Defines position of the offset on the screen, for example, `.5` is center, `1` is right/top edge of the screen, `0` is left/bottom. By default `.5`. |
 | `scale` | Number | Sets scale for the current range, numver of values per pixel. By default is `1`. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
@@ -97,7 +98,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `color` | String, Array | Default color for the lines, axes, ticks and labels. |
 | `axisWidth` | Number | Width of axis, by default `2`. |
 | `axisColor` | String, Array | Axis color, redefines default `color`. |
-| `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `(lines, viewport, grid) => [colors...]`. By default `color`. |
+| `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `state => [colors...]`. By default `color`. |
 | `lineWidth` | Number | Width of lines, by default `1`. |
 | `log` | Bool | Place lines logarithmically. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
