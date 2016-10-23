@@ -51,7 +51,7 @@ let fps = createFps({
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'default', hidden: true, options: {
+	{id: 'use-case', type: 'select', value: 'dictaphone', hidden: true, options: {
 			'default': '⊞ Default',
 			'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
@@ -79,10 +79,10 @@ var settings = createSettings([
 			else if (v === 'dictaphone') {
 				settings.set({
 					x: true,
-					xAxis: Infinity,
+					xAxis: 0,
 					xLines: false,
 					y: true,
-					yAxis: Infinity,
+					yAxis: 0,
 					yLines: false,
 
 					r: false,
@@ -91,33 +91,56 @@ var settings = createSettings([
 				grid.update({
 					x: {
 						lines: false,
-						axis: Infinity,
+						axis: 0,
 						font: '12pt sans-serif',
 						offset: 0,
-						scale: 2,
-						axisWidth: 1,
-						ticks: (lines, vp, grid) => {
-							let step = lines.step;
-							let range = lines.range;
-							let start = lines.offset;
-
+						scale: 10,
+						axisWidth: 2,
+						origin: 0,
+						tickAlign: 1,
+						ticks: (state) => {
 							let result = {};
+							let step = 250;
+							let start = Math.floor(state.offset/step)*step, end = Math.ceil((start + state.range)/step)*step;
+							start = Math.max(start, 0);
 
-							for (let i = 0; i < range; i+= 250) {
-								if (i % 1000) result[i] = 4;
-								else result[i] = 10;
+							for (let i = start; i < end; i+= step) {
+								if (i % 1000) result[i] = 5;
+								else result[i] = 20;
 							}
 
 							return result;
 						},
-						// labels: () => {
+						labels: (state) => {
+							let result = {};
+							let step = 250;
+							let start = Math.floor(state.offset/step)*step, end = Math.ceil((start + state.range)/step)*step;
+							start = Math.max(start, 0);
 
-						// }
+							function time(ts) {
+								let ms = ts % 1000;
+								let seconds = Math.floor(ts/1000) % 60;
+								let minutes = Math.floor(ts/1000/60) % 60;
+								let hours = Math.floor(ts/1000/60/60) % 60;
+								let str = '';
+								if (hours) str += (hours < 10 ? '0' : '') + hours + ':';
+								str += (minutes < 10 ? '0' : '') + minutes + ':';
+								str += (seconds < 10 ? '0' : '') + seconds;
+								return str;
+							}
+
+							for (let i = start; i < end; i+= step) {
+								if (i % 1000) result[i] = null;
+								else result[i] = time(i);
+							}
+
+							return result;
+						}
 					},
-					y: {
-						axis: Infinity
+					y: true/*{
+						axis: 1000
 						// lines: false
-					}
+					}*/
 				});
 			}
 			else if (v === 'multigrid') {

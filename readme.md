@@ -102,7 +102,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `axisColor` | String, Array | Axis color, redefines default `color`. |
 | `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `state => [colors...]`. By default `color`. |
 | `lineWidth` | Number | Width of lines, by default `1`. |
-| `log` | Bool | Place lines logarithmically. |
+| `tickAlign` | Number | The side to align ticks, `0..1`. By default `0.5`. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
 | `steps` | Array | Base steps to use for lines, by default `[1, 2, 5]`. |
 | `step` | Number | Current step value, read-only. |

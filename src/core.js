@@ -12,7 +12,6 @@ const isBrowser = require('is-browser');
 const extend = require('just-extend');
 // const range = require('just-range');
 const pick = require('just-pick');
-const magOrder = require('mumath/order');
 const clamp = require('mumath/clamp');
 const lg = require('mumath/log10');
 const isMultiple = require('mumath/is-multiple');
@@ -20,6 +19,7 @@ const pretty = require('mumath/pretty');
 const panzoom = require('pan-zoom');
 const alpha = require('color-alpha');
 const almost = require('almost-equal');
+const isObj = require('is-plain-obj');
 
 module.exports = Grid;
 
@@ -157,20 +157,17 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.axisColor = lines.axisColor || lines.color;
 	state.axisWidth = lines.axisWidth || lines.lineWidth;
 	state.lineWidth = lines.lineWidth;
+	state.tickAlign = lines.tickAlign;
 	state.labelColor = state.axisColor;
 	state.font = lines.font;
-
 
 	//get lines stops
 	let values;
 	if (lines.lines instanceof Function) {
 		values = lines.lines(state);
 	}
-	else if (Array.isArray(lines.lines)) {
-		values = lines.lines;
-	}
-	else if (!lines.lines) {
-		//TODO: collect values from labels/ticks/coords mb?
+	else {
+		values = lines.lines || [];
 	}
 	state.values = values;
 
@@ -180,7 +177,8 @@ Grid.prototype.calcLines = function (lines, vp) {
 		colors = lines.lineColor(state);
 	}
 	else {
-		colors = state.lines.lineColor || state.lines.color;
+		let color = typeof lines.lineColor === 'string' ? lines.lineColor : lines.color;
+		colors = Array(values.length).fill(color);
 	}
 	state.colors = colors;
 
@@ -189,20 +187,53 @@ Grid.prototype.calcLines = function (lines, vp) {
 	if (lines.ticks instanceof Function) {
 		ticks = lines.ticks(state);
 	}
-	else {
+	else if (Array.isArray(lines.ticks)) {
 		ticks = lines.ticks;
+	}
+	else {
+		let tick = (lines.ticks === true || lines.ticks === true) ? state.axisWidth*2 : lines.ticks || 0;
+		ticks = Array(values.length).fill(tick);
 	}
 	state.ticks = ticks;
 
 	//calc labels
 	let labels;
+	if (lines.labels === true) lines.labels = Grid.prototype.defaults.labels;
 	if (lines.labels instanceof Function) {
 		labels = lines.labels(state);
 	}
-	else {
+	else if (Array.isArray(lines.labels)) {
 		labels = lines.labels;
 	}
+	else {
+		labels = Array(values.length).fill(null);
+	}
 	state.labels = labels;
+
+	//convert hashmap ticks/labels to values + colors
+	if (isObj(ticks)) {
+		state.ticks = Array(values.length).fill(0);
+	}
+	if (isObj(labels)) {
+		state.labels = Array(values.length).fill(null);
+	}
+
+	if (isObj(ticks)) {
+		for (let value in ticks) {
+			state.ticks.push(ticks[value]);
+			state.values.push(parseFloat(value));
+			state.colors.push(null);
+			state.labels.push(null);
+		}
+	}
+	if (isObj(labels)) {
+		for (let value in labels) {
+			state.labels.push(labels[value]);
+			state.values.push(parseFloat(value));
+			state.colors.push(null);
+			state.ticks.push(0);
+		}
+	}
 
 	return state;
 };
@@ -228,10 +259,11 @@ Grid.prototype.defaults = {
 	font: '10pt sans-serif',
 	color: 'rgb(0,0,0)',
 	style: 'lines',
+	tickAlign: .5,
 	disable: true,
 	steps: [1, 2, 5],
-	log: false,
 	distance: 15,
+
 	lines: state => {
 		let step = state.step;
 
@@ -304,6 +336,7 @@ Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 	orientation: 'x',
 	getCoords: (values, state) => {
 		let coords = [];
+		if (!values) return coords;
 		for (let i = 0; i < values.length; i++) {
 			let t = state.lines.getRatio(values[i], state);
 			coords.push(t);
@@ -316,6 +349,7 @@ Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 	getRange: state => {
 		return state.viewport[2] * state.lines.scale;
 	},
+	//FIXME: handle infinity case here
 	getRatio: (value, state) => {
 		return (value - state.offset) / state.range
 	}
@@ -324,6 +358,7 @@ Grid.prototype.y = extend({}, Grid.prototype.defaults, {
 	orientation: 'y',
 	getCoords: (values, state) => {
 		let coords = [];
+		if (!values) return coords;
 		for (let i = 0; i < values.length; i++) {
 			let t = state.lines.getRatio(values[i], state);
 			coords.push(0);

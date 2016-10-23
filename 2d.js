@@ -60,7 +60,6 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 	//create lines positions here
 	let values = state.values;
 	let lineColors = state.colors;
-	let lineColor = Array.isArray(lineColors) ? null : lineColors;
 	let ticks = state.ticks;
 	let labels = state.labels;
 
@@ -84,7 +83,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 		ctx.lineWidth = state.lineWidth;
 
 		for (let i=0, j=0; i < coords.length; i+=4, j++) {
-			let color = lineColor || lineColors[j];
+			let color = lineColors[j];
 			if (!color) continue;
 
 			ctx.beginPath();
@@ -120,17 +119,17 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 		//calc labels/tick coords
 		let tickCoords = [];
 		let labelCoords = [];
-		//FIXME: handle case when ticks are 0
+		let align = state.tickAlign;
 		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
 			let tick = [normals[i] * ticks[k]/width, normals[i+1] * ticks[k]/height];
 			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
 			let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
 			labelCoords.push(normals[i]*(xDif) + x1)
 			labelCoords.push(normals[i+1]*(yDif) + y1)
-			tickCoords.push(normals[i]*(xDif + tick[0]) + x1);
-			tickCoords.push(normals[i+1]*(yDif + tick[1]) + y1);
-			tickCoords.push(normals[i]*(xDif - tick[0]) + x1);
-			tickCoords.push(normals[i+1]*(yDif - tick[1]) + y1);
+			tickCoords.push(normals[i]*(xDif + tick[0]*align) + x1);
+			tickCoords.push(normals[i+1]*(yDif + tick[1]*align) + y1);
+			tickCoords.push(normals[i]*(xDif - tick[0]*(1-align)) + x1);
+			tickCoords.push(normals[i+1]*(yDif - tick[1]*(1-align)) + y1);
 		}
 
 		//draw ticks
