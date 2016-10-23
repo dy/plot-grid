@@ -75,6 +75,8 @@ Create new grid instance. It can serve both as a class or constructor function (
 
 #### Lines
 
+Each of _x/y/r/a_ can define custom dimension view by the following options:
+
 | Name | Type | Description |
 |---|---|---|
 | `lines` | Bool, Array, Function, null | Array with values for lines or function returning such array, `state => [values...]`. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
@@ -104,6 +106,26 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `distance` | Number | Minimum distance between lines. By default `10`. |
 | `steps` | Array | Base steps to use for lines, by default `[1, 2, 5]`. |
 | `step` | Number | Current step value, read-only. |
+
+
+#### State
+
+Some lines properties which can be functions receive `state` object as an argument, which includes following values, directly fed to renderer:
+
+| Name | Description |
+|---|---|
+| `values` | Array with values for lines. |
+| `lines` | Reference to lines options object. |
+| `grid` | Reference to the grid instance. |
+| `viewport` | Current area on the canvas to render grid. |
+| `step` | Current step used to spread lines, one from the _lines.steps_ list, _step ≥ lines.distance_. |
+| `range` | Current visible values range. |
+| `offset` | Value corresponding to the left offset of the grid. |
+| `axisOrigin` | Value for the axis on the opposite dimension, if any. |
+| `axisWidth`, `lineWidth`, `axisColor`, `labelColor`, `font` | Style properties. |
+| `colors` | Color or array of colors, corresponding to lines. |
+| `ticks` | List with tick sizes. |
+| `labels` | Text values for the labels. |
 
 
 ### grid.update(options)

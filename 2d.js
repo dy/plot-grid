@@ -120,6 +120,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 		//calc labels/tick coords
 		let tickCoords = [];
 		let labelCoords = [];
+		//FIXME: handle case when ticks are 0
 		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
 			let tick = [normals[i] * ticks[k]/width, normals[i+1] * ticks[k]/height];
 			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
