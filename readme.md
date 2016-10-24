@@ -92,6 +92,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`. |
 | `origin` | Number | Defines position of the offset on the screen, for example, `.5` is center, `1` is right/top edge of the screen, `0` is left/bottom. By default `.5`. |
 | `scale` | Number | Sets scale for the current range, numver of values per pixel. By default is `1`. |
+| `minScale`, `maxScale` | Number | Scale limits. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
 | **Advanced** |
@@ -119,6 +120,7 @@ Some lines properties which can be functions receive `state` object as an argume
 | `grid` | Reference to the grid instance. |
 | `viewport` | Current area on the canvas to render grid. |
 | `step` | Current step used to spread lines, one from the _lines.steps_ list, _step ≥ lines.distance_. |
+| `minStep` | Minimum step for current resolution/distance, not bound to step grid. |
 | `range` | Current visible values range. |
 | `offset` | Value corresponding to the left offset of the grid. |
 | `axisOrigin` | Value for the axis on the opposite dimension, if any. |

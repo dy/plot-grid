@@ -4,7 +4,11 @@ const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
 const createFps = require('fps-indicator');
-
+const scale = require('mumath/scale');
+const lg = require('mumath/log10');
+const closest = require('mumath/closest');
+const pad = require('left-pad');
+const steps = require('./src/steps');
 
 insertCss(`
 	body {
@@ -88,24 +92,37 @@ var settings = createSettings([
 					r: false,
 					a: false
 				});
+
+
 				grid.update({
 					x: {
 						lines: false,
+						pan: true,
 						axis: 0,
 						font: '12pt sans-serif',
 						offset: 0,
 						scale: 10,
+						minScale: .006,
+						maxScale: 120*1000,
 						axisWidth: 2,
+						min: 0,
 						origin: 0,
 						tickAlign: 1,
+						distance: 20,
+						steps: [1, 2.5, 5],
 						ticks: (state) => {
 							let result = {};
-							let step = 250;
+							let {lines} = state;
+
+							let minStep = lines.distance * lines.scale;
+
+							let [step, largeStep] = steps.date(minStep);
+
 							let start = Math.floor(state.offset/step)*step, end = Math.ceil((start + state.range)/step)*step;
 							start = Math.max(start, 0);
 
 							for (let i = start; i < end; i+= step) {
-								if (i % 1000) result[i] = 5;
+								if (i % largeStep) result[i] = 5;
 								else result[i] = 20;
 							}
 
@@ -113,34 +130,41 @@ var settings = createSettings([
 						},
 						labels: (state) => {
 							let result = {};
-							let step = 250;
+							let {lines} = state;
+							let minStep = lines.distance * lines.scale;
+
+							let [step, largeStep] = steps.date(minStep);
+
 							let start = Math.floor(state.offset/step)*step, end = Math.ceil((start + state.range)/step)*step;
 							start = Math.max(start, 0);
 
-							function time(ts) {
+							function time(ts, showMs) {
 								let ms = ts % 1000;
 								let seconds = Math.floor(ts/1000) % 60;
 								let minutes = Math.floor(ts/1000/60) % 60;
 								let hours = Math.floor(ts/1000/60/60) % 60;
 								let str = '';
-								if (hours) str += (hours < 10 ? '0' : '') + hours + ':';
-								str += (minutes < 10 ? '0' : '') + minutes + ':';
-								str += (seconds < 10 ? '0' : '') + seconds;
+								if (hours) str += pad(hours,2,0) + ':';
+								str += pad(minutes,2,0) + ':';
+								str += pad(seconds,2,0);
+								if (showMs) str += ':' + pad(ms, 3, 0);
 								return str;
 							}
 
 							for (let i = start; i < end; i+= step) {
-								if (i % 1000) result[i] = null;
-								else result[i] = time(i);
+								if (i % largeStep) result[i] = null;
+								else result[i] = time(i, step < 100);
 							}
 
 							return result;
 						}
 					},
-					y: true/*{
-						axis: 1000
+					y: {
+						zoom: false,
+						pan: false,
+						axis: 0
 						// lines: false
-					}*/
+					}
 				});
 			}
 			else if (v === 'multigrid') {

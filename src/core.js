@@ -10,7 +10,7 @@ const Component = require('gl-component');
 const inherits = require('inherits');
 const isBrowser = require('is-browser');
 const extend = require('just-extend');
-// const range = require('just-range');
+const range = require('just-range');
 const pick = require('just-pick');
 const clamp = require('mumath/clamp');
 const lg = require('mumath/log10');
@@ -20,6 +20,7 @@ const panzoom = require('pan-zoom');
 const alpha = require('color-alpha');
 const almost = require('almost-equal');
 const isObj = require('is-plain-obj');
+const getStep = require('mumath/scale');
 
 module.exports = Grid;
 
@@ -67,10 +68,14 @@ function Grid (opts) {
 //default pan/zoom handlers
 //TODO: check if interaction happens within actual viewport
 Grid.prototype.pan = function (dx, dy, x, y) {
-	let vp = this.viewport;
-
-	if (!this.x.disable && this.x.pan) this.x.offset -= this.x.scale * dx;
-	if (!this.y.disable && this.y.pan) this.y.offset += this.y.scale * dy;
+	if (!this.x.disable && this.x.pan) {
+		this.x.offset -= this.x.scale * dx;
+		this.x.offset = clamp(this.x.offset, this.x.min, this.x.max);
+	}
+	if (!this.y.disable && this.y.pan) {
+		this.y.offset += this.y.scale * dy;
+		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
+	}
 
 	this.render();
 
@@ -86,20 +91,21 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 	let oY = this.y && this.y.origin || 0;
 
 	//shift start
-	let tx = (x-left)/width - oX, ty = oY-(y-top)/height;
 	let amt = clamp(-dy, -height*.75, height*.75)/height;
 
-	if (!this.x.disable) {
+	if (this.x.zoom !== false) {
+		let tx = (x-left)/width - oX;
 		let prevScale = this.x.scale;
 		this.x.scale *= (1 - amt);
-		this.x.scale = Math.max(this.x.scale, this.x.minScale);
+		this.x.scale = clamp(this.x.scale, this.x.minScale, this.x.maxScale);
 		this.x.offset -= width*(this.x.scale - prevScale) * tx;
 	}
 
-	if (!this.y.disable) {
+	if (this.y.zoom !== false) {
+		let ty = oY-(y-top)/height;
 		let prevScale = this.y.scale;
 		this.y.scale *= (1 - amt);
-		this.y.scale = Math.max(this.y.scale, this.x.minScale);
+		this.y.scale = clamp(this.y.scale, this.y.minScale, this.y.maxScale);
 		this.y.offset -= height*(this.y.scale - prevScale) * ty;
 	}
 
@@ -144,12 +150,15 @@ Grid.prototype.calcLines = function (lines, vp) {
 		lines: lines,
 		viewport: vp,
 		grid: this,
-		step: getStep(lines.distance * lines.scale, lines.steps),
+		minStep: getStep(lines.distance * lines.scale, lines.steps),
 	};
 
 	//calculate real offset/range
 	state.range = lines.getRange(state);
-	state.offset = lines.offset - state.range * clamp(lines.origin, 0, 1);
+	state.offset = clamp(
+		lines.offset - state.range * clamp(lines.origin, 0, 1),
+		lines.min, lines.max - state.range
+	);
 
 	//calc axis/style
 	state.axisOrigin = typeof lines.axis === 'number' ? lines.axis : 0;
@@ -252,6 +261,7 @@ Grid.prototype.defaults = {
 	origin: .5,
 	scale: 1,
 	minScale: Number.EPSILON || 1.19209290e-7,
+	maxScale: Number.MAX_VALUE || 1e100,
 	zoom: true,
 	pan: true,
 
@@ -298,7 +308,7 @@ Grid.prototype.defaults = {
 		if (!state.values) return;
 		let {lines} = state;
 
-		let step = getStep(getStep(state.step, lines.steps), lines.steps);
+		let step = getStep(getStep(state.step*1.1, lines.steps)*1.1, lines.steps);
 		let eps = step/10;
 		let tickWidth = state.axisWidth*2;
 		return state.values.map(v => {
@@ -311,7 +321,7 @@ Grid.prototype.defaults = {
 		if (!state.values) return;
 		let {lines} = state;
 
-		let step = getStep(getStep(state.step, lines.steps), lines.steps);
+		let step = getStep(getStep(state.step*1.1, lines.steps)*1.1, lines.steps);
 		let precision = clamp(-Math.floor(lg(step)), 20, 0);
 		let eps = step/10;
 		return state.values.map(v => {
@@ -381,45 +391,3 @@ Grid.prototype.r = extend({}, Grid.prototype.defaults, {
 Grid.prototype.a = extend({}, Grid.prototype.defaults, {
 	orientation: 'a'
 });
-
-
-
-//lil helper
-//FIXME: replace with just-range
-function range(start, stop, step) {
-  if (stop == null) {
-    stop = start || 0;
-    start = 0;
-  }
-  if (step == null) {
-    step = stop > start ? 1 : -1;
-  }
-  var toReturn = [];
-  var right = start < stop;
-  for (; right ? start < stop : start > stop; start += step) {
-    toReturn.push(start);
-  }
-  return toReturn;
-}
-
-
-//get closest appropriate step from the list
-//FIXME: move to mumath, but implement log first maybe?
-function getStep (minStep, srcSteps) {
-	let power = Math.floor(lg(minStep));
-
-	let order = Math.pow(10, power);
-	let steps = srcSteps.map(v => v*order);
-	order = Math.pow(10, power+1);
-	steps = steps.concat(srcSteps.map(v => v*order));
-
-	//find closest scale
-	let step = 0;
-	for (let i = 0; i < steps.length; i++) {
-		step = steps[i];
-		if (step > minStep) break;
-	}
-
-	return step;
-}
-
