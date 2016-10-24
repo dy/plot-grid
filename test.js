@@ -87,7 +87,7 @@ var settings = createSettings([
 			else if (v === 'dictaphone') {
 				settings.set({
 					x: true,
-					xAxis: 0,
+					xAxis: Infinity,
 					xLines: false,
 					y: true,
 					yAxis: Infinity,
@@ -110,10 +110,11 @@ var settings = createSettings([
 						maxScale: 120*1000,
 						axisWidth: 2,
 						min: 0,
-						origin: 0,
+						origin: Infinity,
 						align: 0,
 						distance: 20,
 						steps: [1, 2.5, 5],
+						padding: 20,
 						ticks: (state) => {
 							let result = {};
 							let {lines} = state;
@@ -167,9 +168,11 @@ var settings = createSettings([
 						zoom: false,
 						pan: false,
 						axis: Infinity,
+						padding: 20,
 						distance: 20,
-						// lineColor: null,
+						lineColor: 'rgba(0,0,0,0.1)',
 						scale: 20/grid.viewport[3],
+						// ticks: null,
 						labels: state => {
 							return state.values.map(v => -Math.abs(v).toFixed(0));
 						}

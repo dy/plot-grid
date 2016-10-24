@@ -172,6 +172,17 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.align = lines.align;
 	state.labelColor = state.axisColor;
 
+	//get padding
+	if (typeof lines.padding === 'number') {
+		state.padding = Array(4).fill(lines.padding);
+	}
+	else if (lines.padding instanceof Function) {
+		state.padding = lines.padding(state);
+	}
+	else {
+		state.padding = lines.padding;
+	}
+
 	if (typeof lines.fontSize === 'number') {
 		state.fontSize = lines.fontSize
 	}
@@ -285,6 +296,7 @@ Grid.prototype.defaults = {
 	disabled: true,
 	steps: [1, 2, 5],
 	distance: 15,
+	padding: 0,
 
 	lines: state => {
 		let step = state.step;
@@ -338,9 +350,8 @@ Grid.prototype.defaults = {
 		let eps = step/10;
 		return state.values.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
-			if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
-			// console.log(v, pretty(v))
-			return v.toFixed(precision) + lines.units
+			// if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
+			return v.toFixed(precision) + lines.units;
 		});
 	},
 

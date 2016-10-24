@@ -56,6 +56,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 	if (!state || !state.lines || state.lines.disable) return;
 
 	let [left, top, width, height] = state.viewport;
+	let [pt, pr, pb, pl] = state.padding;
 
 	//create lines positions here
 	let values = state.values;
@@ -87,8 +88,10 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 			if (!color) continue;
 
 			ctx.beginPath();
-			let x1 = left + coords[i]*width, y1 = top + coords[i+1]*height;
-			let x2 = left + coords[i+2]*width, y2 = top + coords[i+3]*height;
+			let x1 = left + pl + coords[i]*(width - pr-pl),
+				y1 = top + pt + coords[i+1]*(height - pb-pt);
+			let x2 = left + pl + coords[i+2]*(width - pr-pl),
+				y2 = top + pt + coords[i+3]*(height - pb-pt);
 			ctx.moveTo(x1, y1);
 			ctx.lineTo(x2, y2);
 
@@ -106,8 +109,10 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 
 		ctx.lineWidth = state.axisWidth;
 
-		let x1 = left + axisCoords[0]*width, y1 = top + axisCoords[1]*height;
-		let x2 = left + axisCoords[2]*width, y2 = top + axisCoords[3]*height;
+		let x1 = left + axisCoords[0]*(width - pr-pl),
+			y1 = top + axisCoords[1]*(height - pt-pb);
+		let x2 = left + axisCoords[2]*(width - pr-pl),
+			y2 = top + axisCoords[3]*(height - pt-pb);
 
 		ctx.beginPath();
 		ctx.moveTo(x1, y1);
@@ -122,7 +127,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 		let labelCoords = [];
 		let align = state.align;
 		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
-			let tick = [normals[i] * ticks[k]/width, normals[i+1] * ticks[k]/height];
+			let tick = [normals[i] * ticks[k]/(width-pl-pr), normals[i+1] * ticks[k]/(height-pt-pb)];
 			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
 			let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
 			labelCoords.push(normals[i]*(xDif) + x1)
@@ -139,10 +144,10 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 			ctx.beginPath();
 			for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
 				if (almost(values[j], state.opposite.axisOrigin)) continue;
-				let x1 = left + tickCoords[i]*width,
-					y1 = top + tickCoords[i+1]*height;
-				let x2 = left + tickCoords[i+2]*width,
-					y2 = top + tickCoords[i+3]*height;
+				let x1 = left + pl + tickCoords[i]*(width - pl-pr),
+					y1 = top + pt + tickCoords[i+1]*(height - pt-pb);
+				let x2 = left + pl + tickCoords[i+2]*(width - pl-pr),
+					y2 = top + pt + tickCoords[i+3]*(height - pt-pb);
 				ctx.moveTo(x1, y1);
 				ctx.lineTo(x2, y2);
 			}
@@ -153,22 +158,24 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 
 		//draw labels
 		if (labels) {
-			ctx.font = ' ' + state.fontSize + 'px ' + state.fontFamily;
+			ctx.font = state.fontSize + 'px ' + state.fontFamily;
 			ctx.fillStyle = state.labelColor;
 			ctx.textBaseline = 'top';
 			let textHeight = state.fontSize,
-				indent = state.axisWidth;
+				indent = state.axisWidth + 1.5;
 			let textOffset = align < .5 ? -textHeight-state.axisWidth : state.axisWidth;
 			let isOpp = state.lines.opposite === 'y' && !state.lines.opposite.disable;
 			for (let i = 0; i < labels.length; i++) {
 				let label = labels[i];
-				if (!label) continue;
+				if (label==null) continue;
 				if (isOpp && almost(values[i], state.opposite.axisOrigin)) continue;
 				let textWidth = ctx.measureText(label).width;
-				let textLeft = labelCoords[i*2] * width + left + indent;
-				if (normals[i*2]) textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
-				let textTop = labelCoords[i*2+1] * height + top + textOffset;
-				if (normals[i*2+1]) textTop = clamp(textTop, top + textHeight, top + height - textHeight/2);
+
+				let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;
+				if (normals[i*2]) textLeft = clamp(textLeft, left + pl + indent, left + width - pr - textWidth - 1 - state.axisWidth);
+
+				let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
+				if (normals[i*2+1]) textTop = clamp(textTop, top + pt + textHeight, top + height - pb - textHeight/2);
 				ctx.fillText(label, textLeft, textTop);
 			}
 		}

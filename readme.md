@@ -85,7 +85,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `state => [ticks...]`. |
 | `name` | String, null | Name for the axis. |
 | `units` | String, null | Units to add as a suffix to the labels. |
-| `padding` | Number, Array(4) | Space for the labels and axis, by default `0`. |
+| `padding` | Number, Array(4), Function | Space for labels and axis, by default `0`. Array sequence is `top, right, bottom, left`, as in css. |
 | **Zoom/pan** |
 | `min` | Number | Defines minimum value for the grid, by default `-Infinity`. |
 | `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
