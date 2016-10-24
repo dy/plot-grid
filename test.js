@@ -17,6 +17,7 @@ insertCss(`
 	}
 	.frame {
 		display: block;
+		overflow: hidden;
 		min-height: 100vh;
 	}
 
@@ -31,6 +32,9 @@ insertCss(`
 	@media (max-width:960px) {
 		.settings-panel {
 			display: none!important;
+		}
+		.frame {
+			width: 100vw;
 		}
 		.fps {
 			right: 10px!important;
@@ -86,7 +90,7 @@ var settings = createSettings([
 					xAxis: 0,
 					xLines: false,
 					y: true,
-					yAxis: 0,
+					yAxis: Infinity,
 					yLines: false,
 
 					r: false,
@@ -162,7 +166,12 @@ var settings = createSettings([
 					y: {
 						zoom: false,
 						pan: false,
-						axis: 0
+						axis: Infinity,
+						distance: 20,
+						scale: 20/grid.viewport[3],
+						labels: state => {
+							return state.values.map(v => -Math.abs(v).toFixed(0));
+						}
 						// lines: false
 					}
 				});
@@ -286,5 +295,3 @@ var grid = Grid({
 	// }
 });
 
-
-window.addEventListener('resize', () => grid.update());

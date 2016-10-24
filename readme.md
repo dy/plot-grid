@@ -91,7 +91,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
 | `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`. |
 | `origin` | Number | Defines position of the offset on the screen, for example, `.5` is center, `1` is right/top edge of the screen, `0` is left/bottom. By default `.5`. |
-| `scale` | Number | Sets scale for the current range, numver of values per pixel. By default is `1`. |
+| `scale` | Number, Function | Sets scale for the current range, number of values per pixel. Can be a function, if scale should depend on viewport for adaptive layout. By default is `1`. |
 | `minScale`, `maxScale` | Number | Scale limits. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |

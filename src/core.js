@@ -99,6 +99,7 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 		this.x.scale *= (1 - amt);
 		this.x.scale = clamp(this.x.scale, this.x.minScale, this.x.maxScale);
 		this.x.offset -= width*(this.x.scale - prevScale) * tx;
+		this.x.offset = clamp(this.x.offset, this.x.min, this.x.max);
 	}
 
 	if (this.y.zoom !== false) {
@@ -107,6 +108,7 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 		this.y.scale *= (1 - amt);
 		this.y.scale = clamp(this.y.scale, this.y.minScale, this.y.maxScale);
 		this.y.offset -= height*(this.y.scale - prevScale) * ty;
+		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
 	}
 
 	this.render();
@@ -150,7 +152,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 		lines: lines,
 		viewport: vp,
 		grid: this,
-		minStep: getStep(lines.distance * lines.scale, lines.steps),
+		step: getStep(lines.distance * lines.scale, lines.steps)
 	};
 
 	//calculate real offset/range

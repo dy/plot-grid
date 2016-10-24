@@ -25,12 +25,14 @@ function GLGrid (opts) {
 	opts.autostart = false;
 	let vp = opts.viewport;
 	opts.viewport = null;
+	opts.fit = true;
 
 	Grid.call(this, opts);
 
 	//canvas 2d is used as a texture, that’s it
 	opts.container = null;
 	opts.viewport = vp;
+	opts.fit = false;
 	this.grid = new Canvas2DGrid(opts);
 	this.grid.canvas.width = this.canvas.width;
 	this.grid.canvas.height = this.canvas.height;
@@ -40,6 +42,7 @@ function GLGrid (opts) {
 		this.grid.canvas.width = this.canvas.width;
 		this.grid.canvas.height = this.canvas.height;
 		this.grid.resize();
+		this.render();
 	});
 	this.on('update', (opts) => {
 		//FIXME: this dude automatically draws 2d grid, do something about that
