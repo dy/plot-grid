@@ -188,8 +188,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 		colors = lines.lineColor(state);
 	}
 	else {
-		let color = typeof lines.lineColor === 'string' ? lines.lineColor : lines.color;
-		colors = Array(values.length).fill(color);
+		colors = Array(values.length).fill(lines.lineColor);
 	}
 	state.colors = colors;
 

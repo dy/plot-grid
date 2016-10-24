@@ -122,7 +122,7 @@ var settings = createSettings([
 
 							let [step, largeStep] = steps.date(minStep);
 
-							let start = Math.floor(state.offset/step)*step, end = Math.ceil((start + state.range)/step)*step;
+							let start = Math.floor(state.offset/step)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
 
 							for (let i = start; i < end; i+= step) {
@@ -139,7 +139,7 @@ var settings = createSettings([
 
 							let [step, largeStep] = steps.date(minStep);
 
-							let start = Math.floor(state.offset/step)*step, end = Math.ceil((start + state.range)/step)*step;
+							let start = Math.floor(state.offset/step)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
 
 							function time(ts, showMs) {
@@ -168,6 +168,7 @@ var settings = createSettings([
 						pan: false,
 						axis: Infinity,
 						distance: 20,
+						lineColor: null,
 						scale: 20/grid.viewport[3],
 						labels: state => {
 							return state.values.map(v => -Math.abs(v).toFixed(0));

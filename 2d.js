@@ -101,7 +101,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 	//draw axis
 	if (state.lines.axis !== false) {
 		let axisRatio = state.opposite.lines.getRatio(state.axisOrigin, state.opposite);
-		axisRatio = clamp(axisRatio, -999, 999);
+		axisRatio = clamp(axisRatio, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
 		let axisCoords = state.opposite.lines.getCoords([state.axisOrigin], state.opposite);
 
 		ctx.lineWidth = state.axisWidth;
@@ -162,8 +162,10 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 				if (!label) continue;
 				if (isOpp && almost(values[i], state.opposite.axisOrigin)) continue;
 				let textWidth = ctx.measureText(label).width;
-				let textLeft = clamp(labelCoords[i*2] * width + left + indent, left + indent, left + width - textWidth - 1 - state.axisWidth);
-				let textTop = clamp(labelCoords[i*2+1] * height + top + textHeight, top + textHeight, top + height - textHeight/2);
+				let textLeft = labelCoords[i*2] * width + left + indent;
+				if (normals[i*2]) textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
+				let textTop = labelCoords[i*2+1] * height + top + textHeight;
+				if (normals[i*2+1]) textTop = clamp(textTop, top + textHeight, top + height - textHeight/2);
 				ctx.fillText(label, textLeft, textTop);
 			}
 		}
