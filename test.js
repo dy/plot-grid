@@ -103,7 +103,7 @@ var settings = createSettings([
 						lines: false,
 						pan: true,
 						axis: 0,
-						font: '12pt sans-serif',
+						fontSize: '12pt',
 						offset: 0,
 						scale: 10,
 						minScale: .006,
@@ -111,7 +111,7 @@ var settings = createSettings([
 						axisWidth: 2,
 						min: 0,
 						origin: 0,
-						tickAlign: 1,
+						align: 0,
 						distance: 20,
 						steps: [1, 2.5, 5],
 						ticks: (state) => {
@@ -168,7 +168,7 @@ var settings = createSettings([
 						pan: false,
 						axis: Infinity,
 						distance: 20,
-						lineColor: null,
+						// lineColor: null,
 						scale: 20/grid.viewport[3],
 						labels: state => {
 							return state.values.map(v => -Math.abs(v).toFixed(0));

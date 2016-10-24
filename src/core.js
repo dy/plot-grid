@@ -21,6 +21,8 @@ const alpha = require('color-alpha');
 const almost = require('almost-equal');
 const isObj = require('is-plain-obj');
 const getStep = require('mumath/scale');
+const parseUnit = require('parse-unit');
+const toPx = require('to-px');
 
 module.exports = Grid;
 
@@ -68,11 +70,11 @@ function Grid (opts) {
 //default pan/zoom handlers
 //TODO: check if interaction happens within actual viewport
 Grid.prototype.pan = function (dx, dy, x, y) {
-	if (!this.x.disable && this.x.pan) {
+	if (!this.x.disabled && this.x.pan) {
 		this.x.offset -= this.x.scale * dx;
 		this.x.offset = clamp(this.x.offset, this.x.min, this.x.max);
 	}
-	if (!this.y.disable && this.y.pan) {
+	if (!this.y.disabled && this.y.pan) {
 		this.y.offset += this.y.scale * dy;
 		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
 	}
@@ -122,11 +124,10 @@ Grid.prototype.update = function (opts) {
 	opts = opts || {};
 
 	//disable lines
-	if (opts.x !== undefined) this.x.disable = !opts.x;
-	if (opts.y !== undefined) this.y.disable = !opts.y;
-	if (opts.r !== undefined) this.r.disable = !opts.r;
-	if (opts.a !== undefined) this.a.disable = !opts.a;
-
+	if (opts.x !== undefined) this.x.disabled = !opts.x;
+	if (opts.y !== undefined) this.y.disabled = !opts.y;
+	if (opts.r !== undefined) this.r.disabled = !opts.r;
+	if (opts.a !== undefined) this.a.disabled = !opts.a;
 
 	//extend props
 	if (opts.x) extend(this.x, opts.x);
@@ -168,9 +169,17 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.axisColor = lines.axisColor || lines.color;
 	state.axisWidth = lines.axisWidth || lines.lineWidth;
 	state.lineWidth = lines.lineWidth;
-	state.tickAlign = lines.tickAlign;
+	state.align = lines.align;
 	state.labelColor = state.axisColor;
-	state.font = lines.font;
+
+	if (typeof lines.fontSize === 'number') {
+		state.fontSize = lines.fontSize
+	}
+	else {
+		let units = parseUnit(lines.fontSize);
+		state.fontSize = units[0] * toPx(units[1]);
+	}
+	state.fontFamily = lines.fontFamily || 'sans-serif';
 
 	//get lines stops
 	let values;
@@ -188,7 +197,8 @@ Grid.prototype.calcLines = function (lines, vp) {
 		colors = lines.lineColor(state);
 	}
 	else {
-		colors = Array(values.length).fill(lines.lineColor);
+		let color = lines.lineColor !== undefined ? lines.lineColor : lines.color;
+		colors = Array(values.length).fill(color);
 	}
 	state.colors = colors;
 
@@ -267,11 +277,12 @@ Grid.prototype.defaults = {
 	pan: true,
 
 	//lines params
-	font: '10pt sans-serif',
+	fontSize: '10pt',
+	fontFamily: 'sans-serif',
 	color: 'rgb(0,0,0)',
 	style: 'lines',
-	tickAlign: .5,
-	disable: true,
+	align: .5,
+	disabled: true,
 	steps: [1, 2, 5],
 	distance: 15,
 

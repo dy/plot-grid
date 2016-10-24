@@ -97,13 +97,14 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
 | **Advanced** |
 | `type` | String | Style of lines: `lines`, `dots`, `crosses`. |
-| `font` | String | Font to use for labels, by default `12pt sans-serif`. |
+| `fontSize` | String | Font size to use for labels, by default `10pt`. |
+| `fontFamily` | String | Font family to use for labels, by default `sans-serif`. |
 | `color` | String, Array | Default color for the lines, axes, ticks and labels. |
 | `axisWidth` | Number | Width of axis, by default `2`. |
 | `axisColor` | String, Array | Axis color, redefines default `color`. |
 | `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `state => [colors...]`. By default `color`. |
 | `lineWidth` | Number | Width of lines, by default `1`. |
-| `tickAlign` | Number | The side to align ticks, `0..1`. By default `0.5`. |
+| `align` | Number | The side to align ticks and labels, `0..1`. By default `0.5`. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
 | `steps` | Array | Base steps to use for lines, by default `[1, 2, 5]`. |
 | `step` | Number | Current step value, read-only. |
@@ -128,6 +129,8 @@ Some lines properties which can be functions receive `state` object as an argume
 | `colors` | Color or array of colors, corresponding to lines. |
 | `ticks` | List with tick sizes. |
 | `labels` | Text values for the labels. |
+
+For complete list of details log state object in console.
 
 
 ### grid.update(options)

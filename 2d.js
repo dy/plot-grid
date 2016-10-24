@@ -120,7 +120,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 		//calc labels/tick coords
 		let tickCoords = [];
 		let labelCoords = [];
-		let align = state.tickAlign;
+		let align = state.align;
 		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
 			let tick = [normals[i] * ticks[k]/width, normals[i+1] * ticks[k]/height];
 			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
@@ -153,10 +153,13 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 
 		//draw labels
 		if (labels) {
-			ctx.font = state.font;
+			ctx.font = ' ' + state.fontSize + 'px ' + state.fontFamily;
 			ctx.fillStyle = state.labelColor;
-			let textHeight = 16, indent = state.axisWidth + 1;
-			let isOpp = state.lines.opposite === 'y';
+			ctx.textBaseline = 'top';
+			let textHeight = state.fontSize,
+				indent = state.axisWidth;
+			let textOffset = align < .5 ? -textHeight-state.axisWidth : state.axisWidth;
+			let isOpp = state.lines.opposite === 'y' && !state.lines.opposite.disable;
 			for (let i = 0; i < labels.length; i++) {
 				let label = labels[i];
 				if (!label) continue;
@@ -164,7 +167,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 				let textWidth = ctx.measureText(label).width;
 				let textLeft = labelCoords[i*2] * width + left + indent;
 				if (normals[i*2]) textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
-				let textTop = labelCoords[i*2+1] * height + top + textHeight;
+				let textTop = labelCoords[i*2+1] * height + top + textOffset;
 				if (normals[i*2+1]) textTop = clamp(textTop, top + textHeight, top + height - textHeight/2);
 				ctx.fillText(label, textLeft, textTop);
 			}

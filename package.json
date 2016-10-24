@@ -58,6 +58,8 @@
     "just-pick": "^1.0.3",
     "just-range": "^1.0.0",
     "mumath": "^3.0.1",
-    "pan-zoom": "^1.0.0"
+    "pan-zoom": "^1.0.0",
+    "parse-unit": "^1.0.1",
+    "to-px": "^1.0.1"
   }
 }
