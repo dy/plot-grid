@@ -59,62 +59,42 @@ let fps = createFps({
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'dictaphone', hidden: true, options: {
+	{id: 'use-case', type: 'select', value: 'default', options: {
 			'default': '⊞ Default',
-			'spectrum': '♒ Spectrum',
+			// 'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
-			'multigrid': '⧉ Multigrid',
-			'polar': '⊕ Polar'
+			// 'multigrid': '⧉ Multigrid',
+			// 'polar': '⊕ Polar'
 		}, change: v => {
 			if (v === 'default') {
-				settings.set({
-					x: true,
-					xAxis: 0,
-					y: true,
-					yAxis: 0,
-					r: false,
-					a: false
+				grid.update({
+					x: Grid.prototype.x,
+					y: Grid.prototype.y
 				});
-				grid.update({x: {
-					// offset:
-				}, y: {
-
-				}});
 			}
 			else if (v === 'spectrum') {
 
 			}
 			else if (v === 'dictaphone') {
-				settings.set({
-					x: true,
-					xAxis: Infinity,
-					xLines: false,
-					y: true,
-					yAxis: Infinity,
-					yLines: false,
-
-					r: false,
-					a: false
-				});
-
-
 				grid.update({
 					x: {
 						lines: false,
 						pan: true,
-						axis: 0,
-						fontSize: '12pt',
+						zoom: true,
+						axis: Infinity,
+						fontSize: '11pt',
+						fontFamily: 'sans-serif',
 						offset: 0,
 						scale: 10,
 						minScale: .006,
 						maxScale: 120*1000,
 						axisWidth: 2,
 						min: 0,
-						origin: Infinity,
+						origin: 0,
 						align: 0,
 						distance: 20,
 						steps: [1, 2.5, 5],
-						padding: 20,
+						padding: [60, 0, 0, 0],
 						ticks: (state) => {
 							let result = {};
 							let {lines} = state;
@@ -123,7 +103,7 @@ var settings = createSettings([
 
 							let [step, largeStep] = steps.date(minStep);
 
-							let start = Math.floor(state.offset/step)*step, end = Math.ceil((state.offset + state.range)/step)*step;
+							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
 
 							for (let i = start; i < end; i+= step) {
@@ -140,7 +120,7 @@ var settings = createSettings([
 
 							let [step, largeStep] = steps.date(minStep);
 
-							let start = Math.floor(state.offset/step)*step, end = Math.ceil((state.offset + state.range)/step)*step;
+							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
 
 							function time(ts, showMs) {
@@ -168,7 +148,10 @@ var settings = createSettings([
 						zoom: false,
 						pan: false,
 						axis: Infinity,
-						padding: 20,
+						offset: 0,
+						origin: .5,
+						axisColor: 'transparent',
+						padding: [60, 0,0,0],
 						distance: 20,
 						lineColor: 'rgba(0,0,0,0.1)',
 						scale: 20/grid.viewport[3],
@@ -206,78 +189,17 @@ var settings = createSettings([
 
 
 	{id: 'x', label: '|||', title: 'Horizontal X lines', value: true, change: v => {
-		grid.update({x: {disable: !v}});
+		grid.update({x: {disabled: !v}});
 	}},
-	{id: 'xLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-		if (!settings.get('x')) return;
-		let lines = {x:{}};
-		lines.x.log = isLog;
-		grid.update(lines);
-	}},
-	// {id: 'xAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
-	// 	if (!settings.get('x')) return;
-	// 	grid.update({x: {
-	// 		axis: v
-	// 	}});
-	// }},
-	{id: 'xAxis', type: 'switch', label: 'axis', value: 0, options: ['none', 'top', 'bottom', 0], change: v => {
-		if (!settings.get('x')) return;
-		grid.update({x: {
-			axis: v === 'none' ? false : v
-		}});
-	}},
-
-	{content: '<br/>'},
-
 	{id: 'y', label: '☰', title: 'Horizontal Y lines', value: true, change: v => {
-		grid.update({y: {disable: !v}});
+		grid.update({y: {disabled: !v}});
 	}},
-	{id: 'yLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-		if (!settings.get('y')) return;
-		let lines = {y:{}};
-		lines.y.log = isLog;
-		grid.update(lines);
-	}},
-	// {id: 'yAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-	// 	if (!settings.get('y')) return;
-	// 	grid.update({y:{axis: v}});
-	// }},
-	// {id: 'yAxis', type: 'range', label: 'axis', value: 0, min: -100, max: 100, change: v => {
-	// 	if (!settings.get('y')) return;
-	// 	grid.update({y:{axis: v}});
-	// }},
-	{id: 'yAxis', type: 'switch', label: 'axis', value: 0, options: ['none', 'left', 'right', 0], change: v => {
-		if (!settings.get('y')) return;
-		grid.update({y:{axis: v === 'none' ? false : v}});
-	}},
-
-	{content: '<br/>'},
-
 	{id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
-		grid.update({r: {disable: !v}});
+		grid.update({r: {disabled: !v}});
 	}},
-	{id: 'rLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-		let lines = {r:{}};
-		lines.r.log = isLog;
-		grid.update(lines);
-	}},
-	{id: 'rAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-		grid.update({r:{axis: v}});
-	}},
-
-	{content: '<br/>'},
-
 	{id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
-		grid.update({a: {disable: !v}});
-	}},
-	{id: 'aLog', label: 'logarithmic', type: 'checkbox',	value: false, change: isLog => {
-		let lines = {a:{}};
-		lines.a.log = isLog;
-		grid.update(lines);
-	}},
-	{id: 'aAxis', type: 'checkbox', label: 'axis', value: true, change: v => {
-		grid.update({a:{axis: v}});
-	}},
+		grid.update({a: {disabled: !v}});
+	}}
 ], {
 	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
 	theme: require('settings-panel/theme/control'),

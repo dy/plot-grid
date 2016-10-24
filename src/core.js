@@ -47,10 +47,10 @@ function Grid (opts) {
 	}
 
 	//create x/y/r
-	this.x = extend({}, Grid.prototype.x, opts.x);
-	this.y = extend({}, Grid.prototype.y, opts.y);
-	this.r = extend({}, Grid.prototype.r, opts.r);
-	this.a = extend({}, Grid.prototype.a, opts.a);
+	this.x = extend({disabled: true}, Grid.prototype.x, opts.x);
+	this.y = extend({disabled: true}, Grid.prototype.y, opts.y);
+	this.r = extend({disabled: true}, Grid.prototype.r, opts.r);
+	this.a = extend({disabled: true}, Grid.prototype.a, opts.a);
 
 	this.update(opts);
 
@@ -164,13 +164,13 @@ Grid.prototype.calcLines = function (lines, vp) {
 	);
 
 	//calc axis/style
-	state.axisOrigin = typeof lines.axis === 'number' ? lines.axis : 0;
+	state.axisOrigin = lines.axisOrigin !== undefined ? lines.axisOrigin : typeof lines.axis === 'number' ? lines.axis : 0;
 
 	state.axisColor = lines.axisColor || lines.color;
 	state.axisWidth = lines.axisWidth || lines.lineWidth;
 	state.lineWidth = lines.lineWidth;
 	state.align = lines.align;
-	state.labelColor = state.axisColor;
+	state.labelColor = state.color;
 
 	//get padding
 	if (typeof lines.padding === 'number') {
@@ -293,7 +293,6 @@ Grid.prototype.defaults = {
 	color: 'rgb(0,0,0)',
 	style: 'lines',
 	align: .5,
-	disabled: true,
 	steps: [1, 2, 5],
 	distance: 15,
 	padding: 0,
@@ -301,7 +300,7 @@ Grid.prototype.defaults = {
 	lines: state => {
 		let step = state.step;
 
-		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step)*step, step);
+		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
 	},
 	lineWidth: 1,
 	lineColor: state => {
@@ -334,7 +333,7 @@ Grid.prototype.defaults = {
 
 		let step = getStep(getStep(state.step*1.1, lines.steps)*1.1, lines.steps);
 		let eps = step/10;
-		let tickWidth = state.axisWidth*2;
+		let tickWidth = state.axisWidth*4;
 		return state.values.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
 			if (almost(v, 0, eps)) return null;
