@@ -52,6 +52,9 @@ function Grid (opts) {
 	this.r = extend({disabled: true}, Grid.prototype.r, opts.r);
 	this.a = extend({disabled: true}, Grid.prototype.a, opts.a);
 
+	//create rendering state
+	this.state = {};
+
 	this.update(opts);
 
 
@@ -79,7 +82,7 @@ Grid.prototype.pan = function (dx, dy, x, y) {
 		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
 	}
 
-	this.render();
+	this.update();
 
 	return this;
 };
@@ -113,7 +116,7 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
 	}
 
-	this.render();
+	this.update();
 
 	return this;
 };
@@ -121,26 +124,29 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 
 //re-evaluate lines, calc options for renderer
 Grid.prototype.update = function (opts) {
-	opts = opts || {};
+	if (opts) {
+		//disable lines
+		if (opts.x !== undefined) this.x.disabled = !opts.x;
+		if (opts.y !== undefined) this.y.disabled = !opts.y;
+		if (opts.r !== undefined) this.r.disabled = !opts.r;
+		if (opts.a !== undefined) this.a.disabled = !opts.a;
 
-	//disable lines
-	if (opts.x !== undefined) this.x.disabled = !opts.x;
-	if (opts.y !== undefined) this.y.disabled = !opts.y;
-	if (opts.r !== undefined) this.r.disabled = !opts.r;
-	if (opts.a !== undefined) this.a.disabled = !opts.a;
+		//extend props
+		if (opts.x) extend(this.x, opts.x);
+		if (opts.y) extend(this.y, opts.y);
+		if (opts.r) extend(this.r, opts.r);
+		if (opts.a) extend(this.a, opts.a);
+	}
 
-	//extend props
-	if (opts.x) extend(this.x, opts.x);
-	if (opts.y) extend(this.y, opts.y);
-	if (opts.r) extend(this.r, opts.r);
-	if (opts.a) extend(this.a, opts.a);
+	//recalc state
+	this.state.x = this.calcLines(this.x, this.viewport, this);
+	this.state.y = this.calcLines(this.y, this.viewport, this);
 
-	//normalize limits
-	// this.normalize();
+	this.state.x.opposite = this.state.y;
+	this.state.y.opposite = this.state.x;
 
 	this.emit('update', opts);
 
-	this.clear();
 	this.render();
 
 	return this;

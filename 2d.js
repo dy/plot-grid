@@ -35,18 +35,9 @@ function Canvas2DGrid (opts) {
 Canvas2DGrid.prototype.draw = function (ctx, vp) {
 	this.clear();
 
-	//first we need calc lines values
-	let xLines = this.calcLines(this.x, vp, this);
-	let yLines = this.calcLines(this.y, vp, this);
-
-	if (xLines && yLines) {
-		xLines.opposite = yLines;
-		yLines.opposite = xLines;
-	}
-
 	//then we draw
-	this.drawLines(ctx, xLines);
-	this.drawLines(ctx, yLines);
+	this.drawLines(ctx, this.state.x);
+	this.drawLines(ctx, this.state.y);
 
 	return this;
 }
