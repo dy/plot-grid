@@ -83,7 +83,6 @@ var settings = createSettings([
 						scale: 1/grid.viewport[2],
 						steps: [1],
 						maxScale: .4,
-						minScale: 1e-6,
 						lines: state => {
 							let res = [];
 							let lines = state.lines;
@@ -109,17 +108,17 @@ var settings = createSettings([
 							for (let order = start; order <= max; order *= step10 ) {
 								//not enough subdivisions - display only order lines
 								if (1/.5 < realMinStep) {
-									res = res.concat(getSteps([1], order));
+									res = res.concat(lg(order));
 									// state.logSteps = [logStep];
 								}
 								//display 1, 2, 5 * order lines
 								else if (1/.9 < realMinStep) {
-									res = res.concat(getSteps([1, 2, 5], order));
+									res = res.concat([1, 2, 5].map(v => lg(v*order)));
 									// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
 								}
 								//display 1..9 * order lines
 								else if (1/.95 < realMinStep) {
-									res = res.concat(getSteps([1, 2, 3, 4, 5, 6, 7, 8, 9], order));
+									res = res.concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(v => lg(v*order)));
 								}
 								//try to pick proper subdivision for 2,5 ranges
 								else {
@@ -134,28 +133,34 @@ var settings = createSettings([
 									let step2 = scale(step1*1.1, [1, 2, 5]);
 									let step5 = scale(step2*1.1, [1, 2, 5]);
 
-									//FIXME: think through limiting these
-									let res1 = range(1, 2, step1);
-									if (res1) {
-										res = res.concat(getSteps(res1, order));
-									}
-									let res2 = range(2, 5, step2);
-									if (res2) {
-										res = res.concat(getSteps(res2, order));
-									}
-									let res5 = range(5, 10-step1, step5);
-									if (res5) {
-										res = res.concat(getSteps(res5, order));
-									}
-								}
-							}
+									let baseMin = Math.max(min, order)/order,
+										baseMax = Math.min(max, 10*order)/order;
 
-							function getSteps (steps, order) {
-								let res = [];
-								for (let i = 0; i < steps.length; i++) {
-									res.push(lg(steps[i]*order));
+									if (baseMin < 2) {
+										let from = Math.floor(baseMin/step1)*step1;
+										let to = Math.min(baseMax, 2);
+										let res1 = range(from, to, step1);
+										if (res1) {
+											res = res.concat(res1.map(v => lg(v*order)));
+										}
+									}
+									if (baseMin <= 5 && baseMax > 2) {
+										let from = Math.max(Math.floor(baseMin/step2)*step2, 2);
+										let to = Math.min(baseMax, 5-step1);
+										let res2 = range(from, to, step2);
+										if (res2) {
+											res = res.concat(res2.map(v => lg(v*order)));
+										}
+									}
+									if (baseMax > 5) {
+										let from = Math.max(Math.floor(baseMin/step5)*step5, 5);
+										let to = Math.min(baseMax, 10-step1);
+										let res5 = range(from, to, step5);
+										if (res5) {
+											res = res.concat(res5.map(v => lg(v*order)));
+										}
+									}
 								}
-								return res;
 							}
 
 							return res;
