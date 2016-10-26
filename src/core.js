@@ -191,6 +191,8 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.lineWidth = lines.lineWidth;
 	state.align = lines.align;
 	state.labelColor = state.color;
+	state.lightColor = alpha(lines.color, .1);
+	state.heavyColor = alpha(lines.color, .3);
 
 	//get padding
 	if (typeof lines.padding === 'number') {
@@ -327,8 +329,8 @@ Grid.prototype.defaults = {
 		if (!state.values) return;
 		let {lines} = state;
 
-		let light = alpha(lines.color, .1);
-		let heavy = alpha(lines.color, .4);
+		let light = state.lightColor;
+		let heavy = state.heavyColor;
 
 		let step = state.step;
 		let power = Math.ceil(lg(step));

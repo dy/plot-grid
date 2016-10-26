@@ -81,7 +81,9 @@ var settings = createSettings([
 						origin: 0,
 						distance: 10,
 						scale: 1/grid.viewport[2],
-						steps: [1, 2, 5],
+						steps: [1],
+						maxScale: .4,
+						minScale: 1e-6,
 						lines: state => {
 							let res = [];
 							let lines = state.lines;
@@ -96,19 +98,24 @@ var settings = createSettings([
 							let min = Math.pow(10, logMin),
 								max = Math.pow(10, logMax);
 
-							let start = Math.pow(10, Math.floor(logMin));
-
 							//calc power steps
-							let step10 = Math.pow(10, Math.ceil(logMinStep));
+							let logStep = Math.ceil(logMinStep);
+							let step10 = Math.pow(10, logStep);
+							state.logStep = logStep;
+
+
+							let start = Math.pow(10, Math.floor(logMin/logStep)*logStep);
 
 							for (let order = start; order <= max; order *= step10 ) {
 								//not enough subdivisions - display only order lines
 								if (1/.5 < realMinStep) {
 									res = res.concat(getSteps([1], order));
+									// state.logSteps = [logStep];
 								}
 								//display 1, 2, 5 * order lines
 								else if (1/.9 < realMinStep) {
 									res = res.concat(getSteps([1, 2, 5], order));
+									// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
 								}
 								//display 1..9 * order lines
 								else if (1/.95 < realMinStep) {
@@ -153,17 +160,22 @@ var settings = createSettings([
 
 							return res;
 						},
-						lineColor: 'rgba(0,0,0,.1)',
 						fontSize: 8,
 						ticks: state => {
 							return state.values.map(v => {
-								if ( (Math.abs(v)+.01)%1 <= .02 ) return state.axisWidth*4;
+								if ( isMajor(v, state) ) return state.axisWidth*4;
 								return null;
+							});
+						},
+						lineColor: state => {
+							return state.values.map(v => {
+								if ( isMajor(v, state) ) return state.heavyColor;
+								return state.lightColor;
 							});
 						},
 						labels: state => {
 							return state.values.map(v => {
-								if ( (Math.abs(v)+.01)%1 <= .02 ) return Math.pow(10, v).toPrecision(1);
+								if ( isMajor(v, state) ) return Math.pow(10, v).toPrecision(1);
 								return null;
 							});
 						}
@@ -174,6 +186,13 @@ var settings = createSettings([
 						axis: -Infinity
 					}
 				});
+
+				function isMajor (v, state) {
+					let step = state.logStep;
+
+
+					return (Math.abs(v)+1e-5)%step <= 2e-5
+				}
 			}
 			else if (v === 'dictaphone') {
 				grid.update({
@@ -253,7 +272,6 @@ var settings = createSettings([
 						axisColor: 'transparent',
 						padding: [60, 0,0,0],
 						distance: 20,
-						lineColor: 'rgba(0,0,0,0.1)',
 						scale: 20/grid.viewport[3],
 						// ticks: null,
 						labels: state => {
