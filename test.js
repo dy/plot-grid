@@ -9,6 +9,7 @@ const lg = require('mumath/log10');
 const closest = require('mumath/closest');
 const pad = require('left-pad');
 const steps = require('./src/steps');
+const range = require('just-range');
 
 insertCss(`
 	body {
@@ -59,9 +60,9 @@ let fps = createFps({
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'default', options: {
+	{id: 'use-case', type: 'select', value: 'spectrum', options: {
 			'default': '⊞ Default',
-			// 'spectrum': '♒ Spectrum',
+			'spectrum': '♒ Spectrum',
 			'dictaphone': '┈ Dictaphone',
 			// 'multigrid': '⧉ Multigrid',
 			// 'polar': '⊕ Polar'
@@ -72,8 +73,107 @@ var settings = createSettings([
 					y: Grid.prototype.y
 				});
 			}
+			//FIXME: add type = log, time, linear to options
 			else if (v === 'spectrum') {
+				grid.update({
+					x: {
+						offset: 0,
+						origin: 0,
+						distance: 10,
+						scale: 1/grid.viewport[2],
+						steps: [1, 2, 5],
+						lines: state => {
+							let res = [];
+							let lines = state.lines;
 
+							//get log range numbers
+							let logMinStep = lines.distance * lines.scale;
+							let logMin = state.offset, logMax = state.offset + state.range;
+							let logRange = state.range;
+
+							//get linear range numbers
+							let realMinStep = Math.pow(10, logMinStep);
+							let min = Math.pow(10, logMin),
+								max = Math.pow(10, logMax);
+
+							let start = Math.pow(10, Math.floor(logMin));
+
+							//calc power steps
+							let step10 = Math.pow(10, Math.ceil(logMinStep));
+
+							for (let order = start; order <= max; order *= step10 ) {
+								//not enough subdivisions - display only order lines
+								if (1/.5 < realMinStep) {
+									res = res.concat(getSteps([1], order));
+								}
+								//display 1, 2, 5 * order lines
+								else if (1/.9 < realMinStep) {
+									res = res.concat(getSteps([1, 2, 5], order));
+								}
+								//display 1..9 * order lines
+								else if (1/.95 < realMinStep) {
+									res = res.concat(getSteps([1, 2, 3, 4, 5, 6, 7, 8, 9], order));
+								}
+								//try to pick proper subdivision for 2,5 ranges
+								else {
+									// 1/.98, 1/.99, 1/.995, 1/.998, 1/.999, ...
+									// 1/realMinStep = .99
+									// 1 -  1/realMinStep = .01...
+									//inspiration: http://customgraph.com/SGL/piart.php?art=2161
+
+									let localStep = 1 -  1/realMinStep;
+									let step = scale(localStep, [1, 2, 5]);
+									let step1 = scale(step*1.1, [1, 2, 5]);
+									let step2 = scale(step1*1.1, [1, 2, 5]);
+									let step5 = scale(step2*1.1, [1, 2, 5]);
+
+									//FIXME: think through limiting these
+									let res1 = range(1, 2, step1);
+									if (res1) {
+										res = res.concat(getSteps(res1, order));
+									}
+									let res2 = range(2, 5, step2);
+									if (res2) {
+										res = res.concat(getSteps(res2, order));
+									}
+									let res5 = range(5, 10-step1, step5);
+									if (res5) {
+										res = res.concat(getSteps(res5, order));
+									}
+								}
+							}
+
+							function getSteps (steps, order) {
+								let res = [];
+								for (let i = 0; i < steps.length; i++) {
+									res.push(lg(steps[i]*order));
+								}
+								return res;
+							}
+
+							return res;
+						},
+						lineColor: 'rgba(0,0,0,.1)',
+						fontSize: 8,
+						ticks: state => {
+							return state.values.map(v => {
+								if ( (Math.abs(v)+.01)%1 <= .02 ) return state.axisWidth*4;
+								return null;
+							});
+						},
+						labels: state => {
+							return state.values.map(v => {
+								if ( (Math.abs(v)+.01)%1 <= .02 ) return Math.pow(10, v).toPrecision(1);
+								return null;
+							});
+						}
+					},
+					y: {
+						zoom: false,
+						pan: false,
+						axis: -Infinity
+					}
+				});
 			}
 			else if (v === 'dictaphone') {
 				grid.update({
@@ -101,7 +201,7 @@ var settings = createSettings([
 
 							let minStep = lines.distance * lines.scale;
 
-							let [step, largeStep] = steps.date(minStep);
+							let [step, largeStep] = steps.time(minStep);
 
 							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
@@ -118,7 +218,7 @@ var settings = createSettings([
 							let {lines} = state;
 							let minStep = lines.distance * lines.scale;
 
-							let [step, largeStep] = steps.date(minStep);
+							let [step, largeStep] = steps.time(minStep);
 
 							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
@@ -162,9 +262,6 @@ var settings = createSettings([
 						// lines: false
 					}
 				});
-			}
-			else if (v === 'multigrid') {
-
 			}
 			else if (v === 'polar') {
 

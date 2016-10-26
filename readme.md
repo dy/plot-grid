@@ -79,7 +79,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 
 | Name | Type | Description |
 |---|---|---|
-| `lines` | Bool, Array, Function, null | Array with values for lines or function returning such array, `state => [values...]`. By default lines are calculated based on range and viewport. Can be disabled by passing `false`. |
+| `lines` | Bool, Array, Function, String, null | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. Also can be a string, one of `log`, `linear` or `time`, to define standard line types. Default is `linear`. |
 | `axis` | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. `0` for zero-line. Note that if origin is outside of the viewport, axis will be placed to the edge. |
 | `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `state => [labels...]`. |
 | `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `state => [ticks...]`. |

@@ -20,7 +20,6 @@ const panzoom = require('pan-zoom');
 const alpha = require('color-alpha');
 const almost = require('almost-equal');
 const isObj = require('is-plain-obj');
-const getStep = require('mumath/scale');
 const parseUnit = require('parse-unit');
 const toPx = require('to-px');
 
@@ -57,6 +56,7 @@ function Grid (opts) {
 
 	this.update(opts);
 
+	this.on('resize', () => this.update());
 
 	//enable interactions
 	if ((this.pan || this.zoom) && this.container && this.canvas) {
@@ -75,11 +75,9 @@ function Grid (opts) {
 Grid.prototype.pan = function (dx, dy, x, y) {
 	if (!this.x.disabled && this.x.pan) {
 		this.x.offset -= this.x.scale * dx;
-		this.x.offset = clamp(this.x.offset, this.x.min, this.x.max);
 	}
 	if (!this.y.disabled && this.y.pan) {
 		this.y.offset += this.y.scale * dy;
-		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
 	}
 
 	this.update();
@@ -104,7 +102,6 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 		this.x.scale *= (1 - amt);
 		this.x.scale = clamp(this.x.scale, this.x.minScale, this.x.maxScale);
 		this.x.offset -= width*(this.x.scale - prevScale) * tx;
-		this.x.offset = clamp(this.x.offset, this.x.min, this.x.max);
 	}
 
 	if (this.y.zoom !== false) {
@@ -113,13 +110,28 @@ Grid.prototype.zoom = function (dx, dy, x, y) {
 		this.y.scale *= (1 - amt);
 		this.y.scale = clamp(this.y.scale, this.y.minScale, this.y.maxScale);
 		this.y.offset -= height*(this.y.scale - prevScale) * ty;
-		this.y.offset = clamp(this.y.offset, this.y.min, this.y.max);
 	}
 
 	this.update();
 
 	return this;
 };
+
+
+//make sure that lines scale/offset/range are not off-limits or something
+Grid.prototype.normalize = function () {
+	if (!this.x.disabled) {
+		let range = this.x.getRange({viewport: this.viewport, lines: this.x});
+		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
+	}
+
+	if (!this.y.disabled) {
+		let range = this.y.getRange({viewport: this.viewport, lines: this.y});
+		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
+	}
+
+	return this;
+}
 
 
 //re-evaluate lines, calc options for renderer
@@ -137,6 +149,8 @@ Grid.prototype.update = function (opts) {
 		if (opts.r) extend(this.r, opts.r);
 		if (opts.a) extend(this.a, opts.a);
 	}
+
+	this.normalize();
 
 	//recalc state
 	this.state.x = this.calcLines(this.x, this.viewport, this);
@@ -419,3 +433,16 @@ Grid.prototype.r = extend({}, Grid.prototype.defaults, {
 Grid.prototype.a = extend({}, Grid.prototype.defaults, {
 	orientation: 'a'
 });
+
+
+function getStep (minStep, srcSteps) {
+	var power = Math.floor(lg(minStep));
+
+	var order = Math.pow(10, power);
+	var steps = srcSteps.map(v => v*order);
+	order = Math.pow(10, power+1);
+	steps = steps.concat(srcSteps.map(v => v*order));
+
+	//find closest scale
+	return steps.find(step => step > minStep);
+};

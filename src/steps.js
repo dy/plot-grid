@@ -8,11 +8,17 @@ const scale = require('mumath/scale');
 
 
 module.exports = {
-	date: getDateSteps
+	time: getTimeSteps,
+	log: getLogSteps
 };
 
 
-function getDateSteps (minStep) {
+function getLogSteps () {
+
+}
+
+
+function getTimeSteps (minStep) {
 	let step, largeStep;
 
 	//500ms, 250ms, 100ms, 50ms, 25ms, 10ms, 5ms, ...
