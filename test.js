@@ -11,6 +11,7 @@ const pad = require('left-pad');
 const steps = require('./src/steps');
 const range = require('just-range');
 const almost = require('almost-equal');
+const clamp = require('mumath/clamp');
 
 insertCss(`
 	body {
@@ -83,7 +84,6 @@ var settings = createSettings([
 						distance: 10,
 						scale: 1/grid.viewport[2],
 						steps: [1],
-						maxScale: .4,
 						lines: state => {
 							let res = [];
 							let lines = state.lines;
@@ -95,8 +95,8 @@ var settings = createSettings([
 							let logRange = state.range;
 
 							//get linear range numbers
-							let min = Math.pow(10, logMin),
-								max = Math.pow(10, logMax);
+							let min = clamp(Math.pow(10, logMin), -Number.MAX_VALUE, Number.MAX_VALUE),
+								max = clamp(Math.pow(10, logMax), -Number.MAX_VALUE, Number.MAX_VALUE);
 
 							//local step is like interest (but not in %), or increase
 							// multStep = 1/.98, 1/.99, 1/.995, 1/.998, 1/.999, ...
@@ -112,16 +112,24 @@ var settings = createSettings([
 							state.step = logStep;
 							state.localStep = localStep;
 
-							let start = Math.pow(10, Math.floor(logMin/logStep)*logStep);
+							let start = Math.pow(10, Math.max(Math.floor(logMin/logStep)*logStep, -300));
 
-							for (let order = start; order <= max; order *= step10 ) {
-								//not enough subdivisions - display only order lines
-								if (.5 < localStep) {
-									res = res.concat(lg(order));
-									// state.logSteps = [logStep];
+							//big scales
+							if (.5 < localStep) {
+								for (let order = start; order <= max; order *= step10) {
+									res.push(lg(order));
 								}
+
+								let bigLogStep = scale(scale(logStep*1.1, [1,2,5])*1.1, [1,2,5]);
+								state.bigStep = bigLogStep;
+
+								return res;
+							}
+
+							//small scales
+							for (let order = start; order <= max; order *= step10 ) {
 								//display 1, 2, 5 * order lines
-								else if (.1 < localStep) {
+								if (.1 < localStep) {
 									res = res.concat([1, 2, 5].map(v => lg(v*order)));
 									// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
 								}
@@ -136,9 +144,9 @@ var settings = createSettings([
 									let step2 = scale(step1*1.1, [1, 2, 5]);
 									let step5 = scale(step2*1.1, [1, 2, 5]);
 
-									state.largeStep1 = step5
-									state.largeStep2 = step1*10
-									state.largeStep5 = step2*10
+									state.bigStep1 = step5
+									state.bigStep2 = step1*10
+									state.bigStep5 = step2*10
 
 									let baseMin = Math.max(min, order)/order,
 										baseMax = Math.min(max, 10*order)/order;
@@ -202,15 +210,21 @@ var settings = createSettings([
 				function isMajor (v, state) {
 					let base = Math.pow(10, v - Math.floor(v));
 
+					//small scales
 					if (.02 > state.localStep) {
-						let largeStep = base < 2 ? state.largeStep1 : base < 5 ? state.largeStep2 : state.largeStep5;
-						return almost((base+largeStep/8) % largeStep, 0, largeStep/5);
+						let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
+						return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
 					}
 					else if (.05 > state.localStep) {
 						return almost(base, 2) || almost(base, 5) || almost(base, 1);
 					}
 
-					return (Math.abs(v)+state.localStep)%state.step <= state.localStep
+					//big scales
+					if (.5 < state.localStep) {
+						return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
+					}
+
+					return (Math.abs(v)+state.localStep/8)%state.step <= state.localStep/5
 				}
 			}
 			else if (v === 'dictaphone') {
@@ -239,13 +253,13 @@ var settings = createSettings([
 
 							let minStep = lines.distance * lines.scale;
 
-							let [step, largeStep] = steps.time(minStep);
+							let [step, bigStep] = steps.time(minStep);
 
 							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
 
 							for (let i = start; i < end; i+= step) {
-								if (i % largeStep) result[i] = 5;
+								if (i % bigStep) result[i] = 5;
 								else result[i] = 20;
 							}
 
@@ -256,7 +270,7 @@ var settings = createSettings([
 							let {lines} = state;
 							let minStep = lines.distance * lines.scale;
 
-							let [step, largeStep] = steps.time(minStep);
+							let [step, bigStep] = steps.time(minStep);
 
 							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 							start = Math.max(start, 0);
@@ -275,7 +289,7 @@ var settings = createSettings([
 							}
 
 							for (let i = start; i < end; i+= step) {
-								if (i % largeStep) result[i] = null;
+								if (i % bigStep) result[i] = null;
 								else result[i] = time(i, step < 100);
 							}
 

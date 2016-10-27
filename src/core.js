@@ -180,7 +180,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.range = lines.getRange(state);
 	state.offset = clamp(
 		lines.offset - state.range * clamp(lines.origin, 0, 1),
-		lines.min, lines.max - state.range
+		Math.max(lines.min, -Number.MAX_VALUE+1), Math.min(lines.max, Number.MAX_VALUE) - state.range
 	);
 
 	//calc axis/style
