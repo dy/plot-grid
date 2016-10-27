@@ -14,7 +14,7 @@ const range = require('just-range');
 const pick = require('just-pick');
 const clamp = require('mumath/clamp');
 const lg = require('mumath/log10');
-const isMultiple = require('mumath/is-multiple');
+const scale = require('mumath/scale');
 const pretty = require('mumath/pretty');
 const panzoom = require('pan-zoom');
 const alpha = require('color-alpha');
@@ -22,8 +22,13 @@ const almost = require('almost-equal');
 const isObj = require('is-plain-obj');
 const parseUnit = require('parse-unit');
 const toPx = require('to-px');
+const types = require('./types');
+
 
 module.exports = Grid;
+
+
+Grid.types = types;
 
 
 inherits(Grid, Component);
@@ -173,7 +178,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 		lines: lines,
 		viewport: vp,
 		grid: this,
-		step: getStep(lines.distance * lines.scale, lines.steps)
+		step: scale(lines.distance * lines.scale, lines.steps)
 	};
 
 	//calculate real offset/range
@@ -294,7 +299,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 
 
 //default values
-Grid.prototype.defaults = {
+Grid.prototype.defaults = extend({
 	name: '',
 	units: '',
 
@@ -319,62 +324,16 @@ Grid.prototype.defaults = {
 	distance: 15,
 	padding: 0,
 
-	lines: state => {
-		let step = state.step;
-
-		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
-	},
 	lineWidth: 1,
-	lineColor: state => {
-		if (!state.values) return;
-		let {lines} = state;
-
-		let light = state.lightColor;
-		let heavy = state.heavyColor;
-
-		let step = state.step;
-		let power = Math.ceil(lg(step));
-		let tenStep = Math.pow(10,power);
-		let nextStep = Math.pow(10,power+1);
-		let eps = step/10;
-		return state.values.map(v => {
-			if (isMultiple(v, nextStep, eps)) return heavy;
-			if (isMultiple(v, tenStep, eps)) return light;
-			return null;
-		});
-	},
+	lines: [],
+	lineColor: 'rgba(0,0,0,.1)',
+	ticks: [],
+	labels: [],
 
 	//axis params
 	axis: 0,
 	axisWidth: 2,
 	axisColor: null,
-
-	ticks: state => {
-		if (!state.values) return;
-		let {lines} = state;
-
-		let step = getStep(getStep(state.step*1.1, lines.steps)*1.1, lines.steps);
-		let eps = step/10;
-		let tickWidth = state.axisWidth*4;
-		return state.values.map(v => {
-			if (!isMultiple(v, step, eps)) return null;
-			if (almost(v, 0, eps)) return null;
-			return tickWidth;
-		});
-	},
-	labels: state => {
-		if (!state.values) return;
-		let {lines} = state;
-
-		let step = getStep(getStep(state.step*1.1, lines.steps)*1.1, lines.steps);
-		let precision = clamp(-Math.floor(lg(step)), 20, 0);
-		let eps = step/10;
-		return state.values.map(v => {
-			if (!isMultiple(v, step, eps)) return null;
-			// if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
-			return v.toFixed(precision) + lines.units;
-		});
-	},
 
 	//stub methods
 	//return coords for the values, redefined by axes
@@ -382,8 +341,7 @@ Grid.prototype.defaults = {
 
 	//return 0..1 ratio based on value/offset/range, redefined by axes
 	getRatio: (value, state) => 0
-};
-
+}, types.linear);
 
 
 Grid.prototype.x = extend({}, Grid.prototype.defaults, {
@@ -435,16 +393,3 @@ Grid.prototype.r = extend({}, Grid.prototype.defaults, {
 Grid.prototype.a = extend({}, Grid.prototype.defaults, {
 	orientation: 'a'
 });
-
-
-function getStep (minStep, srcSteps) {
-	var power = Math.floor(lg(minStep));
-
-	var order = Math.pow(10, power);
-	var steps = srcSteps.map(v => v*order);
-	order = Math.pow(10, power+1);
-	steps = steps.concat(srcSteps.map(v => v*order));
-
-	//find closest scale
-	return steps.find(step => step > minStep);
-};

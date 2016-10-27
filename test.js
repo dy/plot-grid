@@ -4,14 +4,6 @@ const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
 const createFps = require('fps-indicator');
-const scale = require('mumath/scale');
-const lg = require('mumath/log10');
-const closest = require('mumath/closest');
-const pad = require('left-pad');
-const steps = require('./src/steps');
-const range = require('just-range');
-const almost = require('almost-equal');
-const clamp = require('mumath/clamp');
 
 insertCss(`
 	body {
@@ -62,262 +54,71 @@ let fps = createFps({
 
 
 var settings = createSettings([
-	{id: 'use-case', type: 'select', value: 'spectrum', options: {
-			'default': '⊞ Default',
-			'spectrum': '♒ Spectrum',
-			'dictaphone': '┈ Dictaphone',
-			// 'multigrid': '⧉ Multigrid',
-			// 'polar': '⊕ Polar'
-		}, change: v => {
-			if (v === 'default') {
-				grid.update({
-					x: Grid.prototype.x,
-					y: Grid.prototype.y
-				});
-			}
-			//FIXME: add type = log, time, linear to options
-			else if (v === 'spectrum') {
-				grid.update({
-					x: {
-						offset: 0,
-						origin: 0,
-						distance: 10,
-						scale: 1/grid.viewport[2],
-						steps: [1],
-						lines: state => {
-							let res = [];
-							let lines = state.lines;
+	// {id: 'use-case', type: 'select', value: 'log', options: {
+	// 		'linear': '⊞ Linear',
+	// 		'log': '♒ Logarithmic',
+	// 		'time': '┈ Time',
+	// 		// 'multigrid': '⧉ Multigrid',
+	// 		// 'polar': '⊕ Polar'
+	// 	}, change: v => {
+	// 		if (v === 'linear') {
+	// 			grid.update({
+	// 				x: Grid.types.linear,
+	// 				y: Grid.types.linear
+	// 			});
+	// 		}
+	// 		//FIXME: add type = log, time, linear to options
+	// 		else if (v === 'log') {
+	// 			grid.update({
+	// 				x: Grid.types.log,
+	// 				y: Grid.types.log
+	// 			});
+	// 		}
+	// 		else if (v === 'time') {
+	// 			grid.update({
+	// 				x: Grid.types.time,
+	// 				{
+	// 					lines: false,
+	// 					pan: true,
+	// 					zoom: true,
+	// 					axis: Infinity,
+	// 					fontSize: '11pt',
+	// 					fontFamily: 'sans-serif',
+	// 					offset: 0,
+	// 					scale: 10,
+	// 					minScale: .006,
+	// 					maxScale: 120*1000,
+	// 					axisWidth: 2,
+	// 					min: 0,
+	// 					origin: 0,
+	// 					align: 0,
+	// 					distance: 20,
+	// 					steps: [1, 2.5, 5],
+	// 					padding: [60, 0, 0, 0]
+	// 				},
+	// 				y: {
+	// 					zoom: false,
+	// 					pan: false,
+	// 					axis: Infinity,
+	// 					offset: 0,
+	// 					origin: .5,
+	// 					axisColor: 'transparent',
+	// 					padding: [60, 0,0,0],
+	// 					distance: 20,
+	// 					scale: 20/grid.viewport[3],
+	// 					// ticks: null,
+	// 					labels: state => {
+	// 						return state.values.map(v => -Math.abs(v).toFixed(0));
+	// 					}
+	// 					// lines: false
+	// 				}
+	// 			});
+	// 		}
+	// 		else if (v === 'polar') {
 
-							//get log range numbers
-							let logMinStep = lines.distance * lines.scale;
-
-							let logMin = state.offset, logMax = state.offset + state.range;
-							let logRange = state.range;
-
-							//get linear range numbers
-							let min = clamp(Math.pow(10, logMin), -Number.MAX_VALUE, Number.MAX_VALUE),
-								max = clamp(Math.pow(10, logMax), -Number.MAX_VALUE, Number.MAX_VALUE);
-
-							//local step is like interest (but not in %), or increase
-							// multStep = 1/.98, 1/.99, 1/.995, 1/.998, 1/.999, ...
-							// 1/multStep = .99
-							// 1 -  1/multStep = .01...
-							//inspiration: http://customgraph.com/SGL/piart.php?art=2161
-							let localStep = 1 -  1/Math.pow(10, logMinStep);
-
-							//calc power steps
-							let logStep = Math.ceil(logMinStep);
-							let step10 = Math.pow(10, logStep);
-
-							state.step = logStep;
-							state.localStep = localStep;
-
-
-							//big scales
-							if (.5 < localStep) {
-								let steps = [1,2,5];
-								let step = state.step = scale(logMinStep, steps);
-								let bigLogStep = scale(scale(step*1.1, steps)*1.1, steps);
-								state.bigStep = bigLogStep;
-
-								return range( Math.floor(logMin/step)*step, Math.ceil(logMax/step)*step, step);
-							}
-
-							let start = Math.pow(10, Math.max(Math.floor(logMin/logStep)*logStep, -300));
-
-							//small scales
-							for (let order = start; order <= max; order *= step10 ) {
-								//display 1, 2, 5 * order lines
-								if (.1 < localStep) {
-									res = res.concat([1, 2, 5].map(v => lg(v*order)));
-									// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
-								}
-								//display 1..9 * order lines
-								else if (.05 < localStep) {
-									res = res.concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(v => lg(v*order)));
-								}
-								//try to pick proper subdivision for 2,5 ranges
-								else {
-									let step = scale(localStep, [1, 2, 5]);
-									let step1 = scale(step*1.1, [1, 2, 5]);
-									let step2 = scale(step1*1.1, [1, 2, 5]);
-									let step5 = scale(step2*1.1, [1, 2, 5]);
-
-									state.bigStep1 = step5
-									state.bigStep2 = step1*10
-									state.bigStep5 = step2*10
-
-									let baseMin = Math.max(min, order)/order,
-										baseMax = Math.min(max, 10*order)/order;
-
-									if (baseMin < 2) {
-										let from = Math.floor((baseMin+step1/15)/step1)*step1;
-										let to = Math.min(baseMax, 2);
-										let res1 = range(from, to, step1);
-										if (res1) {
-											res = res.concat(res1.map(v => lg(v*order)));
-										}
-									}
-									if (baseMin <= 5 && baseMax > 2) {
-										let from = Math.max(Math.floor(baseMin/step2)*step2, 2);
-										let to = Math.min(baseMax, 5-step1);
-										let res2 = range(from, to, step2);
-										if (res2) {
-											res = res.concat(res2.map(v => lg(v*order)));
-										}
-									}
-									if (baseMax > 5) {
-										let from = Math.max(Math.floor(baseMin/step5)*step5, 5);
-										let to = Math.min(baseMax, 10-step1);
-										let res5 = range(from, to, step5);
-										if (res5) {
-											res = res.concat(res5.map(v => lg(v*order)));
-										}
-									}
-								}
-							}
-
-							return res;
-						},
-						fontSize: 8,
-						ticks: state => {
-							return state.values.map(v => {
-								if ( isMajor(v, state) ) return state.axisWidth*4;
-								return null;
-							});
-						},
-						lineColor: state => {
-							return state.values.map(v => {
-								if ( isMajor(v, state) ) return state.heavyColor;
-								return state.lightColor;
-							});
-						},
-						labels: state => {
-							return state.values.map(v => {
-								if ( isMajor(v, state) ) return Math.pow(10, v).toPrecision(2);
-								return null;
-							});
-						}
-					},
-					y: {
-						zoom: false,
-						pan: false,
-						axis: -Infinity
-					}
-				});
-
-				function isMajor (v, state) {
-					let base = Math.pow(10, v - Math.floor(v));
-
-					//small scales
-					if (.02 > state.localStep) {
-						let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
-						return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
-					}
-					else if (.05 > state.localStep) {
-						return almost(base, 2) || almost(base, 5) || almost(base, 1);
-					}
-
-					//big scales
-					if (.5 < state.localStep) {
-						return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
-					}
-
-					return (Math.abs(v)+state.localStep/8)%state.step <= state.localStep/5
-				}
-			}
-			else if (v === 'dictaphone') {
-				grid.update({
-					x: {
-						lines: false,
-						pan: true,
-						zoom: true,
-						axis: Infinity,
-						fontSize: '11pt',
-						fontFamily: 'sans-serif',
-						offset: 0,
-						scale: 10,
-						minScale: .006,
-						maxScale: 120*1000,
-						axisWidth: 2,
-						min: 0,
-						origin: 0,
-						align: 0,
-						distance: 20,
-						steps: [1, 2.5, 5],
-						padding: [60, 0, 0, 0],
-						ticks: (state) => {
-							let result = {};
-							let {lines} = state;
-
-							let minStep = lines.distance * lines.scale;
-
-							let [step, bigStep] = steps.time(minStep);
-
-							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
-							start = Math.max(start, 0);
-
-							for (let i = start; i < end; i+= step) {
-								if (i % bigStep) result[i] = 5;
-								else result[i] = 20;
-							}
-
-							return result;
-						},
-						labels: (state) => {
-							let result = {};
-							let {lines} = state;
-							let minStep = lines.distance * lines.scale;
-
-							let [step, bigStep] = steps.time(minStep);
-
-							let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
-							start = Math.max(start, 0);
-
-							function time(ts, showMs) {
-								let ms = ts % 1000;
-								let seconds = Math.floor(ts/1000) % 60;
-								let minutes = Math.floor(ts/1000/60) % 60;
-								let hours = Math.floor(ts/1000/60/60) % 60;
-								let str = '';
-								if (hours) str += pad(hours,2,0) + ':';
-								str += pad(minutes,2,0) + ':';
-								str += pad(seconds,2,0);
-								if (showMs) str += ':' + pad(ms, 3, 0);
-								return str;
-							}
-
-							for (let i = start; i < end; i+= step) {
-								if (i % bigStep) result[i] = null;
-								else result[i] = time(i, step < 100);
-							}
-
-							return result;
-						}
-					},
-					y: {
-						zoom: false,
-						pan: false,
-						axis: Infinity,
-						offset: 0,
-						origin: .5,
-						axisColor: 'transparent',
-						padding: [60, 0,0,0],
-						distance: 20,
-						scale: 20/grid.viewport[3],
-						// ticks: null,
-						labels: state => {
-							return state.values.map(v => -Math.abs(v).toFixed(0));
-						}
-						// lines: false
-					}
-				});
-			}
-			else if (v === 'polar') {
-
-			}
-		}
-	},
+	// 		}
+	// 	}
+	// },
 	{content: '<br/>'},
 
 	// viewport: {
@@ -338,6 +139,20 @@ var settings = createSettings([
 	{id: 'x', label: '|||', title: 'Horizontal X lines', value: true, change: v => {
 		grid.update({x: {disabled: !v}});
 	}},
+	//type
+	//offset
+	//origin
+	//min, max
+	//minScale, maxScale
+	//pan, zoom
+	//padding
+	//axis
+	//distance
+	//steps?
+	//fontSize
+	//offset/scale readonly
+	//axisWidth
+	//align
 	{id: 'y', label: '☰', title: 'Horizontal Y lines', value: true, change: v => {
 		grid.update({y: {disabled: !v}});
 	}},
