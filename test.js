@@ -200,20 +200,17 @@ var settings = createSettings([
 				});
 
 				function isMajor (v, state) {
-					//FIXME: this error highlights wrong subdivs on really small scales
-					let eps = 200 * (Number.EPSILON || 2.220446049250313e-16);
-
 					let base = Math.pow(10, v - Math.floor(v));
 
 					if (.02 > state.localStep) {
 						let largeStep = base < 2 ? state.largeStep1 : base < 5 ? state.largeStep2 : state.largeStep5;
-						return almost((base+eps) % largeStep, 0, 1.5*eps);
+						return almost((base+largeStep/8) % largeStep, 0, largeStep/5);
 					}
 					else if (.05 > state.localStep) {
 						return almost(base, 2) || almost(base, 5) || almost(base, 1);
 					}
 
-					return (Math.abs(v)+eps)%state.step <= 1.5*eps
+					return (Math.abs(v)+state.localStep)%state.step <= state.localStep
 				}
 			}
 			else if (v === 'dictaphone') {
