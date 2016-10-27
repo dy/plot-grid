@@ -190,8 +190,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 	);
 
 	//calc axis/style
-	state.axisOrigin = lines.axisOrigin !== undefined ? lines.axisOrigin : typeof lines.axis === 'number' ? lines.axis : 0;
-
+	state.axisOrigin = lines.axisOrigin;
 	state.axisColor = lines.axisColor || lines.color;
 	state.axisWidth = lines.axisWidth || lines.lineWidth;
 	state.lineWidth = lines.lineWidth;
@@ -333,7 +332,8 @@ Grid.prototype.defaults = extend({
 	labels: [],
 
 	//axis params
-	axis: 0,
+	axis: true,
+	axisOrigin: 0,
 	axisWidth: 2,
 	axisColor: null,
 

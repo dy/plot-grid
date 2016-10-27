@@ -96,7 +96,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 	let axisRatio = state.opposite.lines.getRatio(state.axisOrigin, state.opposite);
 	axisRatio = clamp(axisRatio, 0, 1);
 
-	if (state.lines.axis !== false && state.axisColor) {
+	if (state.lines.axis && state.axisColor) {
 		let axisCoords = state.opposite.lines.getCoords([state.axisOrigin], state.opposite);
 
 		ctx.lineWidth = state.axisWidth;

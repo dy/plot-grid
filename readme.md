@@ -80,7 +80,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | Name | Type | Description |
 |---|---|---|
 | `lines` | Bool, Array, Function, String, null | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. Also can be a string, one of `log`, `linear` or `time`, to define standard line types. Default is `linear`. |
-| `axis` | Bool, Number, String | Enable axis or define it’s origin on the opposite dimension by passing a number, e.g. `0` for zero-line. Note that if origin is outside of the viewport, axis will be placed to the edge. |
+| `axis` | Bool | Enable axis. |
 | `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `state => [labels...]`. |
 | `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `state => [ticks...]`. |
 | `name` | String, null | Name for the axis. |
@@ -95,11 +95,12 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `minScale`, `maxScale` | Number | Scale limits. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
-| **Advanced** |
-| `type` | String | Style of lines: `lines`, `dots`, `crosses`. |
-| `fontSize` | String | Font size to use for labels, by default `10pt`. |
+| **Style** |
+| `style` | String | Style of lines: `lines`, `dots`, `crosses`. |
+| `fontSize` | String, Number | Font size to use for labels, by default `10pt`. |
 | `fontFamily` | String | Font family to use for labels, by default `sans-serif`. |
 | `color` | String, Array | Default color for the lines, axes, ticks and labels. |
+| `axisOrigin` | Number | The value on the opposite coordinates corresponding to the axis. By default `0`. |
 | `axisWidth` | Number | Width of axis, by default `2`. |
 | `axisColor` | String, Array | Axis color, redefines default `color`. |
 | `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `state => [colors...]`. By default `color`. |
@@ -107,7 +108,6 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `align` | Number | The side to align ticks and labels, `0..1`. By default `0.5`. |
 | `distance` | Number | Minimum distance between lines. By default `10`. |
 | `steps` | Array | Base steps to use for lines, by default `[1, 2, 5]`. |
-| `step` | Number | Current step value, read-only. |
 
 
 #### State
@@ -123,7 +123,6 @@ Some lines properties which can be functions receive `state` object as an argume
 | `range` | Current visible values range. |
 | `offset` | Value corresponding to the left offset of the grid. |
 | `axisOrigin` | Value for the axis on the opposite dimension, if any. |
-| `axisWidth`, `lineWidth`, `axisColor`, `labelColor`, `font` | Style properties. |
 | `colors` | Color or array of colors, corresponding to lines. |
 | `ticks` | List with tick sizes. |
 | `labels` | Text values for the labels. |
