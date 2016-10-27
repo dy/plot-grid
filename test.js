@@ -10,6 +10,7 @@ const closest = require('mumath/closest');
 const pad = require('left-pad');
 const steps = require('./src/steps');
 const range = require('just-range');
+const almost = require('almost-equal');
 
 insertCss(`
 	body {
@@ -89,6 +90,7 @@ var settings = createSettings([
 
 							//get log range numbers
 							let logMinStep = lines.distance * lines.scale;
+
 							let logMin = state.offset, logMax = state.offset + state.range;
 							let logRange = state.range;
 
@@ -100,8 +102,9 @@ var settings = createSettings([
 							//calc power steps
 							let logStep = Math.ceil(logMinStep);
 							let step10 = Math.pow(10, logStep);
-							state.logStep = logStep;
 
+							state.logStep = logStep;
+							state.realStep = realMinStep;
 
 							let start = Math.pow(10, Math.floor(logMin/logStep)*logStep);
 
@@ -137,7 +140,7 @@ var settings = createSettings([
 										baseMax = Math.min(max, 10*order)/order;
 
 									if (baseMin < 2) {
-										let from = Math.floor(baseMin/step1)*step1;
+										let from = Math.floor((baseMin+step1/15)/step1)*step1;
 										let to = Math.min(baseMax, 2);
 										let res1 = range(from, to, step1);
 										if (res1) {
@@ -193,10 +196,14 @@ var settings = createSettings([
 				});
 
 				function isMajor (v, state) {
-					let step = state.logStep;
+					let eps = Number.EPSILON || 2.220446049250313e-16;
 
+					if (1/.95 > state.realStep) {
+						let base = Math.pow(10, v - Math.floor(v));
+						return almost(base, 2) || almost(base, 5) || almost(base, 1);
+					}
 
-					return (Math.abs(v)+1e-5)%step <= 2e-5
+					return (Math.abs(v)+eps)%state.logStep <= 2*eps
 				}
 			}
 			else if (v === 'dictaphone') {
