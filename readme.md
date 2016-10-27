@@ -1,4 +1,4 @@
-# plot-grid [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges) ![gzip-size](https://img.shields.io/badge/gzip-size-18.4kb-brightgreen.svg)
+# plot-grid [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges) ![gzip-size](https://img.shields.io/badge/size-18.4kb-brightgreen.svg)
 
 Grid component for webgl/canvas2d with zooming, panning, polar mode etc. See [demo](https://dfcreative.github.io/plot-grid).
 
@@ -87,11 +87,10 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 | `units` | String, null | Units to add as a suffix to the labels. |
 | `padding` | Number, Array(4), Function | Space for labels and axis, by default `0`. Array sequence is `top, right, bottom, left`, as in css. |
 | **Zoom/pan** |
-| `min` | Number | Defines minimum value for the grid, by default `-Infinity`. |
-| `max` | Number | Defines maximum value for the grid, by default `Infinity`. |
 | `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`. |
 | `origin` | Number | Defines position of the offset on the screen, for example, `.5` is center, `1` is right/top edge of the screen, `0` is left/bottom. By default `.5`. |
 | `scale` | Number, Function | Sets scale for the current range, number of values per pixel. Can be a function, if scale should depend on viewport for adaptive layout. By default is `1`. |
+| `min`, `max` | Number | Limits for panning, by default `-Infinity`, `Infinity`. |
 | `minScale`, `maxScale` | Number | Scale limits. |
 | `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
 | `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
