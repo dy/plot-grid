@@ -112,19 +112,18 @@ var settings = createSettings([
 							state.step = logStep;
 							state.localStep = localStep;
 
-							let start = Math.pow(10, Math.max(Math.floor(logMin/logStep)*logStep, -300));
 
 							//big scales
 							if (.5 < localStep) {
-								for (let order = start; order <= max; order *= step10) {
-									res.push(lg(order));
-								}
-
-								let bigLogStep = scale(scale(logStep*1.1, [1,2,5])*1.1, [1,2,5]);
+								let steps = [1,2,5];
+								let step = state.step = scale(logMinStep, steps);
+								let bigLogStep = scale(scale(step*1.1, steps)*1.1, steps);
 								state.bigStep = bigLogStep;
 
-								return res;
+								return range( Math.floor(logMin/step)*step, Math.ceil(logMax/step)*step, step);
 							}
+
+							let start = Math.pow(10, Math.max(Math.floor(logMin/logStep)*logStep, -300));
 
 							//small scales
 							for (let order = start; order <= max; order *= step10 ) {
