@@ -17,7 +17,8 @@ const isMultiple = require('mumath/is-multiple');
 
 let linear = {
 	lines: state => {
-		let step = state.step;
+		let lines = state.lines;
+		let step = state.step = scale(lines.distance * lines.scale, lines.steps);
 
 		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
 	},
@@ -215,7 +216,7 @@ let time = {
 
 		let minStep = lines.distance * lines.scale;
 
-		let [step, bigStep] = steps.time(minStep);
+		let [step, bigStep] = getTimeSteps(minStep);
 
 		let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 		start = Math.max(start, 0);
@@ -232,7 +233,7 @@ let time = {
 		let {lines} = state;
 		let minStep = lines.distance * lines.scale;
 
-		let [step, bigStep] = steps.time(minStep);
+		let [step, bigStep] = getTimeSteps(minStep);
 
 		let start = Math.floor(state.offset/step-1)*step, end = Math.ceil((state.offset + state.range)/step)*step;
 		start = Math.max(start, 0);

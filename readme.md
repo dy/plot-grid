@@ -1,4 +1,4 @@
-# plot-grid [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
+# plot-grid [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges) ![gzip-size](https://img.shields.io/badge/gzip-size-18.4kb-brightgreen.svg)
 
 Grid component for webgl/canvas2d with zooming, panning, polar mode etc. See [demo](https://dfcreative.github.io/plot-grid).
 
@@ -120,8 +120,6 @@ Some lines properties which can be functions receive `state` object as an argume
 | `lines` | Reference to lines options object. |
 | `grid` | Reference to the grid instance. |
 | `viewport` | Current area on the canvas to render grid. |
-| `step` | Current step used to spread lines, one from the _lines.steps_ list, _step ≥ lines.distance_. |
-| `minStep` | Minimum step for current resolution/distance, not bound to step grid. |
 | `range` | Current visible values range. |
 | `offset` | Value corresponding to the left offset of the grid. |
 | `axisOrigin` | Value for the axis on the opposite dimension, if any. |

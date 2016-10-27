@@ -119,7 +119,6 @@ var settings = createSettings([
 	// 		}
 	// 	}
 	// },
-	{content: '<br/>'},
 
 	// viewport: {
 	// 	type: 'text',
@@ -139,7 +138,13 @@ var settings = createSettings([
 	{id: 'x', label: '|||', title: 'Horizontal X lines', value: true, change: v => {
 		grid.update({x: {disabled: !v}});
 	}},
-	//type
+	{id: 'x-type', label: 'type', type: 'switch', title: 'X lines type', value: 'linear', options: ['linear', 'log', 'time'], change: v => {
+			grid.update({
+				x: {type: v}
+			});
+		}
+	},
+
 	//offset
 	//origin
 	//min, max
@@ -153,15 +158,22 @@ var settings = createSettings([
 	//offset/scale readonly
 	//axisWidth
 	//align
+	{content: '<br/>'},
 	{id: 'y', label: '☰', title: 'Horizontal Y lines', value: true, change: v => {
 		grid.update({y: {disabled: !v}});
 	}},
-	{id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
-		grid.update({r: {disabled: !v}});
-	}},
-	{id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
-		grid.update({a: {disabled: !v}});
-	}}
+	{id: 'y-type', label: 'type', type: 'switch', title: 'Y lines type', value: 'linear', options: ['linear', 'log', 'time'], change: v => {
+			grid.update({
+				y: {type: v}
+			});
+		}
+	},
+	// {id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
+	// 	grid.update({r: {disabled: !v}});
+	// }},
+	// {id: 'a', label: '✳', title: 'Angular α lines', value: false, change: v => {
+	// 	grid.update({a: {disabled: !v}});
+	// }}
 ], {
 	title: '<a href="https://github.com/dfcreative/plot-grid">plot-grid</a>',
 	theme: require('settings-panel/theme/control'),

@@ -13,12 +13,8 @@ const extend = require('just-extend');
 const range = require('just-range');
 const pick = require('just-pick');
 const clamp = require('mumath/clamp');
-const lg = require('mumath/log10');
-const scale = require('mumath/scale');
-const pretty = require('mumath/pretty');
 const panzoom = require('pan-zoom');
 const alpha = require('color-alpha');
-const almost = require('almost-equal');
 const isObj = require('is-plain-obj');
 const parseUnit = require('parse-unit');
 const toPx = require('to-px');
@@ -148,6 +144,12 @@ Grid.prototype.update = function (opts) {
 		if (opts.r !== undefined) this.r.disabled = !opts.r;
 		if (opts.a !== undefined) this.a.disabled = !opts.a;
 
+		//take over types properties
+		if  (opts.x && opts.x.type) extend(opts.x, Grid.types[opts.x.type]);
+		if  (opts.y && opts.y.type) extend(opts.y, Grid.types[opts.y.type]);
+		if  (opts.r && opts.r.type) extend(opts.r, Grid.types[opts.r.type]);
+		if  (opts.a && opts.a.type) extend(opts.a, Grid.types[opts.a.type]);
+
 		//extend props
 		if (opts.x) extend(this.x, opts.x);
 		if (opts.y) extend(this.y, opts.y);
@@ -177,8 +179,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 	let state = {
 		lines: lines,
 		viewport: vp,
-		grid: this,
-		step: scale(lines.distance * lines.scale, lines.steps)
+		grid: this
 	};
 
 	//calculate real offset/range
@@ -300,6 +301,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 
 //default values
 Grid.prototype.defaults = extend({
+	type: 'linear',
 	name: '',
 	units: '',
 
@@ -321,7 +323,7 @@ Grid.prototype.defaults = extend({
 	style: 'lines',
 	align: .5,
 	steps: [1, 2, 5],
-	distance: 15,
+	distance: 10,
 	padding: 0,
 
 	lineWidth: 1,

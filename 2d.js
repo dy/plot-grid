@@ -168,7 +168,7 @@ Canvas2DGrid.prototype.drawLines = function (ctx, state) {
 			if (normals[i*2]) textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
 
 			let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
-			if (normals[i*2+1]) textTop = clamp(textTop, top + textHeight, top + height - textHeight/2);
+			if (normals[i*2+1]) textTop = clamp(textTop, top, top + height - textHeight - textOffset);
 			ctx.fillText(label, textLeft, textTop);
 		}
 	}
