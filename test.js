@@ -95,46 +95,50 @@ var settings = createSettings([
 							let logRange = state.range;
 
 							//get linear range numbers
-							let realMinStep = Math.pow(10, logMinStep);
 							let min = Math.pow(10, logMin),
 								max = Math.pow(10, logMax);
+
+							//local step is like interest (but not in %), or increase
+							// multStep = 1/.98, 1/.99, 1/.995, 1/.998, 1/.999, ...
+							// 1/multStep = .99
+							// 1 -  1/multStep = .01...
+							//inspiration: http://customgraph.com/SGL/piart.php?art=2161
+							let localStep = 1 -  1/Math.pow(10, logMinStep);
 
 							//calc power steps
 							let logStep = Math.ceil(logMinStep);
 							let step10 = Math.pow(10, logStep);
 
-							state.logStep = logStep;
-							state.realStep = realMinStep;
+							state.step = logStep;
+							state.localStep = localStep;
 
 							let start = Math.pow(10, Math.floor(logMin/logStep)*logStep);
 
 							for (let order = start; order <= max; order *= step10 ) {
 								//not enough subdivisions - display only order lines
-								if (1/.5 < realMinStep) {
+								if (.5 < localStep) {
 									res = res.concat(lg(order));
 									// state.logSteps = [logStep];
 								}
 								//display 1, 2, 5 * order lines
-								else if (1/.9 < realMinStep) {
+								else if (.1 < localStep) {
 									res = res.concat([1, 2, 5].map(v => lg(v*order)));
 									// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
 								}
 								//display 1..9 * order lines
-								else if (1/.95 < realMinStep) {
+								else if (.05 < localStep) {
 									res = res.concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(v => lg(v*order)));
 								}
 								//try to pick proper subdivision for 2,5 ranges
 								else {
-									// 1/.98, 1/.99, 1/.995, 1/.998, 1/.999, ...
-									// 1/realMinStep = .99
-									// 1 -  1/realMinStep = .01...
-									//inspiration: http://customgraph.com/SGL/piart.php?art=2161
-
-									let localStep = 1 -  1/realMinStep;
 									let step = scale(localStep, [1, 2, 5]);
 									let step1 = scale(step*1.1, [1, 2, 5]);
 									let step2 = scale(step1*1.1, [1, 2, 5]);
 									let step5 = scale(step2*1.1, [1, 2, 5]);
+
+									state.largeStep1 = step5
+									state.largeStep2 = step1*10
+									state.largeStep5 = step2*10
 
 									let baseMin = Math.max(min, order)/order,
 										baseMax = Math.min(max, 10*order)/order;
@@ -183,7 +187,7 @@ var settings = createSettings([
 						},
 						labels: state => {
 							return state.values.map(v => {
-								if ( isMajor(v, state) ) return Math.pow(10, v).toPrecision(1);
+								if ( isMajor(v, state) ) return Math.pow(10, v).toPrecision(2);
 								return null;
 							});
 						}
@@ -196,14 +200,20 @@ var settings = createSettings([
 				});
 
 				function isMajor (v, state) {
-					let eps = Number.EPSILON || 2.220446049250313e-16;
+					//FIXME: this error highlights wrong subdivs on really small scales
+					let eps = 200 * (Number.EPSILON || 2.220446049250313e-16);
 
-					if (1/.95 > state.realStep) {
-						let base = Math.pow(10, v - Math.floor(v));
+					let base = Math.pow(10, v - Math.floor(v));
+
+					if (.02 > state.localStep) {
+						let largeStep = base < 2 ? state.largeStep1 : base < 5 ? state.largeStep2 : state.largeStep5;
+						return almost((base+eps) % largeStep, 0, 1.5*eps);
+					}
+					else if (.05 > state.localStep) {
 						return almost(base, 2) || almost(base, 5) || almost(base, 1);
 					}
 
-					return (Math.abs(v)+eps)%state.logStep <= 2*eps
+					return (Math.abs(v)+eps)%state.step <= 1.5*eps
 				}
 			}
 			else if (v === 'dictaphone') {
