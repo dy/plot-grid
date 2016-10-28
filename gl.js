@@ -47,6 +47,7 @@ function GLGrid (opts) {
 	this.on('update', (opts) => {
 		//FIXME: this dude automatically draws 2d grid, do something about that
 		this.grid.update(opts);
+		this.render();
 	});
 	this.on('draw', (ctx, vp) => {
 		this.grid.clear();
@@ -55,17 +56,6 @@ function GLGrid (opts) {
 	});
 }
 
-GLGrid.prototype.pan = function (dx, dy, x, y) {
-	this.grid.pan(dx, dy, x, y);
-	this.render();
-	return this;
-};
-
-GLGrid.prototype.zoom = function (dx, dy, x, y) {
-	this.grid.zoom(dx, dy, x, y);
-	this.render();
-	return this;
-};
 
 GLGrid.prototype.context = {
 	type: 'webgl',

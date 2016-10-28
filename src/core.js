@@ -60,78 +60,48 @@ function Grid (opts) {
 	this.on('resize', () => this.update());
 
 	//enable interactions
-	if ((this.pan || this.zoom) && this.container && this.canvas) {
-		panzoom(this.canvas, (dx, dy, x, y) => {
-			this.pan && this.pan(dx, dy, x, y);
-		}, (dx, dy, x, y) => {
-			this.zoom && this.zoom(dx, dy, x, y);
-		}, {
+	if (this.container && this.canvas) {
+		//FIXME: make sure that interaction happens within actual viewport
+		panzoom(this.canvas, (e) => {
+			let [left, top, width, height] = this.viewport;
+
+			//shift start
+			let zoom = clamp(-e.dz, -height*.75, height*.75)/height;
+
+			let x = {offset: this.x.offset, scale: this.x.scale},
+				y = {offset: this.y.offset, scale: this.y.scale};
+
+			//pan
+			if (!this.x.disabled) {
+				let oX = this.x && this.x.origin || 0;
+				if (this.x.pan) {
+					x.offset -= this.x.scale * e.dx;
+				}
+				if (this.x.zoom !== false) {
+					let tx = (e.x-left)/width - oX;
+					let prevScale = x.scale;
+					x.scale *= (1 - zoom);
+					x.scale = clamp(x.scale, this.x.minScale, this.x.maxScale);
+					x.offset -= width*(x.scale - prevScale) * tx;
+				}
+			}
+			if (!this.y.disabled) {
+				let oY = this.y && this.y.origin || 0;
+				if (this.y.pan) {
+					y.offset += y.scale * e.dy;
+				}
+				if (this.y.zoom !== false) {
+					let ty = oY-(e.y-top)/height;
+					let prevScale = y.scale;
+					y.scale *= (1 - zoom);
+					y.scale = clamp(y.scale, this.y.minScale, this.y.maxScale);
+					y.offset -= height*(y.scale - prevScale) * ty;
+				}
+			}
+
+			this.update({x, y});
 		});
 	}
-}
-
-
-//default pan/zoom handlers
-//TODO: check if interaction happens within actual viewport
-Grid.prototype.pan = function (dx, dy, x, y) {
-	if (!this.x.disabled && this.x.pan) {
-		this.x.offset -= this.x.scale * dx;
-	}
-	if (!this.y.disabled && this.y.pan) {
-		this.y.offset += this.y.scale * dy;
-	}
-
-	this.update();
-
-	return this;
-};
-Grid.prototype.zoom = function (dx, dy, x, y) {
-	let [left, top, width, height] = this.viewport;
-
-	if (x==null) x = left + width/2;
-	if (y==null) y = top + height/2;
-
-	let oX = this.x && this.x.origin || 0;
-	let oY = this.y && this.y.origin || 0;
-
-	//shift start
-	let amt = clamp(-dy, -height*.75, height*.75)/height;
-
-	if (this.x.zoom !== false) {
-		let tx = (x-left)/width - oX;
-		let prevScale = this.x.scale;
-		this.x.scale *= (1 - amt);
-		this.x.scale = clamp(this.x.scale, this.x.minScale, this.x.maxScale);
-		this.x.offset -= width*(this.x.scale - prevScale) * tx;
-	}
-
-	if (this.y.zoom !== false) {
-		let ty = oY-(y-top)/height;
-		let prevScale = this.y.scale;
-		this.y.scale *= (1 - amt);
-		this.y.scale = clamp(this.y.scale, this.y.minScale, this.y.maxScale);
-		this.y.offset -= height*(this.y.scale - prevScale) * ty;
-	}
-
-	this.update();
-
-	return this;
-};
-
-
-//make sure that lines scale/offset/range are not off-limits or something
-Grid.prototype.normalize = function () {
-	if (!this.x.disabled) {
-		let range = this.x.getRange({viewport: this.viewport, lines: this.x});
-		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
-	}
-
-	if (!this.y.disabled) {
-		let range = this.y.getRange({viewport: this.viewport, lines: this.y});
-		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
-	}
-
-	return this;
 }
 
 
@@ -157,7 +127,16 @@ Grid.prototype.update = function (opts) {
 		if (opts.a) extend(this.a, opts.a);
 	}
 
-	this.normalize();
+	//normalize, make sure range/offset are not off the limits
+	if (!this.x.disabled) {
+		let range = this.x.getRange({viewport: this.viewport, lines: this.x});
+		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
+	}
+
+	if (!this.y.disabled) {
+		let range = this.y.getRange({viewport: this.viewport, lines: this.y});
+		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
+	}
 
 	//recalc state
 	this.state.x = this.calcLines(this.x, this.viewport, this);
@@ -322,7 +301,7 @@ Grid.prototype.defaults = extend({
 	style: 'lines',
 	align: .5,
 	steps: [1, 2, 5],
-	distance: 10,
+	distance: 13,
 	padding: 0,
 
 	lineWidth: 1,
