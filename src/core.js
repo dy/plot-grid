@@ -168,15 +168,16 @@ Grid.prototype.calcLines = function (lines, vp) {
 		Math.max(lines.min, -Number.MAX_VALUE+1), Math.min(lines.max, Number.MAX_VALUE) - state.range
 	);
 
-	//calc axis/style
-	state.axisOrigin = lines.axisOrigin;
-	state.axisColor = lines.axisColor || lines.color;
+	//calc style
+	state.axisColor = typeof lines.axisColor === 'number' ? alpha(lines.color, lines.axisColor) : lines.axisColor || lines.color;
 	state.axisWidth = lines.axisWidth || lines.lineWidth;
 	state.lineWidth = lines.lineWidth;
 	state.align = lines.align;
 	state.labelColor = state.color;
-	state.lightColor = alpha(lines.color, .1);
-	state.heavyColor = alpha(lines.color, .3);
+	state.lineColor = typeof lines.lineColor === 'number' ? alpha(lines.color, lines.lineColor) : lines.lineColor || lines.color;
+	state.sublineColor = typeof lines.sublineColor === 'number' ? alpha(lines.color, lines.sublineColor) : lines.sublineColor || lines.color;
+	state.tick = lines.tick;
+	state.subtick = lines.subtick;
 
 	//get padding
 	if (typeof lines.padding === 'number') {
@@ -189,6 +190,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 		state.padding = lines.padding;
 	}
 
+	//calc font
 	if (typeof lines.fontSize === 'number') {
 		state.fontSize = lines.fontSize
 	}
@@ -208,35 +210,29 @@ Grid.prototype.calcLines = function (lines, vp) {
 	}
 	state.values = values;
 
-	//calc colors
-	let colors;
-	if (lines.lineColor instanceof Function) {
-		colors = lines.lineColor(state);
+	let subvalues;
+	if (lines.sublines instanceof Function) {
+		subvalues = lines.sublines(state);
+	}
+	//draw sublines only when they are not disabled
+	else if ((lines.sublines === true || lines.sublines === undefined) && (lines.lines instanceof Function)) {
+		let scale = state.scale;
+		state.scale = scale/3;
+		//FIXME: if sublines return object?
+		subvalues = lines.lines(state).filter(v => {
+			return values.indexOf(v) >= 0;
+		});
+		state.scale = scale;
 	}
 	else {
-		let color = lines.lineColor !== undefined ? lines.lineColor : lines.color;
-		colors = Array(values.length).fill(color);
+		subvalues = lines.sublines;
 	}
-	state.colors = colors;
-
-	//calc ticks
-	let ticks;
-	if (lines.ticks instanceof Function) {
-		ticks = lines.ticks(state);
-	}
-	else if (Array.isArray(lines.ticks)) {
-		ticks = lines.ticks;
-	}
-	else {
-		let tick = (lines.ticks === true || lines.ticks === true) ? state.axisWidth*2 : lines.ticks || 0;
-		ticks = Array(values.length).fill(tick);
-	}
-	state.ticks = ticks;
+	state.subvalues = subvalues;
 
 	//calc labels
 	let labels;
-	if (lines.labels === true) lines.labels = Grid.prototype.defaults.labels;
-	if (lines.labels instanceof Function) {
+	if (lines.labels === true) labels = values;
+	else if (lines.labels instanceof Function) {
 		labels = lines.labels(state);
 	}
 	else if (Array.isArray(lines.labels)) {
@@ -248,27 +244,11 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.labels = labels;
 
 	//convert hashmap ticks/labels to values + colors
-	if (isObj(ticks)) {
-		state.ticks = Array(values.length).fill(0);
-	}
 	if (isObj(labels)) {
 		state.labels = Array(values.length).fill(null);
-	}
-
-	if (isObj(ticks)) {
-		for (let value in ticks) {
-			state.ticks.push(ticks[value]);
-			state.values.push(parseFloat(value));
-			state.colors.push(null);
-			state.labels.push(null);
-		}
-	}
-	if (isObj(labels)) {
 		for (let value in labels) {
 			state.labels.push(labels[value]);
 			state.values.push(parseFloat(value));
-			state.colors.push(null);
-			state.ticks.push(0);
 		}
 	}
 
@@ -294,27 +274,30 @@ Grid.prototype.defaults = extend({
 	zoom: true,
 	pan: true,
 
-	//lines params
+	//labels
+	labels: true,
 	fontSize: '10pt',
 	fontFamily: 'sans-serif',
-	color: 'rgb(0,0,0)',
-	style: 'lines',
 	align: .5,
-	steps: [1, 2, 5],
-	distance: 13,
 	padding: 0,
+	color: 'rgb(0,0,0,1)',
 
+	//lines params
+	lines: true,
+	sublines: true,
+	tick: 8,
+	subtick: 0,
 	lineWidth: 1,
-	lines: [],
-	lineColor: 'rgba(0,0,0,.1)',
-	ticks: [],
-	labels: [],
+	distance: 120,
+	style: 'lines',
+	lineColor: .4,
+	sublineColor: .1,
 
 	//axis params
 	axis: true,
 	axisOrigin: 0,
 	axisWidth: 2,
-	axisColor: null,
+	axisColor: 1,
 
 	//stub methods
 	//return coords for the values, redefined by axes

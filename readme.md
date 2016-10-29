@@ -70,19 +70,19 @@ Each of _x/y/r/a_ can customize dimension view by the following options:
 |---|---|---|---|
 | `type` | _String_, `null` | `null` | Source defaults to extend, one of `linear`, `logarithmic`, `time`. |
 | `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
-| `smallLines`, `bigLines` | _Bool_, _Array_, _Function_, `null` | `Grid.types.linear.smallLines`, `Grid.types.linear.bigLines` | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default `bigLines` generate the same as small lines with larger scale. |
-| `smallColor`, `bigColor` | _String_, `null` | `coord.color` | Color for small and big lines. |
+| `lines`, `sublines` | _Bool_, _Array_, _Function_, `null` |  | Array with values for lines and subdivisions, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default `sublines` generates same result as `lines` for smaller scale. |
+| `tick`, `subtick` | _Bool_, _Number_ | `5`, `10` | Size of ticks for the lines. Can be disabled by passing _false_ or can be a number. |
+| `lineColor`, `sublineColor` | _String_, _Number_ `null` | `rgba(0,0,0,.3)`, `.1` | Color for lines and subdivisions. Number value will define opacity of the base color (above). |
 | `lineWidth` | _Number_ | `1` | Width of lines. We guess that width for small and big lines should not differ, if you have use-cases for that, please address [issues](/issues). |
-| `axis` | _Bool_ | `true` | Enable axis line. |
+| `axis` | _Bool_ | `true` | Enable axis. |
 | `axisOrigin` | _Number_ | `0` | Define axis alignment by value on the opposite coordinate. |
-| `axisColor` | _String_ | `coord.color` | Axis color, redefines default `color`. |
-| `axisWidth` | _Number_ | `2` | Width of axis. |
+| `axisColor` | _String_, _Number_ | `0.1` | Axis color, redefines default `color`. |
+| `axisWidth` | _Number_ | `2` | Width of axis line. |
 | `labels` | _Bool_, _Array_, _Object_ , _Function_, `null` | `null` | Object or array with label strings corresponding to big lines. Can be defined as a function returning such array `(state) => labels`. `null` value output values as is. Can be disabled by passing `false`. |
 | `fontSize` | _String_, _Number_ | `10pt` | Font size for labels. Sizes with units will be automatically transformed to pixels by [to-px](https://npmjs.org/package/to-px). |
 | `fontFamily` | _String_ | `sans-serif` | Font family to use for labels. |
-| `padding` | _Number_, _Array(4)_ | `0` | Padding inside the viewport to indent lines from axes and labels. By default `0`. _Array_ sequence is `top, right, bottom, left`, as in css. |
-| `smallTick`, `bigTick` | _Bool_, _Number_ | `5`, `10` | Size of ticks for the lines. Can be disabled by passing _false_ or can be a number. |
 | `align` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
+| `padding` | _Number_, _Array(4)_ | `0` | Padding inside the viewport to indent lines from axes and labels. By default `0`. _Array_ sequence is `top, right, bottom, left`, as in css. |
 | `style` | _String_ | `lines` | Style of rendering: `lines` or `dots`. Note that `dots` available only when `x` and `y` are both enabled. |
 | `distance` | _Number_ | `10` | Minimum distance between lines. |
 
@@ -100,11 +100,7 @@ Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
 | `zoom` | _Bool_ | `true` | Enables zoom interaction. |
 | `pan` | _Bool_ | `true` | Enables pan interaction. |
 
-To change pan or zoom, use `update` method:
-
-```js
-grid.update({x: {offset: grid.x.offset - 20}});
-```
+To change pan or zoom, use `update` method.
 
 #### State
 
