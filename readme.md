@@ -13,22 +13,22 @@ const createGrid = require('plot-grid');
 //cartesian grid
 let grid = createGrid({
 	x: {
-		type: 'logarithmic'
+		type: 'logarithmic',
+		min: 0
 	},
 	y: {
-		type: 'decibels'
+		type: 'decibels',
+		min: -100,
+		max: 0
 	}
 });
 
 //polar grid
 let polar = createGrid({
 	r: {
-		name: 'Direction',
 		labels: {0: 'E', 90: 'N', 180: 'W', 270: 'S'}
 	},
 	a: {
-		name: 'Intensity',
-		units: 'Db',
 		type: 'log'
 	}
 });
@@ -67,7 +67,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 Each of _x/y/r/a_ can customize dimension view by the following options:
 
 | Name | Type | Default | Description |
-|---|---|---|
+|---|---|---|---|
 | `type` | _String_, `null` | `null` | Source defaults to extend, one of `linear`, `logarithmic`, `time`. |
 | `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
 | `smallLines`, `bigLines` | _Bool_, _Array_, _Function_, `null` | `Grid.types.linear.smallLines`, `Grid.types.linear.bigLines` | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default `bigLines` generate the same as small lines with larger scale. |
@@ -91,7 +91,7 @@ Each of _x/y/r/a_ can customize dimension view by the following options:
 Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
 
 | Name | Type | Default | Description |
-|---|---|---|
+|---|---|---|---|
 | `offset` | _Number_ | `0` | Defines start point for the visible range, in terms of values. |
 | `origin` | _Number_ | `0.5` | Defines position of the offset on the screen, for example, `.5` for center, `1` for right/top edge of the screen, `0` for left/bottom. |
 | `scale` | _Number_ | `1` | Sets scale for the current range, number of values per pixel. |
