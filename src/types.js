@@ -338,5 +338,8 @@ let db = {
 
 
 module.exports = {
-	linear, log, time, db
+	linear: linear,
+	logarithmic: log,
+	time: time,
+	decibels: db
 };

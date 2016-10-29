@@ -15,15 +15,12 @@ let grid = createGrid({
 	x: {
 		name: 'Frequency',
 		units: 'Hz',
-		log: true,
-		min: 20,
-		max: 20000
+		type: 'logarithmic'
 	},
 	y: {
 		name: 'Magnitude',
 		units: 'Db',
-		max: 0,
-		min: -100
+		type: 'decibels'
 	}
 });
 
@@ -31,16 +28,12 @@ let grid = createGrid({
 let polar = createGrid({
 	r: {
 		name: 'Direction',
-		min: 0,
-		max: 360,
 		labels: {0: 'E', 90: 'N', 180: 'W', 270: 'S'}
 	},
 	a: {
 		name: 'Intensity',
 		units: 'Db',
-		min: -100,
-		max: 0,
-		log: true,
+		type: 'log'
 	}
 });
 ```
@@ -71,7 +64,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | container | Element, String, null | Container element to place grid into. By default `document.body`. Can be `null` to render in memory. |
 | context | CanvasContext, String, Object | Can be existing context, a string `2d`/`webgl` or context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context). |
 | viewport | Array(4) or (w, h) => Array(4) | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
-| x, y, r, a | Object, Bool | Options for the grid lines of cartesian or polar plot, see the table below. If just boolean, default options will be guessed. |
+| x, y, r, a | Bool, String, Object | Boolean, enabling coordinates of linear type or string, defining custom type: `linear`, `logarithmic`, `decibels` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
 
 #### Lines
 
@@ -79,6 +72,7 @@ Each of _x/y/r/a_ can define custom dimension view by the following options:
 
 | Name | Type | Description |
 |---|---|---|
+| `type` | String | |
 | `lines` | Bool, Array, Function, String, null | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. Also can be a string, one of `log`, `linear` or `time`, to define standard line types. Default is `linear`. |
 | `axis` | Bool | Enable axis. |
 | `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `state => [labels...]`. |

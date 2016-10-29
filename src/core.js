@@ -52,6 +52,12 @@ function Grid (opts) {
 	this.r = extend({disabled: true}, Grid.prototype.r, opts.r);
 	this.a = extend({disabled: true}, Grid.prototype.a, opts.a);
 
+	//enable proper lines
+	if (opts.x !== undefined) this.x.disabled = !opts.x;
+	if (opts.y !== undefined) this.y.disabled = !opts.y;
+	if (opts.r !== undefined) this.r.disabled = !opts.r;
+	if (opts.a !== undefined) this.a.disabled = !opts.a;
+
 	//create rendering state
 	this.state = {};
 
@@ -108,12 +114,6 @@ function Grid (opts) {
 //re-evaluate lines, calc options for renderer
 Grid.prototype.update = function (opts) {
 	if (opts) {
-		//disable lines
-		if (opts.x !== undefined) this.x.disabled = !opts.x;
-		if (opts.y !== undefined) this.y.disabled = !opts.y;
-		if (opts.r !== undefined) this.r.disabled = !opts.r;
-		if (opts.a !== undefined) this.a.disabled = !opts.a;
-
 		//take over types properties
 		if  (opts.x && opts.x.type) extend(opts.x, Grid.types[opts.x.type]);
 		if  (opts.y && opts.y.type) extend(opts.y, Grid.types[opts.y.type]);

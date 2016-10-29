@@ -4,6 +4,7 @@ const isBrowser = require('is-browser');
 const createSettings = require('settings-panel');
 const insertCss = require('insert-styles');
 const createFps = require('fps-indicator');
+const pick = require('just-pick');
 
 insertCss(`
 	body {
@@ -54,9 +55,9 @@ let fps = createFps({
 
 
 var settings = createSettings([
-	// {id: 'use-case', type: 'select', value: 'log', options: {
+	// {id: 'use-case', type: 'select', value: 'logarithmic', options: {
 	// 		'linear': '⊞ Linear',
-	// 		'log': '♒ Logarithmic',
+	// 		'logarithmic': '♒ Logarithmic',
 	// 		'time': '┈ Time',
 	// 		// 'multigrid': '⧉ Multigrid',
 	// 		// 'polar': '⊕ Polar'
@@ -68,7 +69,7 @@ var settings = createSettings([
 	// 			});
 	// 		}
 	// 		//FIXME: add type = log, time, linear to options
-	// 		else if (v === 'log') {
+	// 		else if (v === 'logarithmic') {
 	// 			grid.update({
 	// 				x: Grid.types.log,
 	// 				y: Grid.types.log
@@ -135,12 +136,24 @@ var settings = createSettings([
 	// }},
 
 
-	{id: 'x', label: '|||', title: 'Horizontal X lines', value: true, change: v => {
-		grid.update({x: {disabled: !v}});
+	{id: 'coord', label: 'Lines', type:'switch', title: 'Lines coordinates', value: 'x', options: {
+		x: '||| x', y: '☰ y', r: '⊚ r', a: '✳ a'
+	}, change: v => {
+		settings.set(
+			pick(grid[v], ['disabled', 'type'])
+		);
 	}},
-	{id: 'x-type', label: 'type', type: 'switch', title: 'X lines type', value: 'linear', options: ['linear', 'log', 'time'], change: v => {
+
+	{content: '<br/>'},
+
+	{id: 'disabled', type: 'checkbox', value: false, change: v => {
+		grid.update({
+			[settings.get('coord')]: {disabled: v}
+		});
+	}},
+	{id: 'type', type: 'select', title: 'X lines type', value: 'linear', options: ['linear', 'logarithmic', 'decibels', 'time', 'custom'], change: v => {
 			grid.update({
-				x: {type: v}
+				[settings.get('coord')]: {type: v}
 			});
 		}
 	},
@@ -158,16 +171,10 @@ var settings = createSettings([
 	//offset/scale readonly
 	//axisWidth
 	//align
-	{content: '<br/>'},
-	{id: 'y', label: '☰', title: 'Horizontal Y lines', value: true, change: v => {
-		grid.update({y: {disabled: !v}});
-	}},
-	{id: 'y-type', label: 'type', type: 'switch', title: 'Y lines type', value: 'linear', options: ['linear', 'log', 'time'], change: v => {
-			grid.update({
-				y: {type: v}
-			});
-		}
-	},
+
+	// {id: 'y', label: '☰', title: 'Horizontal Y lines', value: true, change: v => {
+	// 	grid.update({y: {disabled: !v}});
+	// }},
 	// {id: 'r', label: '⊚', title: 'Radial R lines', value: false, change: v => {
 	// 	grid.update({r: {disabled: !v}});
 	// }},
