@@ -13,13 +13,9 @@ const createGrid = require('plot-grid');
 //cartesian grid
 let grid = createGrid({
 	x: {
-		name: 'Frequency',
-		units: 'Hz',
 		type: 'logarithmic'
 	},
 	y: {
-		name: 'Magnitude',
-		units: 'Db',
 		type: 'decibels'
 	}
 });
@@ -50,7 +46,7 @@ Get grid constructor. You can require render-specific version as:
 ```js
 const Canvas2DGrid = require('plot-grid/2d');
 const WebglGrid = require('plot-grid/gl');
-const HTMLGrid = require('plot-grid/html'); //pending
+const HTMLGrid = require('plot-grid/html'); //under construction
 ```
 
 ### let grid = new Grid(options?)
@@ -61,51 +57,58 @@ Create new grid instance. It can serve both as a class or constructor function (
 
 | Name | Type | Description |
 |---|---|---|
-| container | Element, String, null | Container element to place grid into. By default `document.body`. Can be `null` to render in memory. |
-| context | CanvasContext, String, Object | Can be existing context, a string `2d`/`webgl` or context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context). |
-| viewport | Array(4) or (w, h) => Array(4) | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
-| x, y, r, a | Bool, String, Object | Boolean, enabling coordinates of linear type or string, defining custom type: `linear`, `logarithmic`, `decibels` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
+| container | _Element_, _String_, `null` | Container element to place grid into. By default `document.body`. Can be `null` to render in memory. |
+| context | CanvasContext, _String_, _Object_ | Can be existing context, a string `2d`/`webgl` or context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context). |
+| viewport | _Array(4)_ or (w, h) => _Array(4)_ | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
+| x, y, r, a | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of linear type or string, defining custom type: `linear`, `logarithmic`, `decibels` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
 
-#### Lines
+#### Coordinates
 
-Each of _x/y/r/a_ can define custom dimension view by the following options:
+Each of _x/y/r/a_ can customize dimension view by the following options:
 
-| Name | Type | Description |
+| Name | Type | Default | Description |
 |---|---|---|
-| `type` | String | |
-| `lines` | Bool, Array, Function, String, null | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. Also can be a string, one of `log`, `linear` or `time`, to define standard line types. Default is `linear`. |
-| `axis` | Bool | Enable axis. |
-| `labels` | Bool, Array, Function | Values for labels. By default returns lines values with `units` suffix. Can be defined via function `state => [labels...]`. |
-| `ticks` | Bool, Number, Array, Function | Size of the ticks for the labels. Can be disabled by passing false, can be a number, an array corresponding to the labels or a function returning size, `state => [ticks...]`. |
-| `name` | String, null | Name for the axis. |
-| `units` | String, null | Units to add as a suffix to the labels. |
-| `padding` | Number, Array(4), Function | Space for labels and axis, by default `0`. Array sequence is `top, right, bottom, left`, as in css. |
-| **Zoom/pan** |
-| `offset` | Number | Defines start point for the visible range, in terms of values. By default `0`. |
-| `origin` | Number | Defines position of the offset on the screen, for example, `.5` is center, `1` is right/top edge of the screen, `0` is left/bottom. By default `.5`. |
-| `scale` | Number, Function | Sets scale for the current range, number of values per pixel. Can be a function, if scale should depend on viewport for adaptive layout. By default is `1`. |
-| `min`, `max` | Number | Limits for panning, by default `-Infinity`, `Infinity`. |
-| `minScale`, `maxScale` | Number | Scale limits. |
-| `zoom` | Bool, String, Array | Enables zoom interaction. Can be a string with possible interaction: `drag`, `scroll`, or array with these strings. |
-| `pan` | Bool, String, Array | Enables pan interaction, can take same values as zoom. |
-| **Style** |
-| `style` | String | Style of lines: `lines`, `dots`, `crosses`. |
-| `fontSize` | String, Number | Font size to use for labels, by default `10pt`. |
-| `fontFamily` | String | Font family to use for labels, by default `sans-serif`. |
-| `color` | String, Array | Default color for the lines, axes, ticks and labels. |
-| `axisOrigin` | Number | The value on the opposite coordinates corresponding to the axis. By default `0`. |
-| `axisWidth` | Number | Width of axis, by default `2`. |
-| `axisColor` | String, Array | Axis color, redefines default `color`. |
-| `lineColor` | String, Array, Function | Color(s) for lines, can be a function returning specific color per-line, `state => [colors...]`. By default `color`. |
-| `lineWidth` | Number | Width of lines, by default `1`. |
-| `align` | Number | The side to align ticks and labels, `0..1`. By default `0.5`. |
-| `distance` | Number | Minimum distance between lines. By default `10`. |
-| `steps` | Array | Base steps to use for lines, by default `[1, 2, 5]`. |
+| `type` | _String_, `null` | `null` | Source defaults to extend, one of `linear`, `logarithmic`, `time`. |
+| `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
+| `smallLines`, `bigLines` | _Bool_, _Array_, _Function_, `null` | `Grid.types.linear.smallLines`, `Grid.types.linear.bigLines` | Array with values for lines or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default `bigLines` generate the same as small lines with larger scale. |
+| `smallColor`, `bigColor` | _String_, `null` | `coord.color` | Color for small and big lines. |
+| `lineWidth` | _Number_ | `1` | Width of lines. We guess that width for small and big lines should not differ, if you have use-cases for that, please address [issues](/issues). |
+| `axis` | _Bool_ | `true` | Enable axis line. |
+| `axisOrigin` | _Number_ | `0` | Define axis alignment by value on the opposite coordinate. |
+| `axisColor` | _String_ | `coord.color` | Axis color, redefines default `color`. |
+| `axisWidth` | _Number_ | `2` | Width of axis. |
+| `labels` | _Bool_, _Array_, _Object_ , _Function_, `null` | `null` | Object or array with label strings corresponding to big lines. Can be defined as a function returning such array `(state) => labels`. `null` value output values as is. Can be disabled by passing `false`. |
+| `fontSize` | _String_, _Number_ | `10pt` | Font size for labels. Sizes with units will be automatically transformed to pixels by [to-px](https://npmjs.org/package/to-px). |
+| `fontFamily` | _String_ | `sans-serif` | Font family to use for labels. |
+| `padding` | _Number_, _Array(4)_ | `0` | Padding inside the viewport to indent lines from axes and labels. By default `0`. _Array_ sequence is `top, right, bottom, left`, as in css. |
+| `smallTick`, `bigTick` | _Bool_, _Number_ | `5`, `10` | Size of ticks for the lines. Can be disabled by passing _false_ or can be a number. |
+| `align` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
+| `style` | _String_ | `lines` | Style of rendering: `lines` or `dots`. Note that `dots` available only when `x` and `y` are both enabled. |
+| `distance` | _Number_ | `10` | Minimum distance between lines. |
 
+#### Pan & zoom
+
+Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
+
+| Name | Type | Default | Description |
+|---|---|---|
+| `offset` | _Number_ | `0` | Defines start point for the visible range, in terms of values. |
+| `origin` | _Number_ | `0.5` | Defines position of the offset on the screen, for example, `.5` for center, `1` for right/top edge of the screen, `0` for left/bottom. |
+| `scale` | _Number_ | `1` | Sets scale for the current range, number of values per pixel. |
+| `min`, `max` | _Number_ | `-Infinity`, `Infinity` | Limits for panning. |
+| `minScale`, `maxScale` | _Number_ | `0`, `Infinity` | Scale limits. |
+| `zoom` | _Bool_ | `true` | Enables zoom interaction. |
+| `pan` | _Bool_ | `true` | Enables pan interaction. |
+
+To change pan or zoom, use `update` method:
+
+```js
+grid.update({x: {offset: grid.x.offset - 20}});
+```
 
 #### State
 
-Some lines properties which can be functions receive `state` object as an argument, which includes following values, directly fed to renderer:
+Properties which can take functions will receive `state` object as an argument, which includes the following:
 
 | Name | Description |
 |---|---|
@@ -115,12 +118,8 @@ Some lines properties which can be functions receive `state` object as an argume
 | `viewport` | Current area on the canvas to render grid. |
 | `range` | Current visible values range. |
 | `offset` | Value corresponding to the left offset of the grid. |
-| `axisOrigin` | Value for the axis on the opposite dimension, if any. |
-| `colors` | Color or array of colors, corresponding to lines. |
-| `ticks` | List with tick sizes. |
-| `labels` | Text values for the labels. |
 
-For complete list of details log state object in console.
+For complete list of details log state object in console, because some details depend on type of lines. You can always extend this object to pass some values to other functions.
 
 
 ### grid.update(options)
@@ -130,7 +129,10 @@ Pass new options to update grid look. Note that passed options extend existing o
 ```js
 grid.update({
 	x: {
-		log: false
+		type: 'logarithmic',
+		offset: 0,
+		min: 0,
+		scale: .01
 	}
 });
 ```
@@ -139,19 +141,7 @@ It will automatically rerender grid.
 
 ### grid.render()
 
-Redraw grid. Call whenever you want to redraw grid, like resize etc.
-
-### grid.pan(dx, dy)
-
-Shift grid by the amount of pixels, they will be converted to grid values. This method is used by zoom/pan interactions.
-
-### grid.zoom(dx, dy, cx?, cy?)
-
-Scale grid by the amount of pixels, they will be converted to grid values. This method is used by zoom/pan interactions.
-
-### grid.dispose()
-
-Clear any references, events, dispose context etc. Call if you are not planning to use grid instance anymore.
+Redraw grid. Call whenever you need to redraw grid, like resize etc. It will not recalculate lines, just rerender existing lines. To recalculate lines, use `grid.update()`.
 
 
 ## Used by
@@ -167,5 +157,3 @@ To [@evanw](https://github.com/evanw) with [thetamath](http://thetamath.com/app/
 ## Related
 
 * [grid](https://github.com/bit101/grid) — collection of grids for canvas2d.
-* [gl-plot2d](https://www.npmjs.com/package/gl-plot2d) — webgl-based grid.
-* [gl-plot3d](https://www.npmjs.com/package/gl-plot3d) — webgl-based 3d grid.
