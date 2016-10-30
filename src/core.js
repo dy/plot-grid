@@ -199,8 +199,6 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 	state.fontFamily = coord.fontFamily || 'sans-serif';
 
 	//get lines stops, including joined list of values
-	state.values = [];
-
 	let lines;
 	if (coord.lines instanceof Function) {
 		lines = coord.lines(state);
@@ -233,7 +231,7 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 	}
 	else {
 		let tick = (coord.ticks === true || coord.ticks === true) ? state.axisWidth*2 : coord.ticks || 0;
-		ticks = Array(values.length).fill(tick);
+		ticks = Array(lines.length).fill(tick);
 	}
 	state.ticks = ticks;
 
@@ -251,32 +249,32 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 		labels = coord.labels
 	}
 	else {
-		labels = Array(state.values.length).fill(null);
+		labels = Array(state.lines.length).fill(null);
 	}
 	state.labels = labels;
 
 
-	//convert hashmap ticks/labels to values + colors
+	//convert hashmap ticks/labels to lines + colors
 	if (isObj(ticks)) {
-		state.ticks = Array(values.length).fill(0);
+		state.ticks = Array(lines.length).fill(0);
 	}
 	if (isObj(labels)) {
-		state.labels = Array(values.length).fill(null);
+		state.labels = Array(lines.length).fill(null);
 	}
 
 	if (isObj(ticks)) {
 		for (let value in ticks) {
 			state.ticks.push(ticks[value]);
-			state.values.push(parseFloat(value));
-			state.colors.push(null);
+			state.lines.push(parseFloat(value));
+			state.lineColors.push(null);
 			state.labels.push(null);
 		}
 	}
 	if (isObj(labels)) {
 		for (let value in labels) {
 			state.labels.push(labels[value]);
-			state.values.push(parseFloat(value));
-			state.colors.push(null);
+			state.lines.push(parseFloat(value));
+			state.lineColors.push(null);
 			state.ticks.push(null);
 		}
 	}

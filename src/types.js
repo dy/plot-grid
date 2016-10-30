@@ -253,6 +253,7 @@ let	log = {
 
 
 let time = {
+	lines: false,
 	ticks: (state) => {
 		let result = {};
 		let coord = state.coordinate;
