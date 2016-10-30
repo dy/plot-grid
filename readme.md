@@ -64,14 +64,14 @@ Create new grid instance. It can serve both as a class or constructor function (
 
 #### Coordinates
 
-Each of _x_, _y_, _r_, _a_ can customize dimension by the following options:
+Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `type` | _String_, `null` | `null` | Default type to extend, one of `linear`, `logarithmic`, `time`. |
 | `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
 | `lines`, `sublines` | _Bool_, _Array_, _Function_, `null` |  | Values, defining lines and/or subdivisions of lines, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default `sublines` generates same result as `lines` but for smaller scale. |
-| `tick`, `subtick` | _Bool_, _Number_ | `5`, `10` | Size of ticks for the lines and sublines. Can be disabled by passing _false_ or can be a number. |
+| `tick`, `subtick` | _Bool_, _Number_ | `5`, `10` | Size of ticks for the lines and sublines. Can be disabled by passing `false` or can be a number. |
 | `tickAlign` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
 | `lineColor`, `sublineColor` | _String_, _Number_ `null` | `.3`, `.1` | Color for lines and sublines. Number value will take the base color above with changed opacity. |
 | `lineWidth` | _Number_ | `1` | Width of lines. We guess that width of sublines should not differ from the width of lines, if you have use-case requiring the opposite, please address [issues](/issues). |
@@ -101,21 +101,6 @@ Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
 | `pan` | _Bool_ | `true` | Enables pan interaction. |
 
 To change pan or zoom, use `update` method.
-
-#### State
-
-Properties which can take functions will receive `state` object as an argument, which includes the following:
-
-| Name | Description |
-|---|---|
-| `values` | Array with values for lines. |
-| `lines` | Reference to lines options object. |
-| `grid` | Reference to the grid instance. |
-| `viewport` | Current area on the canvas to render grid. |
-| `range` | Current visible values range. |
-| `offset` | Value corresponding to the left offset of the grid. |
-
-For complete list of details log state object in console, because some details depend on type of lines. You can always extend this object to pass some values to other functions.
 
 
 ### grid.update(options)

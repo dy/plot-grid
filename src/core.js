@@ -137,6 +137,7 @@ Grid.prototype.update = function (opts) {
 		let range = this.y.getRange({viewport: this.viewport, lines: this.y});
 		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
 	}
+	//FIXME: make sure minScale/maxScale correspond to min/max range
 
 	//recalc state
 	this.state.x = this.calcLines(this.x, this.viewport, this);
@@ -167,6 +168,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 		lines.offset - state.range * clamp(lines.origin, 0, 1),
 		Math.max(lines.min, -Number.MAX_VALUE+1), Math.min(lines.max, Number.MAX_VALUE) - state.range
 	);
+	state.scale = lines.scale;
 
 	//calc style
 	state.axisColor = typeof lines.axisColor === 'number' ? alpha(lines.color, lines.axisColor) : lines.axisColor || lines.color;
@@ -214,18 +216,8 @@ Grid.prototype.calcLines = function (lines, vp) {
 	if (lines.sublines instanceof Function) {
 		subvalues = lines.sublines(state);
 	}
-	//draw sublines only when they are not disabled
-	else if ((lines.sublines === true || lines.sublines === undefined) && (lines.lines instanceof Function)) {
-		let scale = state.scale;
-		state.scale = scale/3;
-		//FIXME: if sublines return object?
-		subvalues = lines.lines(state).filter(v => {
-			return values.indexOf(v) >= 0;
-		});
-		state.scale = scale;
-	}
 	else {
-		subvalues = lines.sublines;
+		subvalues = lines.sublines || [];
 	}
 	state.subvalues = subvalues;
 

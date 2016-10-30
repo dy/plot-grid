@@ -36,14 +36,14 @@ Canvas2DGrid.prototype.draw = function (ctx, vp) {
 	this.clear();
 
 	//then we draw
-	this.drawDimension(ctx, this.state.x);
-	this.drawDimension(ctx, this.state.y);
+	this.drawCoordinate(ctx, this.state.x);
+	this.drawCoordinate(ctx, this.state.y);
 
 	return this;
 }
 
 //lines instance draw
-Canvas2DGrid.prototype.drawDimension = function (ctx, state) {
+Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
 	if (!state || !state.lines || state.lines.disabled) return;
 
 	let [left, top, width, height] = state.viewport;

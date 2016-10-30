@@ -16,13 +16,20 @@ const isMultiple = require('mumath/is-multiple');
 
 
 let linear = {
-	steps: [1, 2, 5],
-	lines: state => {
+	lines: (state) => {
 		let lines = state.lines;
-		let step = state.step = scale(lines.distance * lines.scale, lines.steps);
+
+		let step = state.step = scale(lines.distance * lines.scale, [1]);
 
 		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
 	},
+	sublines: state => {
+		let lines = state.lines;
+
+		let step = state.step = scale(lines.distance * lines.scale, [1, 2, 5]);
+
+		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
+	}
 	// lineColor: state => {
 	// 	if (!state.values) return;
 	// 	let {lines} = state;
