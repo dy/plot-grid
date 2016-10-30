@@ -50,15 +50,19 @@ Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
 	let [pt, pr, pb, pl] = state.padding;
 
 	//draw lines and sublines
-	let values = state.values;
+	let lines = state.lines;
+
+	let labels = state.labels;
 	let axisRatio = state.opposite.coordinate.getRatio(state.coordinate.axisOrigin, state.opposite);
 	axisRatio = clamp(axisRatio, 0, 1);
 
-	let coords = state.coordinate.getCoords(values, state)
+	let coords = state.coordinate.getCoords(lines, state)
 
 	//draw lines
+	ctx.lineWidth = state.lineWidth;
 	for (let i=0, j=0; i < coords.length; i+=4, j++) {
-		ctx.lineWidth = state.lineWidth;
+		let color = state.lineColors[j];
+		if (!color) continue;
 		ctx.strokeStyle = color;
 		ctx.beginPath();
 
@@ -86,10 +90,11 @@ Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
 	//calc labels/tick coords
 	let tickCoords = [];
 	let labelCoords = [];
+	let ticks = state.ticks;
 	for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
 		let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
 		let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
-		let tick = [normals[i] * tickSize/(width-pl-pr), normals[i+1] * tickSize/(height-pt-pb)];
+		let tick = [normals[i] * ticks[k]/(width-pl-pr), normals[i+1] * ticks[k]/(height-pt-pb)];
 		tickCoords.push(normals[i]*(xDif + tick[0]*state.tickAlign) + x1);
 		tickCoords.push(normals[i+1]*(yDif + tick[1]*state.tickAlign) + y1);
 		tickCoords.push(normals[i]*(xDif - tick[0]*(1-state.tickAlign)) + x1);
@@ -99,11 +104,11 @@ Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
 	}
 
 	//draw ticks
-	if (tickSize) {
+	if (ticks.length) {
 		ctx.lineWidth = state.axisWidth;
 		ctx.beginPath();
 		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
-			if (almost(values[j], state.opposite.coordinate.axisOrigin)) continue;
+			if (almost(lines[j], state.opposite.coordinate.axisOrigin)) continue;
 			let x1 = left + pl + tickCoords[i]*(width - pl-pr),
 				y1 = top + pt + tickCoords[i+1]*(height - pt-pb);
 			let x2 = left + pl + tickCoords[i+2]*(width - pl-pr),
@@ -117,7 +122,7 @@ Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
 	}
 
 	//draw axis
-	if (axis && state.coordinate.axis && state.axisColor) {
+	if (state.coordinate.axis && state.axisColor) {
 		let axisCoords = state.opposite.coordinate.getCoords([state.coordinate.axisOrigin], state.opposite);
 
 		ctx.lineWidth = state.axisWidth;
@@ -148,7 +153,7 @@ Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
 		for (let i = 0; i < labels.length; i++) {
 			let label = labels[i];
 			if (label==null) continue;
-			if (isOpp && almost(values[i], state.opposite.coordinate.axisOrigin)) continue;
+			if (isOpp && almost(lines[i], state.opposite.coordinate.axisOrigin)) continue;
 			let textWidth = ctx.measureText(label).width;
 
 			let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;

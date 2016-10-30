@@ -71,7 +71,7 @@ Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 | `type` | _String_, `null` | `null` | Default type to extend, one of `linear`, `logarithmic`, `time`. |
 | `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
 | `lines` | _Bool_, _Array_, _Function_, `null` |  | Array with values, defining lines, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. |
-| `lineColor` | _String_, _Number_ `null` | `.3` | Color for lines. Number value will take the base color above with changed opacity. |
+| `lineColor` | _String_, _Number_, _Function_, `null` | `.3` | Color for lines. Number value will take the base color above with changed opacity. Function signature is `state => [...values]`. |
 | `lineWidth` | _Number_ | `1` | Width of lines. We guess that width of sublines should not differ from the width of lines, if you have use-case requiring the opposite, please address [issues](/issues). |
 | `axis` | _Bool_ | `true` | Enable axis. |
 | `axisOrigin` | _Number_ | `0` | Define axis alignment by value on the opposite coordinate. |

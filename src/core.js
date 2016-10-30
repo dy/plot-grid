@@ -176,10 +176,6 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 	state.lineWidth = coord.lineWidth;
 	state.tickAlign = coord.tickAlign;
 	state.labelColor = state.color;
-	state.lineColor = typeof coord.lineColor === 'number' ? alpha(coord.color, coord.lineColor) : coord.lineColor || coord.color;
-	state.sublineColor = typeof coord.sublineColor === 'number' ? alpha(coord.color, coord.sublineColor) : coord.sublineColor || coord.color;
-	state.tick = coord.tick;
-	state.subtick = coord.subtick;
 
 	//get padding
 	if (typeof coord.padding === 'number') {
@@ -214,6 +210,33 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 	}
 	state.lines = lines;
 
+	//calc colors
+	if (coord.lineColor instanceof Function) {
+		state.lineColors = coord.lineColor(state);
+	}
+	else if (Array.isArray(coord.lineColor)) {
+		state.lineColors = coord.lineColor;
+	}
+	else {
+		let color = typeof coord.lineColor === 'number' ? alpha(coord.color, coord.lineColor) : (coord.lineColor === false || coord.lineColor == null) ? null : coord.color;
+		state.lineColors = Array(lines.length).fill(color);
+	}
+
+
+	//calc ticks
+	let ticks;
+	if (coord.ticks instanceof Function) {
+		ticks = coord.ticks(state);
+	}
+	else if (Array.isArray(coord.ticks)) {
+		ticks = coord.ticks;
+	}
+	else {
+		let tick = (coord.ticks === true || coord.ticks === true) ? state.axisWidth*2 : coord.ticks || 0;
+		ticks = Array(values.length).fill(tick);
+	}
+	state.ticks = ticks;
+
 
 	//calc labels
 	let labels;
@@ -232,12 +255,29 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 	}
 	state.labels = labels;
 
+
 	//convert hashmap ticks/labels to values + colors
+	if (isObj(ticks)) {
+		state.ticks = Array(values.length).fill(0);
+	}
 	if (isObj(labels)) {
-		state.labels = Array(state.values.length).fill(null);
+		state.labels = Array(values.length).fill(null);
+	}
+
+	if (isObj(ticks)) {
+		for (let value in ticks) {
+			state.ticks.push(ticks[value]);
+			state.values.push(parseFloat(value));
+			state.colors.push(null);
+			state.labels.push(null);
+		}
+	}
+	if (isObj(labels)) {
 		for (let value in labels) {
 			state.labels.push(labels[value]);
 			state.values.push(parseFloat(value));
+			state.colors.push(null);
+			state.ticks.push(null);
 		}
 	}
 
@@ -272,15 +312,12 @@ Grid.prototype.defaults = extend({
 
 	//lines params
 	lines: true,
-	sublines: true,
 	tick: 8,
-	subtick: 0,
 	tickAlign: .5,
 	lineWidth: 1,
-	distance: 120,
+	distance: 13,
 	style: 'lines',
 	lineColor: .4,
-	sublineColor: .1,
 
 	//axis params
 	axis: true,

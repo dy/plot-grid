@@ -12,59 +12,62 @@ const range = require('just-range');
 const almost = require('almost-equal');
 const clamp = require('mumath/clamp');
 const isMultiple = require('mumath/is-multiple');
+const alpha = require('color-alpha');
 
 
 
 let linear = {
+	steps: [1,2,5],
+	distance: 20,
 	lines: (state) => {
-		let lines = state.coordinate;
+		let coord = state.coordinate;
 
-		let step = state.step = scale(lines.distance * lines.scale, [1]);
+		let step = state.step = scale(coord.distance * coord.scale, coord.steps);
 
 		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
 	},
 	lineColor: state => {
-		if (!state.values) return;
-		let {lines} = state;
+		if (!state.lines) return;
+		let coord = state.coordinate;
 
-		let light = state.lightColor;
-		let heavy = state.heavyColor;
+		let light = alpha(coord.color, .1);
+		let heavy = alpha(coord.color, .3);
 
 		let step = state.step;
 		let power = Math.ceil(lg(step));
 		let tenStep = Math.pow(10,power);
 		let nextStep = Math.pow(10,power+1);
 		let eps = step/10;
-		return state.values.map(v => {
+		let colors = state.lines.map(v => {
 			if (isMultiple(v, nextStep, eps)) return heavy;
 			if (isMultiple(v, tenStep, eps)) return light;
 			return null;
 		});
+		return colors;
 	},
 	ticks: state => {
-		if (!state.values) return;
-		let {lines} = state;
-
-		let step = scale(scale(state.step*1.1, lines.steps)*1.1, lines.steps);
+		if (!state.lines) return;
+		let coord = state.coordinate;
+		let step = scale(scale(state.step*1.1, coord.steps)*1.1, coord.steps);
 		let eps = step/10;
 		let tickWidth = state.axisWidth*4;
-		return state.values.map(v => {
+		return state.lines.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
 			if (almost(v, 0, eps)) return null;
 			return tickWidth;
 		});
 	},
 	labels: state => {
-		if (!state.values) return;
-		let {lines} = state;
+		if (!state.lines) return;
+		let coord = state.coordinate;
 
-		let step = scale(scale(state.step*1.1, lines.steps)*1.1, lines.steps);
+		let step = scale(scale(state.step*1.1, coord.steps)*1.1, coord.steps);
 		let precision = clamp(-Math.floor(lg(step)), 20, 0);
 		let eps = step/10;
-		return state.values.map(v => {
+		return state.lines.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
-			// if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
-			return v.toFixed(precision) + lines.units;
+			// if (almost(v, 0, eps)) return coord.orientation === 'y' ? null : '0';
+			return v.toFixed(precision) + coord.units;
 		});
 	}
 };
@@ -76,7 +79,7 @@ let	log = {
 		let lines = state.coordinate;
 
 		//get log range numbers
-		let logMinStep = lines.distance * lines.scale;
+		let logMinStep = coord.distance * coord.scale;
 
 		let logMin = state.offset, logMax = state.offset + state.range;
 		let logRange = state.range;
@@ -167,19 +170,19 @@ let	log = {
 		return res;
 	},
 	ticks: state => {
-		return state.values.map(v => {
+		return state.lines.map(v => {
 			if ( isMajor(v, state) ) return state.axisWidth*4;
 			return null;
 		});
 	},
 	lineColor: state => {
-		return state.values.map(v => {
+		return state.lines.map(v => {
 			if ( isMajor(v, state) ) return state.heavyColor;
 			return state.lightColor;
 		});
 	},
 	labels: state => {
-		return state.values.map(v => {
+		return state.lines.map(v => {
 			if ( isMajor(v, state) ) return Math.pow(10, v).toPrecision(2);
 			return null;
 		});
@@ -213,9 +216,9 @@ function isMajor (v, state) {
 let time = {
 	ticks: (state) => {
 		let result = {};
-		let {lines} = state;
+		let coord = state.coordinate;
 
-		let minStep = lines.distance * lines.scale;
+		let minStep = coord.distance * coord.scale;
 
 		let [step, bigStep] = getTimeSteps(minStep);
 
@@ -231,8 +234,8 @@ let time = {
 	},
 	labels: (state) => {
 		let result = {};
-		let {lines} = state;
-		let minStep = lines.distance * lines.scale;
+		let coord = state.coordinate;
+		let minStep = coord.distance * coord.scale;
 
 		let [step, bigStep] = getTimeSteps(minStep);
 
