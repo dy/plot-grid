@@ -105,15 +105,19 @@ let	log = {
 		state.step = logStep;
 		state.localStep = localStep;
 
+		let steps = [1,2,5];
+
 
 		//big scales
-		if (.5 < localStep) {
-			let steps = [1,2,5];
+		if (.25 < localStep) {
+			//10² scale, we need only big step here
 			let step = state.step = scale(logMinStep, steps);
 			let bigLogStep = scale(scale(step*1.1, steps)*1.1, steps);
 			state.bigStep = bigLogStep;
 
-			return range( Math.floor(logMin/step)*step, Math.ceil(logMax/step)*step, step);
+			//10⁵ scale, we can regenerate lines
+			if (.7 < localStep)
+				return range( Math.floor(logMin/step)*step, Math.ceil(logMax/step)*step, step);
 		}
 
 		let start = Math.pow(10, Math.max(Math.floor(logMin/logStep)*logStep, -300));
@@ -121,8 +125,8 @@ let	log = {
 		//small scales
 		for (let order = start; order <= max; order *= step10 ) {
 			//display 1, 2, 5 * order lines
-			if (.1 < localStep) {
-				res = res.concat([1, 2, 5].map(v => lg(v*order)));
+			if (.15 < localStep) {
+				res = res.concat(steps.map(v => lg(v*order)));
 				// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
 			}
 			//display 1..9 * order lines
@@ -131,10 +135,10 @@ let	log = {
 			}
 			//try to pick proper subdivision for 2,5 ranges
 			else {
-				let step = scale(localStep, [1, 2, 5]);
-				let step1 = scale(step*1.1, [1, 2, 5]);
-				let step2 = scale(step1*1.1, [1, 2, 5]);
-				let step5 = scale(step2*1.1, [1, 2, 5]);
+				let step = scale(localStep, steps);
+				let step1 = scale(step*1.1, steps);
+				let step2 = scale(step1*1.1, steps);
+				let step5 = scale(step2*1.1, steps);
 
 				state.bigStep1 = step5
 				state.bigStep2 = step1*10
@@ -207,7 +211,7 @@ let	log = {
 		}
 
 		//big scales
-		if (.5 < state.localStep) {
+		if (.25 < state.localStep) {
 			return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
 		}
 
@@ -236,7 +240,7 @@ let	log = {
 		}
 
 		//big scales
-		if (.5 < state.localStep) {
+		if (.25 < state.localStep) {
 			return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
 		}
 
