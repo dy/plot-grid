@@ -172,7 +172,7 @@ Grid.prototype.calcLines = function (lines, vp) {
 	state.axisColor = typeof lines.axisColor === 'number' ? alpha(lines.color, lines.axisColor) : lines.axisColor || lines.color;
 	state.axisWidth = lines.axisWidth || lines.lineWidth;
 	state.lineWidth = lines.lineWidth;
-	state.align = lines.align;
+	state.tickAlign = lines.tickAlign;
 	state.labelColor = state.color;
 	state.lineColor = typeof lines.lineColor === 'number' ? alpha(lines.color, lines.lineColor) : lines.lineColor || lines.color;
 	state.sublineColor = typeof lines.sublineColor === 'number' ? alpha(lines.color, lines.sublineColor) : lines.sublineColor || lines.color;
@@ -278,7 +278,6 @@ Grid.prototype.defaults = extend({
 	labels: true,
 	fontSize: '10pt',
 	fontFamily: 'sans-serif',
-	align: .5,
 	padding: 0,
 	color: 'rgb(0,0,0,1)',
 
@@ -287,6 +286,7 @@ Grid.prototype.defaults = extend({
 	sublines: true,
 	tick: 8,
 	subtick: 0,
+	tickAlign: .5,
 	lineWidth: 1,
 	distance: 120,
 	style: 'lines',

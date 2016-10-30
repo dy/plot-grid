@@ -99,10 +99,10 @@ Canvas2DGrid.prototype.drawDimension = function (ctx, state) {
 			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
 			let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
 			let tick = [normals[i] * tickSize/(width-pl-pr), normals[i+1] * tickSize/(height-pt-pb)];
-			tickCoords.push(normals[i]*(xDif + tick[0]*state.align) + x1);
-			tickCoords.push(normals[i+1]*(yDif + tick[1]*state.align) + y1);
-			tickCoords.push(normals[i]*(xDif - tick[0]*(1-state.align)) + x1);
-			tickCoords.push(normals[i+1]*(yDif - tick[1]*(1-state.align)) + y1);
+			tickCoords.push(normals[i]*(xDif + tick[0]*state.tickAlign) + x1);
+			tickCoords.push(normals[i+1]*(yDif + tick[1]*state.tickAlign) + y1);
+			tickCoords.push(normals[i]*(xDif - tick[0]*(1-state.tickAlign)) + x1);
+			tickCoords.push(normals[i+1]*(yDif - tick[1]*(1-state.tickAlign)) + y1);
 			labelCoords.push(normals[i]*xDif + x1);
 			labelCoords.push(normals[i+1]*yDif + y1);
 		}
@@ -152,7 +152,7 @@ Canvas2DGrid.prototype.drawDimension = function (ctx, state) {
 			ctx.textBaseline = 'top';
 			let textHeight = state.fontSize,
 				indent = state.axisWidth + 1.5;
-			let textOffset = state.align < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
+			let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
 			let isOpp = state.lines.orientation === 'y' && !state.opposite.disabled;
 			for (let i = 0; i < labels.length; i++) {
 				let label = labels[i];
