@@ -74,9 +74,12 @@ let linear = {
 
 
 let	log = {
+	scale: 0.002,
+	offset: 0,
+	distance: 13,
 	lines: state => {
 		let res = [];
-		let lines = state.coordinate;
+		let coord = state.coordinate;
 
 		//get log range numbers
 		let logMinStep = coord.distance * coord.scale;
@@ -169,46 +172,78 @@ let	log = {
 
 		return res;
 	},
-	ticks: state => {
+	lineColor: state => {
+		let light = alpha(state.coordinate.color, .1);
+		let heavy = alpha(state.coordinate.color, .3);
+
+
 		return state.lines.map(v => {
-			if ( isMajor(v, state) ) return state.axisWidth*4;
-			return null;
+			if ( state.coordinate.isMajorLine(v, state) ) return heavy;
+			return light;
 		});
 	},
-	lineColor: state => {
+	ticks: state => {
 		return state.lines.map(v => {
-			if ( isMajor(v, state) ) return state.heavyColor;
-			return state.lightColor;
+			if ( state.coordinate.isLabel(v, state) ) return state.axisWidth*4;
+			return null;
 		});
 	},
 	labels: state => {
 		return state.lines.map(v => {
-			if ( isMajor(v, state) ) return Math.pow(10, v).toPrecision(2);
+			if ( state.coordinate.isLabel(v, state) ) return Math.pow(10, v).toPrecision(2);
 			return null;
 		});
+	},
+	isMajorLine: function isMajor (v, state) {
+		let base = Math.pow(10, v - Math.floor(v));
+
+		//small scales
+		if (.02 > state.localStep) {
+			let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
+			return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
+		}
+		else if (.05 > state.localStep) {
+			return almost(base, 2) || almost(base, 5) || almost(base, 1);
+		}
+
+		//big scales
+		if (.5 < state.localStep) {
+			return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
+		}
+
+		return (Math.abs(v)+state.localStep/8)%state.step <= state.localStep/5
+	},
+	//more frequent than isMajorLine
+	isLabel: function isLabel (v, state) {
+		let base = Math.pow(10, v - Math.floor(v));
+
+		let eps = state.localStep/2;
+
+		//small scales
+		if (.02 > state.localStep) {
+			let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
+			return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
+		}
+		else if (.052 > state.localStep) {
+			return almost(base, 2, eps) ||
+					almost(base, 3, eps) ||
+					almost(base, 4, eps) ||
+					almost(base, 5, eps) ||
+					almost(base, 1, eps);
+		}
+		else if (.09 > state.localStep) {
+			return almost(base, 2) || almost(base, 5) || almost(base, 1);
+		}
+
+		//big scales
+		if (.5 < state.localStep) {
+			return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
+		}
+
+		return (Math.abs(v)+state.localStep/8)%state.step <= state.localStep/5
 	}
 };
 
-//helper for log scale
-function isMajor (v, state) {
-	let base = Math.pow(10, v - Math.floor(v));
-
-	//small scales
-	if (.02 > state.localStep) {
-		let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
-		return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
-	}
-	else if (.05 > state.localStep) {
-		return almost(base, 2) || almost(base, 5) || almost(base, 1);
-	}
-
-	//big scales
-	if (.5 < state.localStep) {
-		return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
-	}
-
-	return (Math.abs(v)+state.localStep/8)%state.step <= state.localStep/5
-};
 
 
 
