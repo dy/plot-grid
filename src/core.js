@@ -129,19 +129,19 @@ Grid.prototype.update = function (opts) {
 
 	//normalize, make sure range/offset are not off the limits
 	if (!this.x.disabled) {
-		let range = this.x.getRange({viewport: this.viewport, lines: this.x});
+		let range = this.x.getRange({viewport: this.viewport, coordinate: this.x});
 		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
 	}
 
 	if (!this.y.disabled) {
-		let range = this.y.getRange({viewport: this.viewport, lines: this.y});
+		let range = this.y.getRange({viewport: this.viewport, coordinate: this.y});
 		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
 	}
 	//FIXME: make sure minScale/maxScale correspond to min/max range
 
 	//recalc state
-	this.state.x = this.calcLines(this.x, this.viewport, this);
-	this.state.y = this.calcLines(this.y, this.viewport, this);
+	this.state.x = this.calcCoordinate(this.x, this.viewport, this);
+	this.state.y = this.calcCoordinate(this.y, this.viewport, this);
 
 	this.state.x.opposite = this.state.y;
 	this.state.y.opposite = this.state.x;
@@ -155,89 +155,86 @@ Grid.prototype.update = function (opts) {
 
 
 //get state object with calculated params, ready for rendering
-Grid.prototype.calcLines = function (lines, vp) {
+Grid.prototype.calcCoordinate = function (coord, vp) {
 	let state = {
-		lines: lines,
+		coordinate: coord,
 		viewport: vp,
 		grid: this
 	};
 
 	//calculate real offset/range
-	state.range = lines.getRange(state);
+	state.range = coord.getRange(state);
 	state.offset = clamp(
-		lines.offset - state.range * clamp(lines.origin, 0, 1),
-		Math.max(lines.min, -Number.MAX_VALUE+1), Math.min(lines.max, Number.MAX_VALUE) - state.range
+		coord.offset - state.range * clamp(coord.origin, 0, 1),
+		Math.max(coord.min, -Number.MAX_VALUE+1), Math.min(coord.max, Number.MAX_VALUE) - state.range
 	);
-	state.scale = lines.scale;
+	state.scale = coord.scale;
 
 	//calc style
-	state.axisColor = typeof lines.axisColor === 'number' ? alpha(lines.color, lines.axisColor) : lines.axisColor || lines.color;
-	state.axisWidth = lines.axisWidth || lines.lineWidth;
-	state.lineWidth = lines.lineWidth;
-	state.tickAlign = lines.tickAlign;
+	state.axisColor = typeof coord.axisColor === 'number' ? alpha(coord.color, coord.axisColor) : coord.axisColor || coord.color;
+	state.axisWidth = coord.axisWidth || coord.lineWidth;
+	state.lineWidth = coord.lineWidth;
+	state.tickAlign = coord.tickAlign;
 	state.labelColor = state.color;
-	state.lineColor = typeof lines.lineColor === 'number' ? alpha(lines.color, lines.lineColor) : lines.lineColor || lines.color;
-	state.sublineColor = typeof lines.sublineColor === 'number' ? alpha(lines.color, lines.sublineColor) : lines.sublineColor || lines.color;
-	state.tick = lines.tick;
-	state.subtick = lines.subtick;
+	state.lineColor = typeof coord.lineColor === 'number' ? alpha(coord.color, coord.lineColor) : coord.lineColor || coord.color;
+	state.sublineColor = typeof coord.sublineColor === 'number' ? alpha(coord.color, coord.sublineColor) : coord.sublineColor || coord.color;
+	state.tick = coord.tick;
+	state.subtick = coord.subtick;
 
 	//get padding
-	if (typeof lines.padding === 'number') {
-		state.padding = Array(4).fill(lines.padding);
+	if (typeof coord.padding === 'number') {
+		state.padding = Array(4).fill(coord.padding);
 	}
-	else if (lines.padding instanceof Function) {
-		state.padding = lines.padding(state);
+	else if (coord.padding instanceof Function) {
+		state.padding = coord.padding(state);
 	}
 	else {
-		state.padding = lines.padding;
+		state.padding = coord.padding;
 	}
 
 	//calc font
-	if (typeof lines.fontSize === 'number') {
-		state.fontSize = lines.fontSize
+	if (typeof coord.fontSize === 'number') {
+		state.fontSize = coord.fontSize
 	}
 	else {
-		let units = parseUnit(lines.fontSize);
+		let units = parseUnit(coord.fontSize);
 		state.fontSize = units[0] * toPx(units[1]);
 	}
-	state.fontFamily = lines.fontFamily || 'sans-serif';
+	state.fontFamily = coord.fontFamily || 'sans-serif';
 
-	//get lines stops
-	let values;
-	if (lines.lines instanceof Function) {
-		values = lines.lines(state);
+	//get lines stops, including joined list of values
+	state.values = [];
+
+	let lines;
+	if (coord.lines instanceof Function) {
+		lines = coord.lines(state);
 	}
 	else {
-		values = lines.lines || [];
+		lines = coord.lines || [];
 	}
-	state.values = values;
+	state.lines = lines;
 
-	let subvalues;
-	if (lines.sublines instanceof Function) {
-		subvalues = lines.sublines(state);
-	}
-	else {
-		subvalues = lines.sublines || [];
-	}
-	state.subvalues = subvalues;
 
 	//calc labels
 	let labels;
-	if (lines.labels === true) labels = values;
-	else if (lines.labels instanceof Function) {
-		labels = lines.labels(state);
+	if (coord.labels === true) labels = state.lines.concat(Array(sublines.length).fill(null));
+	else if (coord.labels instanceof Function) {
+		labels = coord.labels(state);
 	}
-	else if (Array.isArray(lines.labels)) {
-		labels = lines.labels;
+	else if (Array.isArray(coord.labels)) {
+		labels = coord.labels;
+	}
+	else if (isObj(coord.labels)) {
+		labels = coord.labels
 	}
 	else {
-		labels = Array(values.length).fill(null);
+		labels = Array(state.values.length).fill(null);
 	}
 	state.labels = labels;
 
 	//convert hashmap ticks/labels to values + colors
 	if (isObj(labels)) {
-		state.labels = Array(values.length).fill(null);
+		state.labels = Array(state.values.length).fill(null);
 		for (let value in labels) {
 			state.labels.push(labels[value]);
 			state.values.push(parseFloat(value));
@@ -306,7 +303,7 @@ Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 		let coords = [];
 		if (!values) return coords;
 		for (let i = 0; i < values.length; i++) {
-			let t = state.lines.getRatio(values[i], state);
+			let t = state.coordinate.getRatio(values[i], state);
 			coords.push(t);
 			coords.push(0);
 			coords.push(t);
@@ -315,7 +312,7 @@ Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 		return coords;
 	},
 	getRange: state => {
-		return state.viewport[2] * state.lines.scale;
+		return state.viewport[2] * state.coordinate.scale;
 	},
 	//FIXME: handle infinity case here
 	getRatio: (value, state) => {
@@ -328,7 +325,7 @@ Grid.prototype.y = extend({}, Grid.prototype.defaults, {
 		let coords = [];
 		if (!values) return coords;
 		for (let i = 0; i < values.length; i++) {
-			let t = state.lines.getRatio(values[i], state);
+			let t = state.coordinate.getRatio(values[i], state);
 			coords.push(0);
 			coords.push(t);
 			coords.push(1);
@@ -337,7 +334,7 @@ Grid.prototype.y = extend({}, Grid.prototype.defaults, {
 		return coords;
 	},
 	getRange: state => {
-		return state.viewport[3] * state.lines.scale;
+		return state.viewport[3] * state.coordinate.scale;
 	},
 	getRatio: (value, state) => {
 		return 1 - (value - state.offset) / state.range

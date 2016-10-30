@@ -70,15 +70,15 @@ Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 |---|---|---|---|
 | `type` | _String_, `null` | `null` | Default type to extend, one of `linear`, `logarithmic`, `time`. |
 | `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
-| `lines`, `sublines` | _Bool_, _Array_, _Function_, `null` |  | Values, defining lines and/or subdivisions of lines, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default `sublines` generates same result as `lines` but for smaller scale. |
-| `tick`, `subtick` | _Bool_, _Number_ | `5`, `10` | Size of ticks for the lines and sublines. Can be disabled by passing `false` or can be a number. |
-| `tickAlign` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
-| `lineColor`, `sublineColor` | _String_, _Number_ `null` | `.3`, `.1` | Color for lines and sublines. Number value will take the base color above with changed opacity. |
+| `lines` | _Bool_, _Array_, _Function_, `null` |  | Array with values, defining lines, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. |
+| `lineColor` | _String_, _Number_ `null` | `.3` | Color for lines. Number value will take the base color above with changed opacity. |
 | `lineWidth` | _Number_ | `1` | Width of lines. We guess that width of sublines should not differ from the width of lines, if you have use-case requiring the opposite, please address [issues](/issues). |
 | `axis` | _Bool_ | `true` | Enable axis. |
 | `axisOrigin` | _Number_ | `0` | Define axis alignment by value on the opposite coordinate. |
 | `axisColor` | _String_, _Number_ | `0.1` | Axis color, redefines default `color`. |
 | `axisWidth` | _Number_ | `2` | Width of axis line. |
+| `ticks` | _Bool_, _Array_, _Number_, _Function_ | `5` | Tick size. Can be disabled by passing `false`. |
+| `align` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
 | `labels` | _Bool_, _Array_, _Object_ , _Function_, `null` | `null` | Object or array with labels corresponding to lines. Can be defined as a function returning such array `(state) => labels`. `null` value will output values as is. Can be disabled by passing `false`. |
 | `fontSize` | _String_, _Number_ | `10pt` | Font size for labels. Sizes with units will be automatically transformed to pixels by [to-px](https://npmjs.org/package/to-px). |
 | `fontFamily` | _String_ | `sans-serif` | Font family to use for labels. |

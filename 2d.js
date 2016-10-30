@@ -44,133 +44,121 @@ Canvas2DGrid.prototype.draw = function (ctx, vp) {
 
 //lines instance draw
 Canvas2DGrid.prototype.drawCoordinate = function (ctx, state) {
-	if (!state || !state.lines || state.lines.disabled) return;
+	if (!state || !state.coordinate || state.coordinate.disabled) return;
 
 	let [left, top, width, height] = state.viewport;
 	let [pt, pr, pb, pl] = state.padding;
 
-
 	//draw lines and sublines
-	if (state.lines.lines !== false && state.lineColor) {
-		drawLines(state.values, state.lineColor, state.tick, state.labels, true, state);
-	}
-	if (state.lines.sublines !== false && state.sublineColor) {
-		drawLines(state.subvalues, state.sublineColor, state.subtick, null, false, state);
-	}
+	let values = state.values;
+	let axisRatio = state.opposite.coordinate.getRatio(state.coordinate.axisOrigin, state.opposite);
+	axisRatio = clamp(axisRatio, 0, 1);
 
+	let coords = state.coordinate.getCoords(values, state)
 
-	//common method for drawing lines/sublines
-	function drawLines (values, color, tickSize, labels, axis, state) {
-		let coords = state.lines.getCoords(values, state)
-
-		let axisRatio = state.opposite.lines.getRatio(state.lines.axisOrigin, state.opposite);
-		axisRatio = clamp(axisRatio, 0, 1);
-
-		let normals = [];
-		for (let i = 0; i < coords.length; i+= 4) {
-			let x1 = coords[i], y1 = coords[i+1], x2 = coords[i+2], y2 = coords[i+3];
-			let xDif = x2 - x1, yDif = y2 - y1;
-			let dist = len(xDif, yDif);
-			normals.push(xDif/dist);
-			normals.push(yDif/dist);
-		}
-
-		//draw lines
+	//draw lines
+	for (let i=0, j=0; i < coords.length; i+=4, j++) {
 		ctx.lineWidth = state.lineWidth;
 		ctx.strokeStyle = color;
 		ctx.beginPath();
 
-		for (let i=0, j=0; i < coords.length; i+=4, j++) {
-			let x1 = left + pl + coords[i]*(width - pr-pl),
-				y1 = top + pt + coords[i+1]*(height - pb-pt);
-			let x2 = left + pl + coords[i+2]*(width - pr-pl),
-				y2 = top + pt + coords[i+3]*(height - pb-pt);
-			ctx.moveTo(x1, y1);
-			ctx.lineTo(x2, y2);
-		}
+		let x1 = left + pl + coords[i]*(width - pr-pl),
+			y1 = top + pt + coords[i+1]*(height - pb-pt);
+		let x2 = left + pl + coords[i+2]*(width - pr-pl),
+			y2 = top + pt + coords[i+3]*(height - pb-pt);
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
 
 		ctx.stroke();
 		ctx.closePath();
-
-		//calc labels/tick coords
-		let tickCoords = [];
-		let labelCoords = [];
-		for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
-			let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
-			let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
-			let tick = [normals[i] * tickSize/(width-pl-pr), normals[i+1] * tickSize/(height-pt-pb)];
-			tickCoords.push(normals[i]*(xDif + tick[0]*state.tickAlign) + x1);
-			tickCoords.push(normals[i+1]*(yDif + tick[1]*state.tickAlign) + y1);
-			tickCoords.push(normals[i]*(xDif - tick[0]*(1-state.tickAlign)) + x1);
-			tickCoords.push(normals[i+1]*(yDif - tick[1]*(1-state.tickAlign)) + y1);
-			labelCoords.push(normals[i]*xDif + x1);
-			labelCoords.push(normals[i+1]*yDif + y1);
-		}
-
-		//draw ticks
-		if (tickSize) {
-			ctx.lineWidth = state.axisWidth;
-			ctx.beginPath();
-			for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
-				if (almost(values[j], state.opposite.lines.axisOrigin)) continue;
-				let x1 = left + pl + tickCoords[i]*(width - pl-pr),
-					y1 = top + pt + tickCoords[i+1]*(height - pt-pb);
-				let x2 = left + pl + tickCoords[i+2]*(width - pl-pr),
-					y2 = top + pt + tickCoords[i+3]*(height - pt-pb);
-				ctx.moveTo(x1, y1);
-				ctx.lineTo(x2, y2);
-			}
-			ctx.strokeStyle = state.axisColor;
-			ctx.stroke();
-			ctx.closePath();
-		}
-
-		//draw axis
-		if (axis && state.lines.axis && state.axisColor) {
-			let axisCoords = state.opposite.lines.getCoords([state.lines.axisOrigin], state.opposite);
-
-			ctx.lineWidth = state.axisWidth;
-
-			let x1 = left + pl + clamp(axisCoords[0], 0, 1)*(width - pr-pl),
-				y1 = top + pt + clamp(axisCoords[1], 0, 1)*(height - pt-pb);
-			let x2 = left + pl + clamp(axisCoords[2], 0, 1)*(width - pr-pl),
-				y2 = top + pt + clamp(axisCoords[3], 0, 1)*(height - pt-pb);
-
-			ctx.beginPath();
-			ctx.moveTo(x1, y1);
-			ctx.lineTo(x2, y2);
-
-			ctx.strokeStyle = state.axisColor;
-			ctx.stroke();
-			ctx.closePath();
-		}
-
-		//draw labels
-		if (labels) {
-			ctx.font = state.fontSize + 'px ' + state.fontFamily;
-			ctx.fillStyle = state.labelColor;
-			ctx.textBaseline = 'top';
-			let textHeight = state.fontSize,
-				indent = state.axisWidth + 1.5;
-			let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
-			let isOpp = state.lines.orientation === 'y' && !state.opposite.disabled;
-			for (let i = 0; i < labels.length; i++) {
-				let label = labels[i];
-				if (label==null) continue;
-				if (isOpp && almost(values[i], state.opposite.lines.axisOrigin)) continue;
-				let textWidth = ctx.measureText(label).width;
-
-				let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;
-				if (state.lines.orientation === 'y') textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
-
-				let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
-				if (state.lines.orientation === 'x') textTop = clamp(textTop, top, top + height - textHeight - textOffset);
-				ctx.fillText(label, textLeft, textTop);
-			}
-		}
 	}
 
 
+	let normals = [];
+	for (let i = 0; i < coords.length; i+= 4) {
+		let x1 = coords[i], y1 = coords[i+1], x2 = coords[i+2], y2 = coords[i+3];
+		let xDif = x2 - x1, yDif = y2 - y1;
+		let dist = len(xDif, yDif);
+		normals.push(xDif/dist);
+		normals.push(yDif/dist);
+	}
+
+	//calc labels/tick coords
+	let tickCoords = [];
+	let labelCoords = [];
+	for (let i = 0, j = 0, k = 0; i < normals.length; k++, i+=2, j+=4) {
+		let x1 = coords[j], y1 = coords[j+1], x2 = coords[j+2], y2 = coords[j+3];
+		let xDif = (x2 - x1)*axisRatio, yDif = (y2 - y1)*axisRatio;
+		let tick = [normals[i] * tickSize/(width-pl-pr), normals[i+1] * tickSize/(height-pt-pb)];
+		tickCoords.push(normals[i]*(xDif + tick[0]*state.tickAlign) + x1);
+		tickCoords.push(normals[i+1]*(yDif + tick[1]*state.tickAlign) + y1);
+		tickCoords.push(normals[i]*(xDif - tick[0]*(1-state.tickAlign)) + x1);
+		tickCoords.push(normals[i+1]*(yDif - tick[1]*(1-state.tickAlign)) + y1);
+		labelCoords.push(normals[i]*xDif + x1);
+		labelCoords.push(normals[i+1]*yDif + y1);
+	}
+
+	//draw ticks
+	if (tickSize) {
+		ctx.lineWidth = state.axisWidth;
+		ctx.beginPath();
+		for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
+			if (almost(values[j], state.opposite.coordinate.axisOrigin)) continue;
+			let x1 = left + pl + tickCoords[i]*(width - pl-pr),
+				y1 = top + pt + tickCoords[i+1]*(height - pt-pb);
+			let x2 = left + pl + tickCoords[i+2]*(width - pl-pr),
+				y2 = top + pt + tickCoords[i+3]*(height - pt-pb);
+			ctx.moveTo(x1, y1);
+			ctx.lineTo(x2, y2);
+		}
+		ctx.strokeStyle = state.axisColor;
+		ctx.stroke();
+		ctx.closePath();
+	}
+
+	//draw axis
+	if (axis && state.coordinate.axis && state.axisColor) {
+		let axisCoords = state.opposite.coordinate.getCoords([state.coordinate.axisOrigin], state.opposite);
+
+		ctx.lineWidth = state.axisWidth;
+
+		let x1 = left + pl + clamp(axisCoords[0], 0, 1)*(width - pr-pl),
+			y1 = top + pt + clamp(axisCoords[1], 0, 1)*(height - pt-pb);
+		let x2 = left + pl + clamp(axisCoords[2], 0, 1)*(width - pr-pl),
+			y2 = top + pt + clamp(axisCoords[3], 0, 1)*(height - pt-pb);
+
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+
+		ctx.strokeStyle = state.axisColor;
+		ctx.stroke();
+		ctx.closePath();
+	}
+
+	//draw labels
+	if (labels) {
+		ctx.font = state.fontSize + 'px ' + state.fontFamily;
+		ctx.fillStyle = state.labelColor;
+		ctx.textBaseline = 'top';
+		let textHeight = state.fontSize,
+			indent = state.axisWidth + 1.5;
+		let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
+		let isOpp = state.coordinate.orientation === 'y' && !state.opposite.disabled;
+		for (let i = 0; i < labels.length; i++) {
+			let label = labels[i];
+			if (label==null) continue;
+			if (isOpp && almost(values[i], state.opposite.coordinate.axisOrigin)) continue;
+			let textWidth = ctx.measureText(label).width;
+
+			let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;
+			if (state.coordinate.orientation === 'y') textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
+
+			let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
+			if (state.coordinate.orientation === 'x') textTop = clamp(textTop, top, top + height - textHeight - textOffset);
+			ctx.fillText(label, textLeft, textTop);
+		}
+	}
 }
 
 /*

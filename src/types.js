@@ -17,70 +17,63 @@ const isMultiple = require('mumath/is-multiple');
 
 let linear = {
 	lines: (state) => {
-		let lines = state.lines;
+		let lines = state.coordinate;
 
 		let step = state.step = scale(lines.distance * lines.scale, [1]);
 
 		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
 	},
-	sublines: state => {
-		let lines = state.lines;
+	lineColor: state => {
+		if (!state.values) return;
+		let {lines} = state;
 
-		let step = state.step = scale(lines.distance * lines.scale, [1, 2, 5]);
+		let light = state.lightColor;
+		let heavy = state.heavyColor;
 
-		return range( Math.floor(state.offset/step)*step, Math.ceil((state.offset + state.range)/step + 1)*step, step);
+		let step = state.step;
+		let power = Math.ceil(lg(step));
+		let tenStep = Math.pow(10,power);
+		let nextStep = Math.pow(10,power+1);
+		let eps = step/10;
+		return state.values.map(v => {
+			if (isMultiple(v, nextStep, eps)) return heavy;
+			if (isMultiple(v, tenStep, eps)) return light;
+			return null;
+		});
+	},
+	ticks: state => {
+		if (!state.values) return;
+		let {lines} = state;
+
+		let step = scale(scale(state.step*1.1, lines.steps)*1.1, lines.steps);
+		let eps = step/10;
+		let tickWidth = state.axisWidth*4;
+		return state.values.map(v => {
+			if (!isMultiple(v, step, eps)) return null;
+			if (almost(v, 0, eps)) return null;
+			return tickWidth;
+		});
+	},
+	labels: state => {
+		if (!state.values) return;
+		let {lines} = state;
+
+		let step = scale(scale(state.step*1.1, lines.steps)*1.1, lines.steps);
+		let precision = clamp(-Math.floor(lg(step)), 20, 0);
+		let eps = step/10;
+		return state.values.map(v => {
+			if (!isMultiple(v, step, eps)) return null;
+			// if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
+			return v.toFixed(precision) + lines.units;
+		});
 	}
-	// lineColor: state => {
-	// 	if (!state.values) return;
-	// 	let {lines} = state;
-
-	// 	let light = state.lightColor;
-	// 	let heavy = state.heavyColor;
-
-	// 	let step = state.step;
-	// 	let power = Math.ceil(lg(step));
-	// 	let tenStep = Math.pow(10,power);
-	// 	let nextStep = Math.pow(10,power+1);
-	// 	let eps = step/10;
-	// 	return state.values.map(v => {
-	// 		if (isMultiple(v, nextStep, eps)) return heavy;
-	// 		if (isMultiple(v, tenStep, eps)) return light;
-	// 		return null;
-	// 	});
-	// },
-	// ticks: state => {
-	// 	if (!state.values) return;
-	// 	let {lines} = state;
-
-	// 	let step = scale(scale(state.step*1.1, lines.steps)*1.1, lines.steps);
-	// 	let eps = step/10;
-	// 	let tickWidth = state.axisWidth*4;
-	// 	return state.values.map(v => {
-	// 		if (!isMultiple(v, step, eps)) return null;
-	// 		if (almost(v, 0, eps)) return null;
-	// 		return tickWidth;
-	// 	});
-	// },
-	// labels: state => {
-	// 	if (!state.values) return;
-	// 	let {lines} = state;
-
-	// 	let step = scale(scale(state.step*1.1, lines.steps)*1.1, lines.steps);
-	// 	let precision = clamp(-Math.floor(lg(step)), 20, 0);
-	// 	let eps = step/10;
-	// 	return state.values.map(v => {
-	// 		if (!isMultiple(v, step, eps)) return null;
-	// 		// if (almost(v, 0, eps)) return lines.orientation === 'y' ? null : '0';
-	// 		return v.toFixed(precision) + lines.units;
-	// 	});
-	// }
 };
 
 
 let	log = {
 	lines: state => {
 		let res = [];
-		let lines = state.lines;
+		let lines = state.coordinate;
 
 		//get log range numbers
 		let logMinStep = lines.distance * lines.scale;
