@@ -130,7 +130,7 @@ let	log = {
 				// state.logSteps = [logStep, logStep-lg(), logStep-lg()];
 			}
 			//display 1..9 * order lines
-			else if (.05 < localStep) {
+			else if (.035 < localStep) {
 				res = res.concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(v => lg(v*order)));
 			}
 			//try to pick proper subdivision for 2,5 ranges
@@ -206,7 +206,7 @@ let	log = {
 			let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
 			return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
 		}
-		else if (.05 > state.localStep) {
+		else if (.06 > state.localStep) {
 			return almost(base, 2) || almost(base, 5) || almost(base, 1);
 		}
 
@@ -214,7 +214,6 @@ let	log = {
 		if (.25 < state.localStep) {
 			return (Math.abs(v)+state.localStep/8)%state.bigStep <= state.localStep/5
 		}
-
 		return (Math.abs(v)+state.localStep/8)%state.step <= state.localStep/5
 	},
 	//more frequent than isMajorLine
@@ -227,6 +226,17 @@ let	log = {
 		if (.02 > state.localStep) {
 			let bigStep = base < 2 ? state.bigStep1 : base < 5 ? state.bigStep2 : state.bigStep5;
 			return almost((base+bigStep/8) % bigStep, 0, bigStep/5);
+		}
+		else if (.035 > state.localStep) {
+			return almost(base, 2, eps) ||
+					almost(base, 3, eps) ||
+					almost(base, 4, eps) ||
+					almost(base, 5, eps) ||
+					almost(base, 6, eps) ||
+					almost(base, 7, eps) ||
+					almost(base, 8, eps) ||
+					almost(base, 9, eps) ||
+					almost(base, 1, eps);
 		}
 		else if (.052 > state.localStep) {
 			return almost(base, 2, eps) ||
@@ -375,7 +385,21 @@ function getTimeSteps (minStep) {
 
 
 let db = {
+	lines: state => {
 
+	},
+
+	lineColor: state => {
+
+	},
+
+	ticks: state => {
+
+	},
+
+	labels: state => {
+
+	}
 }
 
 

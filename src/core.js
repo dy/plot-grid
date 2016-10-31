@@ -113,6 +113,8 @@ function Grid (opts) {
 
 //re-evaluate lines, calc options for renderer
 Grid.prototype.update = function (opts) {
+	let [left, top, width, height] = this.viewport;
+
 	if (opts) {
 		//take over types properties
 		if  (opts.x && opts.x.type) extend(opts.x, Grid.types[opts.x.type]);
@@ -131,13 +133,14 @@ Grid.prototype.update = function (opts) {
 	if (!this.x.disabled) {
 		let range = this.x.getRange({viewport: this.viewport, coordinate: this.x});
 		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
+		this.x.maxScale = Math.min(this.x.maxScale, (this.x.max - this.x.min) / width );
 	}
 
 	if (!this.y.disabled) {
 		let range = this.y.getRange({viewport: this.viewport, coordinate: this.y});
 		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
+		this.y.maxScale = Math.min(this.y.maxScale, (this.y.max - this.y.min) / height );
 	}
-	//FIXME: make sure minScale/maxScale correspond to min/max range
 
 	//recalc state
 	this.state.x = this.calcCoordinate(this.x, this.viewport, this);
