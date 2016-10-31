@@ -17,7 +17,6 @@ let grid = createGrid({
 		min: 0
 	},
 	y: {
-		type: 'decibels',
 		min: -100,
 		max: 0
 	}
@@ -60,7 +59,7 @@ Create new grid instance. It can serve both as a class or constructor function (
 | container | _Element_, _String_, `null` | Container element to place grid into. By default `document.body`. Can be `null` to render in memory. |
 | context | CanvasContext, _String_, _Object_ | Can be existing context, a string `2d`/`webgl` or context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context). |
 | viewport | _Array(4)_ or (w, h) => _Array(4)_ | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
-| x, y, r, a | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic`, `decibels` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
+| x, y, r, a | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
 
 #### Coordinates
 

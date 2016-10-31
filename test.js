@@ -151,7 +151,7 @@ var settings = createSettings([
 			[settings.get('coord')]: {disabled: v}
 		});
 	}},
-	{id: 'type', type: 'select', title: 'X lines type', value: 'linear', options: ['linear', 'logarithmic', 'decibels', 'time', 'custom'], change: v => {
+	{id: 'type', type: 'select', title: 'X lines type', value: 'linear', options: ['linear', 'logarithmic', 'time', 'custom'], change: v => {
 			grid.update({
 				[settings.get('coord')]: {type: v}
 			});

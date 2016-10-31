@@ -384,30 +384,9 @@ function getTimeSteps (minStep) {
 
 
 
-let db = {
-	lines: state => {
-
-	},
-
-	lineColor: state => {
-
-	},
-
-	ticks: state => {
-
-	},
-
-	labels: state => {
-
-	}
-}
-
-
-
 
 module.exports = {
 	linear: linear,
 	logarithmic: log,
-	time: time,
-	decibels: db
+	time: time
 };
