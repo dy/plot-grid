@@ -19,6 +19,7 @@ const isObj = require('is-plain-obj');
 const parseUnit = require('parse-unit');
 const toPx = require('to-px');
 const types = require('./types');
+const prettyNum = require('pretty-number');
 
 
 module.exports = Grid;
@@ -286,7 +287,6 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 };
 
 
-
 //default values
 Grid.prototype.defaults = extend({
 	type: 'linear',
@@ -299,7 +299,7 @@ Grid.prototype.defaults = extend({
 	offset: 0,
 	origin: .5,
 	scale: 1,
-	minScale: Number.EPSILON || 1.19209290e-7,
+	minScale: 1.19209290e-13,
 	maxScale: Number.MAX_VALUE || 1e100,
 	zoom: true,
 	pan: true,
@@ -307,7 +307,7 @@ Grid.prototype.defaults = extend({
 	//labels
 	labels: true,
 	fontSize: '10pt',
-	fontFamily: 'sans-serif',
+	fontFamily: 'serif',
 	padding: 0,
 	color: 'rgb(0,0,0,1)',
 
@@ -331,9 +331,11 @@ Grid.prototype.defaults = extend({
 	getCoords: (values, state) => [0,0,0,0],
 
 	//return 0..1 ratio based on value/offset/range, redefined by axes
-	getRatio: (value, state) => 0
-}, types.linear);
+	getRatio: (value, state) => 0,
 
+	//default label formatter
+	format: prettyNum
+}, types.linear);
 
 Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 	orientation: 'x',

@@ -60,6 +60,7 @@
     "mumath": "^3.0.1",
     "pan-zoom": "^2.0.0",
     "parse-unit": "^1.0.1",
+    "pretty-number": "^1.0.0",
     "to-px": "^1.0.1"
   }
 }

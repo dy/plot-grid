@@ -62,12 +62,12 @@ let linear = {
 		let coord = state.coordinate;
 
 		let step = scale(scale(state.step*1.1, coord.steps)*1.1, coord.steps);
-		let precision = clamp(-Math.floor(lg(step)), 20, 0);
+		// let precision = clamp(Math.abs(Math.floor(lg(step))), 10, 20);
 		let eps = step/10;
 		return state.lines.map(v => {
 			if (!isMultiple(v, step, eps)) return null;
-			// if (almost(v, 0, eps)) return coord.orientation === 'y' ? null : '0';
-			return v.toFixed(precision) + coord.units;
+			if (almost(v, 0, eps)) return coord.orientation === 'y' ? null : '0';
+			return coord.format(v);
 		});
 	}
 };
@@ -193,8 +193,9 @@ let	log = {
 		});
 	},
 	labels: state => {
+		let precision = state.step > 2 ? 2 : 10;
 		return state.lines.map(v => {
-			if ( state.coordinate.isLabel(v, state) ) return Math.pow(10, v).toPrecision(2);
+			if ( state.coordinate.isLabel(v, state) ) return state.coordinate.format(Math.pow(10, v), precision);
 			return null;
 		});
 	},
@@ -236,6 +237,7 @@ let	log = {
 					almost(base, 7, eps) ||
 					almost(base, 8, eps) ||
 					almost(base, 9, eps) ||
+					almost(base, 1.5, eps) ||
 					almost(base, 1, eps);
 		}
 		else if (.052 > state.localStep) {
@@ -243,6 +245,7 @@ let	log = {
 					almost(base, 3, eps) ||
 					almost(base, 4, eps) ||
 					almost(base, 5, eps) ||
+					almost(base, 1.5, eps) ||
 					almost(base, 1, eps);
 		}
 		else if (.09 > state.localStep) {
