@@ -79,7 +79,7 @@ Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 | `ticks` | _Bool_, _Array_, _Number_, _Function_ | `5` | Tick size. Can be disabled by passing `false`. |
 | `align` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
 | `labels` | _Bool_, _Array_, _Object_ , _Function_, `null` | `null` | Object or array with labels corresponding to lines. Can be defined as a function returning such array `(state) => labels`. `null` value will output values as is. Can be disabled by passing `false`. |
-| `format` | _Function_ | `prettyNumber` | Formatter for label values. By default used [pretty-number](https://npmjs.org/package/pretty-number) |
+| `format` | _Function_ | `prettyNumber` | Formatter for label values. Takes a value and returns a string. [pretty-number](https://npmjs.org/package/pretty-number) can be used as such. |
 | `fontSize` | _String_, _Number_ | `10pt` | Font size for labels. Sizes with units will be automatically transformed to pixels by [to-px](https://npmjs.org/package/to-px). |
 | `fontFamily` | _String_ | `sans-serif` | Font family to use for labels. |
 | `padding` | _Number_, _Array(4)_ | `0` | Padding inside the viewport to indent lines from axes and labels. Ordering is _top_, _right_, _bottom_, _left_, as in css. |

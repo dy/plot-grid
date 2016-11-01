@@ -307,7 +307,7 @@ Grid.prototype.defaults = extend({
 	//labels
 	labels: true,
 	fontSize: '10pt',
-	fontFamily: 'serif',
+	fontFamily: 'sans-serif',
 	padding: 0,
 	color: 'rgb(0,0,0,1)',
 
@@ -334,7 +334,7 @@ Grid.prototype.defaults = extend({
 	getRatio: (value, state) => 0,
 
 	//default label formatter
-	format: prettyNum
+	format: v => v
 }, types.linear);
 
 Grid.prototype.x = extend({}, Grid.prototype.defaults, {
