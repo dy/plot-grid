@@ -38,21 +38,19 @@ This will create frequency response and directional diagram.
 
 ## API
 
-### const Grid = require('plot-grid')
+### `const Grid = require('plot-grid')`
 
 Get grid constructor. You can require render-specific version as:
 
 ```js
-const Canvas2DGrid = require('plot-grid/2d');
 const WebglGrid = require('plot-grid/gl');
-const HTMLGrid = require('plot-grid/html'); //under construction
+const Canvas2DGrid = require('plot-grid/2d');
+const WebglCanvasGrid = require('plot-grid/gl2d'); //uses canvas2d as a texture
 ```
 
-### let grid = new Grid(options?)
+### `let grid = new Grid(options?)`
 
-Create new grid instance. It can serve both as a class or constructor function (no `new`).
-
-#### Options
+Create new grid instance. It can serve both as a class or constructor function (no `new`). By default it displays cartesian grid, but
 
 | Name | Type | Description |
 |---|---|---|
@@ -60,8 +58,6 @@ Create new grid instance. It can serve both as a class or constructor function (
 | context | CanvasContext, _String_, _Object_ | Can be existing context, a string `2d`/`webgl` or context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context). |
 | viewport | _Array(4)_ or (w, h) => _Array(4)_ | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
 | x, y, r, a | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
-
-#### Coordinates
 
 Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 
@@ -103,7 +99,7 @@ Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
 To change pan or zoom, use `update` method.
 
 
-### grid.update(options)
+### `grid.update(options)`
 
 Pass new options to update grid look. Note that passed options extend existing ones.
 
@@ -120,7 +116,7 @@ grid.update({
 
 It will automatically rerender grid.
 
-### grid.render()
+### `grid.render()`
 
 Redraw grid. Call whenever you need to redraw grid, like resize etc. It will not recalculate lines, just rerender existing lines. To recalculate lines, use `grid.update()`.
 

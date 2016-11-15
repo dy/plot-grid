@@ -41,6 +41,8 @@ function Grid (opts) {
 		'container', 'viewport', 'context', 'autostart'
 	]), opts));
 
+	this.canvas.classList.add('plot-grid-canvas')
+
 	//set default coords as xy
 	if (opts.r == null && opts.a == null && opts.y == null && opts.x == null) {
 		opts.x = true;
@@ -61,8 +63,6 @@ function Grid (opts) {
 
 	//create rendering state
 	this.state = {};
-
-	this.update(opts);
 
 	this.on('resize', () => this.update());
 
@@ -109,6 +109,8 @@ function Grid (opts) {
 			this.update({x, y});
 		});
 	}
+
+	setTimeout(() => this.update(opts))
 }
 
 

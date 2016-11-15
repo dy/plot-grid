@@ -164,6 +164,12 @@ var settings = createSettings([
 	//minScale, maxScale
 	//pan, zoom
 	//padding
+	{id: 'padding', type: 'range', title: 'Padding', value: 0, change: v => {
+		grid.update({
+			x: {padding: v},
+			y: {padding: v}
+		})
+	}}
 	//axis
 	//distance
 	//steps?

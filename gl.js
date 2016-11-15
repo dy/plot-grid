@@ -35,6 +35,41 @@ function GlGrid (opts) {
 	};
 	Grid.call(this, opts);
 
+	//FIXME: this container may be wrong if plot-grid is not exclusive in it's own cntnr
+	let labelsContainer = this.container.appendChild(document.createElement('div'));
+	labelsContainer.className = 'plot-grid-labels';
+	labelsContainer.style.cssText = `
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		pointer-events: none;
+		overflow: hidden;
+		text-rendering: optimizeSpeed;
+	`;
+	this.labelsContainer = labelsContainer;
+
+	//create label holders, we guess 30 is enough (more is bad practice)
+	this.x.labelEls = createLabels(20)
+	this.y.labelEls = createLabels(20)
+	this.r.labelEls = createLabels(20)
+	this.a.labelEls = createLabels(20)
+
+	function createLabels (n) {
+		return Array(n).fill(null).map(x => {
+			let el = labelsContainer.appendChild(document.createElement('span'))
+			el.className = 'plot-grid-label';
+			el.style.cssText = `
+				position: absolute;
+				left: 0;
+				top: 0;
+			`;
+			return el;
+		});
+	}
+
+	//init position usage
 	this.setAttribute('position', {usage: this.gl.DYNAMIC_DRAW})
 }
 
@@ -62,7 +97,6 @@ GlGrid.prototype.frag = `
 GlGrid.prototype.draw = function (gl, vp) {
 	this.clear();
 
-	//then we draw
 	this.drawLines(gl, this.state.x);
 	this.drawLines(gl, this.state.y);
 
@@ -82,8 +116,8 @@ GlGrid.prototype.drawLines = function (gl, state) {
 
 	//draw lines and sublines
 	let lines = state.lines;
-
 	let labels = state.labels;
+
 	let axisRatio = state.opposite.coordinate.getRatio(state.coordinate.axisOrigin, state.opposite);
 	axisRatio = clamp(axisRatio, 0, 1);
 
@@ -144,17 +178,50 @@ GlGrid.prototype.drawLines = function (gl, state) {
 	if (ticks.length) {
 		gl.lineWidth(state.axisWidth);
 		this.setUniform('color', rgba(state.axisColor));
-		// let points = [];
-		// for (let i=0, j=0; i < tickCoords.length; i+=4, j++) {
-		// 	if (almost(lines[j], state.opposite.coordinate.axisOrigin)) continue;
-		// 	let x1 = left + pl + tickCoords[i]*(width - pl-pr),
-		// 		y1 = top + pt + tickCoords[i+1]*(height - pt-pb);
-		// 	let x2 = left + pl + tickCoords[i+2]*(width - pl-pr),
-		// 		y2 = top + pt + tickCoords[i+3]*(height - pt-pb);
-		// 	// points.push(x1,y1,x2,y2);
-		// }
 		this.setAttribute('position', tickCoords);
 		gl.drawArrays(gl.LINES, 0, tickCoords.length/2);
+	}
+
+
+	//draw labels
+	if (labels) {
+		let textHeight = state.fontSize,
+			indent = state.axisWidth + 1.5;
+		let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
+		let isOpp = state.coordinate.orientation === 'y' && !state.opposite.disabled;
+
+		//preset style
+		this.labelsContainer.style.fontFamily = state.fontFamily;
+		this.labelsContainer.style.fontSize = state.coordinate.fontSize;
+		this.labelsContainer.style.color = state.labelColor;
+
+		//clean labels
+		let labelEls = state.coordinate.labelEls;
+		labelEls.forEach(el => el.textContent = '');
+
+		for (let i = 0, j = 0; i < labels.length; i++) {
+			let labelEl = labelEls[j];
+			let label = labels[i];
+
+			if (label == null) continue;
+			if (isOpp && almost(lines[i], state.opposite.coordinate.axisOrigin)) continue;
+			labelEl.textContent = label;
+			j++;
+
+			let textWidth = labelEl.offsetWidth;
+
+			let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;
+			if (state.coordinate.orientation === 'y') textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
+
+			let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
+			if (state.coordinate.orientation === 'x') textTop = clamp(textTop, top, top + height - textHeight - textOffset);
+
+			labelEl.style.transform = `
+				translate3d(${textLeft.toFixed(0)}px, ${textTop.toFixed(0)}px, 0)
+			`;
+			// labelEl.style.left = textLeft.toFixed(0) + 'px';
+			// labelEl.style.top = textTop.toFixed(0) + 'px';
+		}
 	}
 }
 
@@ -168,35 +235,5 @@ GlGrid.prototype.drawAxis = function (gl, state) {
 
 		this.setAttribute('position', axisCoords);
 		gl.drawArrays(gl.LINES, 0, axisCoords.length/2);
-
-		// let x1 = left + pl + clamp(axisCoords[0], 0, 1)*(width - pr-pl),
-		// 	y1 = top + pt + clamp(axisCoords[1], 0, 1)*(height - pt-pb);
-		// let x2 = left + pl + clamp(axisCoords[2], 0, 1)*(width - pr-pl),
-		// 	y2 = top + pt + clamp(axisCoords[3], 0, 1)*(height - pt-pb);
 	}
-
-
-	// //draw labels
-	// if (labels) {
-	// 	ctx.font = state.fontSize + 'px ' + state.fontFamily;
-	// 	ctx.fillStyle = state.labelColor;
-	// 	ctx.textBaseline = 'top';
-	// 	let textHeight = state.fontSize,
-	// 		indent = state.axisWidth + 1.5;
-	// 	let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
-	// 	let isOpp = state.coordinate.orientation === 'y' && !state.opposite.disabled;
-	// 	for (let i = 0; i < labels.length; i++) {
-	// 		let label = labels[i];
-	// 		if (label==null) continue;
-	// 		if (isOpp && almost(lines[i], state.opposite.coordinate.axisOrigin)) continue;
-	// 		let textWidth = ctx.measureText(label).width;
-
-	// 		let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;
-	// 		if (state.coordinate.orientation === 'y') textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
-
-	// 		let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
-	// 		if (state.coordinate.orientation === 'x') textTop = clamp(textTop, top, top + height - textHeight - textOffset);
-	// 		ctx.fillText(label, textLeft, textTop);
-	// 	}
-	// }
 }
