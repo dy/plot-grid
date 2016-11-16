@@ -6,7 +6,7 @@
 
 'use strict';
 
-const Component = require('../../gl-component');
+const Component = require('gl-component');
 const inherits = require('inherits');
 const isBrowser = require('is-browser');
 const extend = require('just-extend');
