@@ -64,6 +64,7 @@ function GlGrid (opts) {
 				position: absolute;
 				left: 0;
 				top: 0;
+				will-change: transform;
 			`;
 			return el;
 		});
@@ -216,9 +217,7 @@ GlGrid.prototype.drawLines = function (gl, state) {
 			let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
 			if (state.coordinate.orientation === 'x') textTop = clamp(textTop, top, top + height - textHeight - textOffset);
 
-			labelEl.style.transform = `
-				translate3d(${textLeft.toFixed(0)}px, ${textTop.toFixed(0)}px, 0)
-			`;
+			labelEl.style.transform = `translate3d(${textLeft.toFixed(0)}px, ${textTop.toFixed(0)}px, 0)`;
 			// labelEl.style.left = textLeft.toFixed(0) + 'px';
 			// labelEl.style.top = textTop.toFixed(0) + 'px';
 		}
