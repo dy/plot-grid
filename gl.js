@@ -125,14 +125,20 @@ GlGrid.prototype.draw = function (gl, vp) {
 
 //lines instance draw
 GlGrid.prototype.drawLines = function (gl, state) {
-	if (!state || !state.coordinate || state.coordinate.disabled) return;
-
 	let [left, top, width, height] = state.viewport;
 	let [pt, pr, pb, pl] = state.padding;
 
 	//draw lines and sublines
 	let lines = state.lines;
 	let labels = state.labels;
+	let labelEls = state.coordinate.labelEls;
+
+	//clean labels
+	if (labels) {
+		labelEls.forEach(el => el.textContent = '');
+	}
+
+	if (!state || !state.coordinate || state.coordinate.disabled) return;
 
 	let axisRatio = state.opposite.coordinate.getRatio(state.coordinate.axisOrigin, state.opposite);
 	axisRatio = clamp(axisRatio, 0, 1);
@@ -205,10 +211,6 @@ GlGrid.prototype.drawLines = function (gl, state) {
 			indent = state.axisWidth + 1.5;
 		let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
 		let isOpp = state.coordinate.orientation === 'y' && !state.opposite.disabled;
-
-		//clean labels
-		let labelEls = state.coordinate.labelEls;
-		labelEls.forEach(el => el.textContent = '');
 
 		for (let i = 0, j = 0; i < labels.length; i++) {
 			let labelEl = labelEls[j];

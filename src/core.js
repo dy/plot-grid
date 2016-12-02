@@ -117,6 +117,12 @@ Grid.prototype.update = function (opts) {
 	let [left, top, width, height] = this.viewport;
 
 	if (opts) {
+		//treat bools
+		if (opts.x === false) opts.x = {disabled: true};
+		if (opts.y === false) opts.y = {disabled: true};
+		if (opts.r === false) opts.r = {disabled: true};
+		if (opts.a === false) opts.a = {disabled: true};
+
 		//take over types properties
 		if  (opts.x && opts.x.type) opts.x = extend({}, Grid.types[opts.x.type], opts.x);
 		if  (opts.y && opts.y.type) opts.y = extend({}, Grid.types[opts.y.type], opts.y);
