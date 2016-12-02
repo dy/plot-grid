@@ -26,7 +26,7 @@ function GlGrid (opts) {
 
 	opts = opts || {};
 	opts.autostart = false;
-	opts.context = {
+	if (opts.context == null) opts.context = {
 		antialias: true,
 		alpha: true,
 		depth: false,
@@ -75,6 +75,16 @@ function GlGrid (opts) {
 }
 
 
+GlGrid.prototype.update = function (opts) {
+	Grid.prototype.update.call(this, opts);
+
+	//preset style
+	this.labelsContainer.style.fontFamily = this.x.fontFamily;
+	this.labelsContainer.style.fontSize = this.x.fontSize;
+	this.labelsContainer.style.color = this.x.labelColor || this.x.color;
+}
+
+
 GlGrid.prototype.vert = `
 	attribute vec2 position;
 
@@ -96,13 +106,17 @@ GlGrid.prototype.frag = `
 
 //draw grid to the canvas
 GlGrid.prototype.draw = function (gl, vp) {
-	this.clear();
+	// this.clear();
+
+	this.labelsContainer.style.diplay = 'none';
 
 	this.drawLines(gl, this.state.x);
 	this.drawLines(gl, this.state.y);
 
 	this.drawAxis(gl, this.state.x)
 	this.drawAxis(gl, this.state.y)
+
+	this.labelsContainer.style.diplay = null;
 
 	return this;
 }
@@ -190,11 +204,6 @@ GlGrid.prototype.drawLines = function (gl, state) {
 			indent = state.axisWidth + 1.5;
 		let textOffset = state.tickAlign < .5 ? -textHeight-state.axisWidth*2 : state.axisWidth;
 		let isOpp = state.coordinate.orientation === 'y' && !state.opposite.disabled;
-
-		//preset style
-		this.labelsContainer.style.fontFamily = state.fontFamily;
-		this.labelsContainer.style.fontSize = state.coordinate.fontSize;
-		this.labelsContainer.style.color = state.labelColor;
 
 		//clean labels
 		let labelEls = state.coordinate.labelEls;

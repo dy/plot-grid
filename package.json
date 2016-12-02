@@ -2,7 +2,7 @@
   "name": "plot-grid",
   "version": "2.2.2",
   "description": "Plot grid component",
-  "main": "html.js",
+  "main": "gl.js",
   "scripts": {
     "test": "budo test.js",
     "test:browser": "budo test.js -- -g bubleify",
@@ -58,7 +58,7 @@
     "just-extend": "^1.1.21",
     "just-pick": "^1.0.3",
     "just-range": "^1.0.0",
-    "mumath": "^3.0.1",
+    "mumath": "^3.3.1",
     "pan-zoom": "^2.0.0",
     "parse-unit": "^1.0.1",
     "to-px": "^1.0.1"

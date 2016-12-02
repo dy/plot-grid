@@ -9,6 +9,7 @@ const pick = require('just-pick');
 insertCss(`
 	body {
 		margin: 0;
+		overflow: hidden;
 		padding: 0;
 	}
 	.frame {

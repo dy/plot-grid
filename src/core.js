@@ -19,7 +19,6 @@ const isObj = require('is-plain-obj');
 const parseUnit = require('parse-unit');
 const toPx = require('to-px');
 const types = require('./types');
-const prettyNum = require('pretty-number');
 
 
 module.exports = Grid;
