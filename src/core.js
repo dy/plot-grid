@@ -106,10 +106,9 @@ function Grid (opts) {
 			}
 
 			this.update({x, y});
+			this.emit('interact', this);
 		});
 	}
-
-	setTimeout(() => this.update(opts))
 }
 
 
@@ -119,10 +118,10 @@ Grid.prototype.update = function (opts) {
 
 	if (opts) {
 		//take over types properties
-		if  (opts.x && opts.x.type) extend(opts.x, Grid.types[opts.x.type]);
-		if  (opts.y && opts.y.type) extend(opts.y, Grid.types[opts.y.type]);
-		if  (opts.r && opts.r.type) extend(opts.r, Grid.types[opts.r.type]);
-		if  (opts.a && opts.a.type) extend(opts.a, Grid.types[opts.a.type]);
+		if  (opts.x && opts.x.type) opts.x = extend({}, Grid.types[opts.x.type], opts.x);
+		if  (opts.y && opts.y.type) opts.y = extend({}, Grid.types[opts.y.type], opts.y);
+		if  (opts.r && opts.r.type) opts.r = extend({}, Grid.types[opts.r.type], opts.r);
+		if  (opts.a && opts.a.type) opts.a = extend({}, Grid.types[opts.a.type], opts.a);
 
 		//extend props
 		if (opts.x) extend(this.x, opts.x);
@@ -135,13 +134,13 @@ Grid.prototype.update = function (opts) {
 	if (!this.x.disabled) {
 		let range = this.x.getRange({viewport: this.viewport, coordinate: this.x});
 		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
-		this.x.maxScale = Math.min(this.x.maxScale, (this.x.max - this.x.min) / width );
+		this.x.maxScale = (this.x.max - this.x.min) / width;
 	}
 
 	if (!this.y.disabled) {
 		let range = this.y.getRange({viewport: this.viewport, coordinate: this.y});
 		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
-		this.y.maxScale = Math.min(this.y.maxScale, (this.y.max - this.y.min) / height );
+		this.y.maxScale = (this.y.max - this.y.min) / height;
 	}
 
 	//recalc state
@@ -153,7 +152,7 @@ Grid.prototype.update = function (opts) {
 
 	this.emit('update', opts);
 
-	this.render();
+	!this.autostart && this.render();
 
 	return this;
 }

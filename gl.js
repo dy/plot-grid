@@ -56,6 +56,8 @@ function GlGrid (opts) {
 	this.r.labelEls = createLabels(20)
 	this.a.labelEls = createLabels(20)
 
+	this.update(opts);
+
 	function createLabels (n) {
 		return Array(n).fill(null).map(x => {
 			let el = labelsContainer.appendChild(document.createElement('span'))
@@ -71,7 +73,7 @@ function GlGrid (opts) {
 	}
 
 	//init position usage
-	this.setAttribute('position', {usage: this.gl.DYNAMIC_DRAW})
+	this.setAttribute('position', {usage: this.gl.DYNAMIC_DRAW, size: 2})
 }
 
 
@@ -107,7 +109,6 @@ GlGrid.prototype.frag = `
 //draw grid to the canvas
 GlGrid.prototype.draw = function (gl, vp) {
 	// this.clear();
-
 	this.labelsContainer.style.diplay = 'none';
 
 	this.drawLines(gl, this.state.x);

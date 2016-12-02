@@ -96,7 +96,9 @@ Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
 | `zoom` | _Bool_ | `true` | Enables zoom interaction. |
 | `pan` | _Bool_ | `true` | Enables pan interaction. |
 
-To change pan or zoom, use `update` method.
+To change pan or zoom, use `update` method with the propertives above.
+
+Another time it might be useful to engage `grid.on('interact', grid => {})` handler for grid interactions, like moving and zooming.
 
 
 ### `grid.update(options)`
