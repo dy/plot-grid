@@ -36,9 +36,10 @@ function Grid (opts) {
 
 	if (!isBrowser) return;
 
-	Component.call(this, extend(pick(this, [
-		'container', 'viewport', 'context', 'autostart'
-	]), opts));
+	//create rendering state
+	this.state = {};
+
+	Component.call(this, opts);
 
 	this.canvas.classList.add('plot-grid-canvas')
 
@@ -60,8 +61,6 @@ function Grid (opts) {
 	if (opts.r !== undefined) this.r.disabled = !opts.r;
 	if (opts.a !== undefined) this.a.disabled = !opts.a;
 
-	//create rendering state
-	this.state = {};
 
 	this.on('resize', () => this.update());
 
@@ -114,6 +113,8 @@ function Grid (opts) {
 
 //re-evaluate lines, calc options for renderer
 Grid.prototype.update = function (opts) {
+	Component.prototype.update.call(this);
+
 	let [left, top, width, height] = this.viewport;
 
 	if (opts) {

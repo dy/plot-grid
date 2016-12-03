@@ -25,18 +25,13 @@ function GlGrid (opts) {
 	if (!(this instanceof GlGrid)) return new GlGrid(opts);
 
 	opts = opts || {};
-	opts.autostart = false;
-	if (opts.context == null) opts.context = {
-		antialias: true,
-		alpha: true,
-		depth: false,
-		premultipliedAlpha: true,
-		preserveDrawingBuffer: false
-	};
+
+	let labelsContainer = this.labelsContainer = document.createElement('div');
+
 	Grid.call(this, opts);
 
 	//FIXME: this container may be wrong if plot-grid is not exclusive in it's own cntnr
-	let labelsContainer = this.container.appendChild(document.createElement('div'));
+	this.container.appendChild(labelsContainer);
 	labelsContainer.className = 'plot-grid-labels';
 	labelsContainer.style.cssText = `
 		position: absolute;
@@ -48,7 +43,6 @@ function GlGrid (opts) {
 		overflow: hidden;
 		text-rendering: optimizeSpeed;
 	`;
-	this.labelsContainer = labelsContainer;
 
 	//create label holders, we guess 30 is enough (more is bad practice)
 	this.x.labelEls = createLabels(20)
@@ -75,6 +69,13 @@ function GlGrid (opts) {
 	//init position usage
 	this.attribute('position', {usage: this.gl.DYNAMIC_DRAW, size: 2})
 }
+
+GlGrid.prototype.autostart = false;
+GlGrid.prototype.antialias = true;
+GlGrid.prototype.alpha = true;
+GlGrid.prototype.depth = false;
+GlGrid.prototype.premultipliedAlpha = true;
+GlGrid.prototype.preserveDrawingBuffer = false;
 
 
 GlGrid.prototype.update = function (opts) {
@@ -110,7 +111,6 @@ GlGrid.prototype.frag = `
 GlGrid.prototype.draw = function (data) {
 	let gl = this.gl;
 
-	// this.clear();
 	this.labelsContainer.style.diplay = 'none';
 
 	this.drawLines(gl, this.state.x);
