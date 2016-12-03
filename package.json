@@ -1,6 +1,6 @@
 {
   "name": "plot-grid",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "Plot grid component",
   "main": "gl.js",
   "scripts": {
