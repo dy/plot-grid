@@ -24,16 +24,19 @@ function Canvas2DGrid (opts) {
 	if (!(this instanceof Canvas2DGrid)) return new Canvas2DGrid(opts);
 
 	opts = opts || {};
-	opts.autostart = false;
 	opts.context = '2d';
 
 	Grid.call(this, opts);
+
+	this.on('render', () => {
+		if (this.autostart) this.clear();
+	})
 }
 
 
 //draw grid to the canvas
-Canvas2DGrid.prototype.draw = function (ctx, vp) {
-	this.clear();
+Canvas2DGrid.prototype.draw = function () {
+	let ctx = this.context
 
 	//then we draw
 	this.drawCoordinate(ctx, this.state.x);

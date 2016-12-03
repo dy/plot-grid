@@ -73,7 +73,7 @@ function GlGrid (opts) {
 	}
 
 	//init position usage
-	this.setAttribute('position', {usage: this.gl.DYNAMIC_DRAW, size: 2})
+	this.attribute('position', {usage: this.gl.DYNAMIC_DRAW, size: 2})
 }
 
 
@@ -107,7 +107,9 @@ GlGrid.prototype.frag = `
 
 
 //draw grid to the canvas
-GlGrid.prototype.draw = function (gl, vp) {
+GlGrid.prototype.draw = function (data) {
+	let gl = this.gl;
+
 	// this.clear();
 	this.labelsContainer.style.diplay = 'none';
 
@@ -165,8 +167,8 @@ GlGrid.prototype.drawLines = function (gl, state) {
 	}
 	//render color groups
 	for (let color in colors) {
-		this.setUniform('color', rgba(color));
-		this.setAttribute('position', colors[color]);
+		this.uniform('color', rgba(color));
+		this.attribute('position', colors[color]);
 		gl.drawArrays(gl.LINES, 0, colors[color].length/2);
 	}
 
@@ -199,8 +201,8 @@ GlGrid.prototype.drawLines = function (gl, state) {
 	//draw ticks
 	if (ticks.length) {
 		gl.lineWidth(state.axisWidth);
-		this.setUniform('color', rgba(state.axisColor));
-		this.setAttribute('position', tickCoords);
+		this.uniform('color', rgba(state.axisColor));
+		this.attribute('position', tickCoords);
 		gl.drawArrays(gl.LINES, 0, tickCoords.length/2);
 	}
 
@@ -242,9 +244,9 @@ GlGrid.prototype.drawAxis = function (gl, state) {
 		let axisCoords = state.opposite.coordinate.getCoords([state.coordinate.axisOrigin], state.opposite);
 
 		gl.lineWidth(state.axisWidth);
-		this.setUniform('color', rgba(state.axisColor));
+		this.uniform('color', rgba(state.axisColor));
 
-		this.setAttribute('position', axisCoords);
+		this.attribute('position', axisCoords);
 		gl.drawArrays(gl.LINES, 0, axisCoords.length/2);
 	}
 }
