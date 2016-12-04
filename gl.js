@@ -114,9 +114,8 @@ GlGrid.prototype.frag = `
 
 
 GlGrid.prototype.render = function (data) {
-	setProgram(this.gl, this.program);
-	this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 	this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
 	this.draw(data);
 
 	return this;
@@ -125,6 +124,8 @@ GlGrid.prototype.render = function (data) {
 
 //draw grid to the canvas
 GlGrid.prototype.draw = function (data) {
+	setProgram(this.gl, this.program);
+
 	let gl = this.gl;
 
 	this.labelsContainer.style.diplay = 'none';

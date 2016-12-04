@@ -52,6 +52,7 @@ function Grid (opts) {
 		this.container.appendChild(this.canvas);
 	}
 
+
 	this.canvas.classList.add('plot-grid-canvas')
 
 	//set default coords as xy

@@ -21,16 +21,6 @@ let grid = createGrid({
 		max: 0
 	}
 });
-
-//polar grid
-let polar = createGrid({
-	r: {
-		labels: {0: 'E', 90: 'N', 180: 'W', 270: 'S'}
-	},
-	a: {
-		type: 'log'
-	}
-});
 ```
 
 This will create frequency response and directional diagram.
@@ -47,9 +37,9 @@ Create new grid instance. It can serve both as a class or constructor function (
 | `container` | `document.body` | Container to place grid into. Can be `null` to render in memory. |
 | `context` | `null` | Can be pre-existing context. |
 | `pixelRatio` | `window.devicePixelRatio` | Pixel ratio of canvas. |
-| `autostart` | `true` | Render every frame automatically or call `render` method manually. Useful if plot-grid is used in cooperation with other components. |
-| `interactions` | `true` | Enable pan/zoom interactions |
-| `x`, `y`, `r`, `a` | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
+| `autostart` | `true` | Render every frame automatically or call `render` method manually. Useful if _plot-grid_ is used in cooperation with other components. |
+| `interactions` | `true` | Enable pan/zoom interactions, see `interact` event. |
+| `x`, `y`, `r`, `a` | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic` or `time`. If object is passed, it defines custom lines behaviour, see the table below. |
 
 Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 
@@ -57,22 +47,11 @@ Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 |---|---|---|---|
 | `type` | _String_, `null` | `null` | Default type to extend, one of `linear`, `logarithmic`, `time`. |
 | `color` | _String_ | `rgba(0,0,0,1)` | Default color for the lines, axes, ticks and labels. |
-| `lines` | _Bool_, _Array_, _Function_, `null` |  | Array with values, defining lines, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. |
-| `lineColor` | _String_, _Number_, _Function_, `null` | `.3` | Color for lines. Number value will take the base color above with changed opacity. Function signature is `state => [...values]`. |
-| `lineWidth` | _Number_ | `1` | Width of lines. We guess that width of sublines should not differ from the width of lines, if you have use-case requiring the opposite, please address [issues](/issues). |
-| `axis` | _Bool_ | `true` | Enable axis. |
-| `axisOrigin` | _Number_ | `0` | Define axis alignment by value on the opposite coordinate. |
-| `axisColor` | _String_, _Number_ | `0.1` | Axis color, redefines default `color`. |
-| `axisWidth` | _Number_ | `2` | Width of axis line. |
+| `format` | _Function_ | `null` | Formatter for label values. Takes a value and returns a string. [pretty-number](https://npmjs.org/package/pretty-number) can be used as such. |
+| `lines` | _Bool_, _Array_, _Function_, `null` |  | Array with values, defining lines, or function returning such array, `state => [values...]`. Can be disabled by passing `false`. By default implemented by `type`. |
 | `ticks` | _Bool_, _Array_, _Number_, _Function_ | `5` | Tick size. Can be disabled by passing `false`. |
-| `align` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
 | `labels` | _Bool_, _Array_, _Object_ , _Function_, `null` | `null` | Object or array with labels corresponding to lines. Can be defined as a function returning such array `(state) => labels`. `null` value will output values as is. Can be disabled by passing `false`. |
-| `format` | _Function_ | `prettyNumber` | Formatter for label values. Takes a value and returns a string. [pretty-number](https://npmjs.org/package/pretty-number) can be used as such. |
-| `fontSize` | _String_, _Number_ | `10pt` | Font size for labels. Sizes with units will be automatically transformed to pixels by [to-px](https://npmjs.org/package/to-px). |
-| `fontFamily` | _String_ | `sans-serif` | Font family to use for labels. |
-| `padding` | _Number_, _Array(4)_ | `0` | Padding inside the viewport to indent lines from axes and labels. Ordering is _top_, _right_, _bottom_, _left_, as in css. |
-| `style` | _String_ | `lines` | Style of rendering: `lines` or `dots`. Note that `dots` is available only when `x` and `y` are both enabled. |
-| `distance` | _Number_ | `120` | Minimum distance between lines. |
+| `axis` | _Bool_ | `true` | Enable axis. |
 
 #### Pan & zoom
 
@@ -88,10 +67,27 @@ Additional pan/zoom params can be set for each coordinate `x`, `y`, `r`, `a`:
 | `zoom` | _Bool_ | `true` | Enables zoom interaction. |
 | `pan` | _Bool_ | `true` | Enables pan interaction. |
 
-To change pan or zoom, use `update` method with the propertives above.
+To change pan or zoom, use `update` method with the propertives above, as `update({x: {offset, scale}, y: {offset, scale});`.
 
 Another time it might be useful to engage `grid.on('interact', grid => {})` handler for grid interactions, like moving and zooming.
 
+#### Style
+
+Each coordinate can be customized more with additional options:
+
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `lineColor` | _String_, _Number_, _Function_, `null` | `.3` | Color for lines. Number value will take the base color above with changed opacity. Function signature is `state => [...values]`. |
+| `lineWidth` | _Number_ | `1` | Width of lines. We guess that width of sublines should not differ from the width of lines, if you have use-case requiring the opposite, please address [issues](/issues). |
+| `axisOrigin` | _Number_ | `0` | Define axis alignment by value on the opposite coordinate. |
+| `axisColor` | _String_, _Number_ | `0.1` | Axis color, redefines default `color`. |
+| `axisWidth` | _Number_ | `2` | Width of axis line. |
+| `align` | _Number_ | `0.5` | The side to align ticks and labels, `0..1`. |
+| `fontSize` | _String_, _Number_ | `10pt` | Font size for labels. Sizes with units will be automatically transformed to pixels by [to-px](https://npmjs.org/package/to-px). |
+| `fontFamily` | _String_ | `sans-serif` | Font family to use for labels. |
+| `padding` WIP | _Number_, _Array(4)_ | `0` | Padding inside the viewport to indent lines from axes and labels. Ordering is _top_, _right_, _bottom_, _left_, as in css. |
+| `style` WIP | _String_ | `lines` | Style of rendering: `lines` or `dots`. Note that `dots` is available only when `x` and `y` are both enabled. |
+| `distance` | _Number_ | `120` | Minimum distance between lines. |
 
 ### `grid.update(options)`
 
@@ -107,12 +103,15 @@ grid.update({
 	}
 });
 ```
-
-It will automatically rerender grid.
+Note that you may need to call render in manual mode `grid.update().render()`.
 
 ### `grid.render()`
 
 Redraw grid. Call whenever you need to redraw grid, like resize etc. It will not recalculate lines, just rerender existing lines. To recalculate lines, use `grid.update()`.
+
+### `grid.draw()`
+
+Directly invoke draw method, useful in case if grid needs to be drawn over other content.
 
 
 ## Used by
