@@ -6,19 +6,21 @@
 
 'use strict';
 
-const Component = require('gl-component');
-const inherits = require('inherits');
-const isBrowser = require('is-browser');
-const extend = require('just-extend');
-const range = require('just-range');
-const pick = require('just-pick');
-const clamp = require('mumath/clamp');
-const panzoom = require('pan-zoom');
-const alpha = require('color-alpha');
-const isObj = require('is-plain-obj');
-const parseUnit = require('parse-unit');
-const toPx = require('to-px');
-const types = require('./types');
+const createLoop = require('canvas-loop')
+const inherits = require('inherits')
+const isBrowser = require('is-browser')
+const extend = require('object-assign')
+const range = require('just-range')
+const pick = require('just-pick')
+const clamp = require('mumath/clamp')
+const panzoom = require('pan-zoom')
+const alpha = require('color-alpha')
+const isObj = require('is-plain-obj')
+const parseUnit = require('parse-unit')
+const toPx = require('to-px')
+const types = require('./types')
+const Emitter = require('events')
+const getContext = require('gl-util/context')
 
 
 module.exports = Grid;
@@ -27,7 +29,7 @@ module.exports = Grid;
 Grid.types = types;
 
 
-inherits(Grid, Component);
+inherits(Grid, Emitter);
 
 
 //constructor
@@ -39,7 +41,16 @@ function Grid (opts) {
 	//create rendering state
 	this.state = {};
 
-	Component.call(this, opts);
+	extend(this, opts);
+
+	//create canvas/container
+	//FIXME: this is not very good for 2d case though
+	if (!this.context) this.context = getContext(this);
+	if (!this.canvas) this.canvas = this.context.canvas;
+	if (!this.container) this.container = document.body || document.documentElement;
+	if (!this.canvas.parentNode) {
+		this.container.appendChild(this.canvas);
+	}
 
 	this.canvas.classList.add('plot-grid-canvas')
 
@@ -61,68 +72,76 @@ function Grid (opts) {
 	if (opts.r !== undefined) this.r.disabled = !opts.r;
 	if (opts.a !== undefined) this.a.disabled = !opts.a;
 
+	//create loop
+	this.loop = createLoop(this.canvas, {parent: this.container, scale: this.pixelRatio});
 
-	this.on('resize', () => this.update());
+	this.loop.on('tick', () => {
+		this.render();
+	});
+	this.loop.on('resize', () => {
+		this.update()
+	});
+
+	this.autostart && this.loop.start();
+
 
 	//enable interactions
-	if (this.container && this.canvas) {
-		//FIXME: make sure that interaction happens within actual viewport
-		panzoom(this.canvas, (e) => {
-			let [left, top, width, height] = this.viewport;
+	panzoom(this.canvas, (e) => {
+		if (!this.interactions) return;
 
-			//shift start
-			let zoom = clamp(-e.dz, -height*.75, height*.75)/height;
+		let {width, height} = this.canvas;
 
-			let x = {offset: this.x.offset, scale: this.x.scale},
-				y = {offset: this.y.offset, scale: this.y.scale};
+		//shift start
+		let zoom = clamp(-e.dz, -height*.75, height*.75)/height;
 
-			//pan
-			if (!this.x.disabled) {
-				let oX = this.x && this.x.origin || 0;
-				if (this.x.pan) {
-					x.offset -= this.x.scale * e.dx;
-				}
-				if (this.x.zoom !== false) {
-					let tx = (e.x-left)/width - oX;
-					let prevScale = x.scale;
-					x.scale *= (1 - zoom);
-					x.scale = clamp(x.scale, this.x.minScale, this.x.maxScale);
-					x.offset -= width*(x.scale - prevScale) * tx;
-				}
+		let x = {offset: this.x.offset, scale: this.x.scale},
+			y = {offset: this.y.offset, scale: this.y.scale};
+
+		//pan
+		if (!this.x.disabled) {
+			let oX = this.x && this.x.origin || 0;
+			if (this.x.pan) {
+				x.offset -= this.x.scale * e.dx;
 			}
-			if (!this.y.disabled) {
-				let oY = this.y && this.y.origin || 0;
-				if (this.y.pan) {
-					y.offset += y.scale * e.dy;
-				}
-				if (this.y.zoom !== false) {
-					let ty = oY-(e.y-top)/height;
-					let prevScale = y.scale;
-					y.scale *= (1 - zoom);
-					y.scale = clamp(y.scale, this.y.minScale, this.y.maxScale);
-					y.offset -= height*(y.scale - prevScale) * ty;
-				}
+			if (this.x.zoom !== false) {
+				let tx = (e.x)/width - oX;
+				let prevScale = x.scale;
+				x.scale *= (1 - zoom);
+				x.scale = clamp(x.scale, this.x.minScale, this.x.maxScale);
+				x.offset -= width*(x.scale - prevScale) * tx;
 			}
-
-			this.update({x, y});
-			this.emit('interact', this);
-		});
-	}
+		}
+		if (!this.y.disabled) {
+			let oY = this.y && this.y.origin || 0;
+			if (this.y.pan) {
+				y.offset += y.scale * e.dy;
+			}
+			if (this.y.zoom !== false) {
+				let ty = oY-(e.y)/height;
+				let prevScale = y.scale;
+				y.scale *= (1 - zoom);
+				y.scale = clamp(y.scale, this.y.minScale, this.y.maxScale);
+				y.offset -= height*(y.scale - prevScale) * ty;
+			}
+		}
+		this.update({x, y});
+		this.emit('interact', this);
+	});
 }
 
 
 //re-evaluate lines, calc options for renderer
 Grid.prototype.update = function (opts) {
-	Component.prototype.update.call(this);
+	if (!opts) opts = {};
 
-	let [left, top, width, height] = this.viewport;
+	let shape = [this.canvas.width, this.canvas.height];
 
 	if (opts) {
 		//treat bools
-		if (opts.x === false) opts.x = {disabled: true};
-		if (opts.y === false) opts.y = {disabled: true};
-		if (opts.r === false) opts.r = {disabled: true};
-		if (opts.a === false) opts.a = {disabled: true};
+		if (opts.x === false || opts.x === true) opts.x = {disabled: !opts.x};
+		if (opts.y === false || opts.y === true) opts.y = {disabled: !opts.y};
+		if (opts.r === false || opts.r === true) opts.r = {disabled: !opts.r};
+		if (opts.a === false || opts.a === true) opts.a = {disabled: !opts.a};
 
 		//take over types properties
 		if  (opts.x && opts.x.type) opts.x = extend({}, Grid.types[opts.x.type], opts.x);
@@ -139,37 +158,37 @@ Grid.prototype.update = function (opts) {
 
 	//normalize, make sure range/offset are not off the limits
 	if (!this.x.disabled) {
-		let range = this.x.getRange({viewport: this.viewport, coordinate: this.x});
+		let range = this.x.getRange({shape: shape, coordinate: this.x});
+
 		this.x.offset = clamp(this.x.offset, this.x.min, Math.max(this.x.max - range, this.x.min));
-		this.x.maxScale = (this.x.max - this.x.min) / width;
+
+		this.x.maxScale = (this.x.max - this.x.min) / shape[0];
 	}
 
 	if (!this.y.disabled) {
-		let range = this.y.getRange({viewport: this.viewport, coordinate: this.y});
+		let range = this.y.getRange({shape: shape, coordinate: this.y});
 		this.y.offset = clamp(this.y.offset, this.y.min, Math.max(this.y.max - range, this.y.min));
-		this.y.maxScale = (this.y.max - this.y.min) / height;
+		this.y.maxScale = (this.y.max - this.y.min) / shape[1];
 	}
 
 	//recalc state
-	this.state.x = this.calcCoordinate(this.x, this.viewport, this);
-	this.state.y = this.calcCoordinate(this.y, this.viewport, this);
+	this.state.x = this.calcCoordinate(this.x, shape, this);
+	this.state.y = this.calcCoordinate(this.y, shape, this);
 
 	this.state.x.opposite = this.state.y;
 	this.state.y.opposite = this.state.x;
 
 	this.emit('update', opts);
 
-	!this.autostart && this.render();
-
 	return this;
 }
 
 
 //get state object with calculated params, ready for rendering
-Grid.prototype.calcCoordinate = function (coord, vp) {
+Grid.prototype.calcCoordinate = function (coord, shape) {
 	let state = {
 		coordinate: coord,
-		viewport: vp,
+		shape: shape,
 		grid: this
 	};
 
@@ -294,6 +313,11 @@ Grid.prototype.calcCoordinate = function (coord, vp) {
 };
 
 
+Grid.prototype.pixelRatio = window.devicePixelRatio;
+Grid.prototype.autostart = true;
+Grid.prototype.interactions = true;
+
+
 //default values
 Grid.prototype.defaults = extend({
 	type: 'linear',
@@ -359,7 +383,7 @@ Grid.prototype.x = extend({}, Grid.prototype.defaults, {
 		return coords;
 	},
 	getRange: state => {
-		return state.viewport[2] * state.coordinate.scale;
+		return state.shape[0] * state.coordinate.scale;
 	},
 	//FIXME: handle infinity case here
 	getRatio: (value, state) => {
@@ -381,7 +405,7 @@ Grid.prototype.y = extend({}, Grid.prototype.defaults, {
 		return coords;
 	},
 	getRange: state => {
-		return state.viewport[3] * state.coordinate.scale;
+		return state.shape[1] * state.coordinate.scale;
 	},
 	getRatio: (value, state) => {
 		return 1 - (value - state.offset) / state.range

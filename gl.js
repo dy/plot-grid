@@ -6,13 +6,16 @@
 'use strict';
 
 
-const Grid = require('./src/core');
-const TAU = Math.PI*2;
-const clamp = require('mumath/clamp');
-const len = require('mumath/len');
-const inherit = require('inherits');
-const almost = require('almost-equal');
-const rgba = require('color-rgba');
+const Grid = require('./src/core')
+const clamp = require('mumath/clamp')
+const len = require('mumath/len')
+const inherit = require('inherits')
+const almost = require('almost-equal')
+const rgba = require('color-rgba')
+const attr = require('gl-util/attribute')
+const setProgram = require('gl-util/program')
+const uniform = require('gl-util/uniform')
+
 
 module.exports = GlGrid;
 
@@ -29,6 +32,13 @@ function GlGrid (opts) {
 	let labelsContainer = this.labelsContainer = document.createElement('div');
 
 	Grid.call(this, opts);
+
+	this.gl = this.context;
+
+	this.program = setProgram(this.gl, this.vert, this.frag);
+
+	//init position usage
+	attr(this.gl, 'position', {usage: this.gl.DYNAMIC_DRAW, size: 2}, this.program);
 
 	//FIXME: this container may be wrong if plot-grid is not exclusive in it's own cntnr
 	this.container.appendChild(labelsContainer);
@@ -66,14 +76,10 @@ function GlGrid (opts) {
 		});
 	}
 
-	//init position usage
-	this.attribute('position', {usage: this.gl.DYNAMIC_DRAW, size: 2})
 }
 
-GlGrid.prototype.autostart = false;
 GlGrid.prototype.antialias = true;
 GlGrid.prototype.alpha = true;
-GlGrid.prototype.depth = false;
 GlGrid.prototype.premultipliedAlpha = true;
 GlGrid.prototype.preserveDrawingBuffer = false;
 
@@ -107,6 +113,16 @@ GlGrid.prototype.frag = `
 `;
 
 
+GlGrid.prototype.render = function (data) {
+	setProgram(this.gl, this.program);
+	this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+	this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+	this.draw(data);
+
+	return this;
+}
+
+
 //draw grid to the canvas
 GlGrid.prototype.draw = function (data) {
 	let gl = this.gl;
@@ -127,7 +143,7 @@ GlGrid.prototype.draw = function (data) {
 
 //lines instance draw
 GlGrid.prototype.drawLines = function (gl, state) {
-	let [left, top, width, height] = state.viewport;
+	let [width, height] = state.shape;
 	let [pt, pr, pb, pl] = state.padding;
 
 	//draw lines and sublines
@@ -167,8 +183,8 @@ GlGrid.prototype.drawLines = function (gl, state) {
 	}
 	//render color groups
 	for (let color in colors) {
-		this.uniform('color', rgba(color));
-		this.attribute('position', colors[color]);
+		uniform(gl, 'color', rgba(color));
+		attr(this.gl, 'position', colors[color], this.program);
 		gl.drawArrays(gl.LINES, 0, colors[color].length/2);
 	}
 
@@ -201,8 +217,8 @@ GlGrid.prototype.drawLines = function (gl, state) {
 	//draw ticks
 	if (ticks.length) {
 		gl.lineWidth(state.axisWidth);
-		this.uniform('color', rgba(state.axisColor));
-		this.attribute('position', tickCoords);
+		uniform(gl, 'color', rgba(state.axisColor));
+		attr(this.gl, 'position', tickCoords, this.program);
 		gl.drawArrays(gl.LINES, 0, tickCoords.length/2);
 	}
 
@@ -225,11 +241,11 @@ GlGrid.prototype.drawLines = function (gl, state) {
 
 			let textWidth = labelEl.offsetWidth;
 
-			let textLeft = labelCoords[i*2] * (width - pl-pr) + left + indent + pl;
-			if (state.coordinate.orientation === 'y') textLeft = clamp(textLeft, left + indent, left + width - textWidth - 1 - state.axisWidth);
+			let textLeft = labelCoords[i*2] * (width - pl-pr) + indent + pl;
+			if (state.coordinate.orientation === 'y') textLeft = clamp(textLeft, indent,width - textWidth - 1 - state.axisWidth);
 
-			let textTop = labelCoords[i*2+1] * (height - pt-pb) + top + textOffset + pt;
-			if (state.coordinate.orientation === 'x') textTop = clamp(textTop, top, top + height - textHeight - textOffset);
+			let textTop = labelCoords[i*2+1] * (height - pt-pb) + textOffset + pt;
+			if (state.coordinate.orientation === 'x') textTop = clamp(textTop, 0, height - textHeight - textOffset);
 
 			labelEl.style.transform = `translate3d(${textLeft.toFixed(0)}px, ${textTop.toFixed(0)}px, 0)`;
 			// labelEl.style.left = textLeft.toFixed(0) + 'px';
@@ -244,9 +260,9 @@ GlGrid.prototype.drawAxis = function (gl, state) {
 		let axisCoords = state.opposite.coordinate.getCoords([state.coordinate.axisOrigin], state.opposite);
 
 		gl.lineWidth(state.axisWidth);
-		this.uniform('color', rgba(state.axisColor));
+		uniform(this.gl, 'color', rgba(state.axisColor), this.program);
 
-		this.attribute('position', axisCoords);
+		attr(this.gl, 'position', axisCoords, this.program);
 		gl.drawArrays(gl.LINES, 0, axisCoords.length/2);
 	}
 }

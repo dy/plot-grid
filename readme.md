@@ -38,26 +38,18 @@ This will create frequency response and directional diagram.
 
 ## API
 
-### `const Grid = require('plot-grid')`
-
-Get grid constructor. You can require render-specific version as:
-
-```js
-const WebglGrid = require('plot-grid/gl');
-const Canvas2DGrid = require('plot-grid/2d');
-const WebglCanvasGrid = require('plot-grid/gl2d'); //uses canvas2d as a texture
-```
-
 ### `let grid = new Grid(options?)`
 
 Create new grid instance. It can serve both as a class or constructor function (no `new`). By default it displays cartesian grid, but
 
-| Name | Type | Description |
+| Name | Default | Description |
 |---|---|---|
-| container | _Element_, _String_, `null` | Container element to place grid into. By default `document.body`. Can be `null` to render in memory. |
-| context | CanvasContext, _String_, _Object_ | Can be existing context, a string `2d`/`webgl` or context options for [get-canvas-context](https://npmjs.org/package/get-canvas-context). |
-| viewport | _Array(4)_ or (w, h) => _Array(4)_ | An array defining the viewbox within the canvas for grid. Array components are `[left, top, width, height]`.
-| x, y, r, a | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
+| `container` | `document.body` | Container to place grid into. Can be `null` to render in memory. |
+| `context` | `null` | Can be pre-existing context. |
+| `pixelRatio` | `window.devicePixelRatio` | Pixel ratio of canvas. |
+| `autostart` | `true` | Render every frame automatically or call `render` method manually. Useful if plot-grid is used in cooperation with other components. |
+| `interactions` | `true` | Enable pan/zoom interactions |
+| `x`, `y`, `r`, `a` | _Bool_, _String_, _Object_ | Boolean, enabling coordinates of `linear` type or a string, defining custom type: `linear`, `logarithmic` or `time`. If object passed, it will define custom lines behaviour, see the table below. |
 
 Each of _x_, _y_, _r_, _a_ can be customized by the following options:
 
