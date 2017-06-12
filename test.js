@@ -41,7 +41,6 @@ insertCss(`
 	.fps {
 		z-index: 2;
 		font-size: 10px;
-		top: 10px!important;
 	}
 `);
 
@@ -51,7 +50,8 @@ frame.className = 'frame';
 
 
 let fps = createFps({
-	container: frame
+	container: frame,
+	position: 'bottom-left'
 });
 
 

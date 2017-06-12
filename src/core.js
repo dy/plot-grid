@@ -38,6 +38,8 @@ function Grid (opts) {
 
 	if (!isBrowser) return;
 
+	Emitter.call(opts);
+
 	//create rendering state
 	this.state = {};
 
