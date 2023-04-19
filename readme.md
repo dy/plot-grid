@@ -1,6 +1,6 @@
 # plot-grid [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges) ![gzip-size](https://img.shields.io/badge/size-18.4kb-brightgreen.svg)
 
-Grid component for webgl/canvas2d with zooming, panning, polar mode etc. See [demo](https://dfcreative.github.io/plot-grid).
+Grid component for webgl/canvas2d with zooming, panning, polar mode etc. See [demo](https://dy.github.io/plot-grid).
 
 
 ## Usage
